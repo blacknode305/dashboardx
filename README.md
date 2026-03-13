@@ -6,45 +6,35 @@ Node.js dashboard + Web client + Android WebView bridge
 - Node.js + ws + grammy
 - Webpack client
 - Android WebView + JS Bridge
-- 
 
-### Сопроводительное письмо
+## Description
+- A workspace system with widgets that can:
+- be freely moved around the workspace
+- be resized
+- A navigation menu with:
+- workspace switching
+- hotkey support
+- widget categorization
 
-Здравствуйте.
+On the backend, I'm developing an
+HTTP/WebSocket server in Node.js,
+which aggregates data from external APIs, including:
+- Binance
+- MoneyConvert
+- (more integrations planned)
 
-Увлекаюсь разработкой и в настоящее время создаю 
-интерактивный dashboard-клиент 
-с архитектурой рабочих пространств (workspaces), 
-аналогично macOS.
+Next steps include:
+- Displaying the server console in the client interface
+- Client-side logging
+- Integrating an audio and video player
+- Connecting the Telegram API for bot administration and sending messages
+- Integrating mapping APIs for displaying geolocation
+- Widgets for managing personal finances
 
-Проект включает:
-  - Систему воркспейсов с виджетами, которые можно:
-    - свободно перемещать по рабочей области
-    - масштабировать (изменять размер)
-  - Навигационное меню с:
-    - переключением воркспейсов
-    - поддержкой горячих клавиш
-    - категоризацией виджетов
+The client will also be integrated into an Android WebView application
+with an androidBridge implementation for interaction between the
+native part and the server (working with SMS, geolocation, and other system data).
+Similar integration is planned for iOS.
 
-Со стороны backend я разрабатываю 
-HTTP / WebSocket сервер на Node.js, 
-который агрегирует данные из внешних API, включая:
-  - Binance
-  - MoneyConvert
-  - (планируется расширение списка интеграций)
-
-В дальнейших этапах планируется:
-  - Вывод серверной консоли в клиентский интерфейс
-  - Логирование клиентской части
-  - Интеграция аудио- и видеоплеера
-  - Подключение Telegram API для администрирования ботов и отправки сообщений
-  - Интеграция картографических API для отображения геолокации
-  - Виджеты для управления личными финансами
-
-Также клиентская часть будет интегрирована в Android WebView-приложение
-с реализацией androidBridge для взаимодействия между 
-нативной частью и сервером (работа с SMS, геолокацией и другими системными данными). 
-Аналогичная интеграция планируется для iOS.
-
-Проект разрабатывается как расширяемая модульная система 
-с возможностью масштабирования функционала.
+The project is being developed as an extensible modular system
+with the ability to scale functionality.
