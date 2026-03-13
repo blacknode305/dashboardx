@@ -1,0 +1,64 @@
+.finance-table-data > table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.finance-table-data > table th,
+.finance-table-data > table td {
+  padding: 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--divider);
+  background: var(--bg-panel-light);
+}
+.finance-table-data > table thead {
+  position: sticky;
+  top: 0;
+  padding: 10px 8px;
+  background: var(--bg-panel);
+  z-index: 2;
+}
+.finance-table-data {
+  width: 100%;
+  border-collapse: collapse;
+  
+  font-size: 12px;
+}
+.finance-table-data tbody tr {
+  
+}
+.finance-table-data tbody tr:hover {
+  /* background: var(--bg-panel-light); */
+}
+.finance-table-data tbody td {
+  padding: 10px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--divider);
+  white-space: nowrap;
+}
+.finance-table-data tbody td:first-child {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.finance-table-data .green {
+  color: #2ecc71;
+  font-weight: 500;
+}
+.finance-table-data .red {
+  color: #e74c3c;
+  font-weight: 500;
+}
+.finance-table-data .blue {
+  color: #3498db;
+  font-weight: 500;
+}
+.finance-table-data tbody .btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+.finance-table-data tbody:empty::after {
+  /* content: "No data"; */
+  display: block;
+  padding: 16px;
+  text-align: center;
+  color: var(--text-secondary);
+}

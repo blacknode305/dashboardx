@@ -1,0 +1,29 @@
+.nav--container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  /* width: 1280px; */
+  width: 100%;
+  /* background: var(--bg-linear-gradient); */
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  z-index: var(--z-nav);
+}
+.nav--element {
+  flex-shrink: 0;
+  width: 80px;
+  height: 40px;
+  font-size: 12px;
+  font-weight: 900;
+  font-family: var(--f-family-stm);
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--text-main);
+  border: 0;
+  cursor: pointer;
+  user-select: none;
+}
+.nav--element:active {
+  background: var(--blue);
+}

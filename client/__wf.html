@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FullScreen-Workplace</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    border: '';
+  }
+  body {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    /* display: flex;
+    flex-direction: column; */
+    
+    background: green;
+  }
+  
+  #navigationBar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    
+    width: 100%;
+    height: 40px;
+    display: flex;
+    flex-direction: row;
+    flex-shrink: 0;
+    
+    background: red;
+  }
+  .navigationBarContainer {
+    
+  }
+  
+  .btnCategory {
+    width: 80px;
+    height: 100%;
+  }
+  
+  #windowBar {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-shrink: 1;
+    
+    background: blue;
+  }
+  .windowBarContainer {
+    width: 100%;
+    height: 100%;
+  }
+  #winWorkplace01 {
+    display: flex;
+    
+    background: purple;
+  }
+  #winWorkplace02 {
+    display: none;
+    
+    background: yellow;
+  }
+  #winWorkplace03 {
+    display: none;
+    
+    background: cyan;
+  }
+  
+</style>
+</head>
+<body>
+  
+<div id="navigationBar">
+  <div id="navCategory" class="navigationBarContainer">
+    <button id="btnFinanceCategory" class="btnCategory">Finance</button>
+    <button id="btnToolsCategory" class="btnCategory">Tools</button>
+    <button id="btnGamesCategory" class="btnCategory">Games</button>
+    <button id="btnMediaCategory" class="btnCategory">Media</button>
+    <button id="btnSystemsCategory" class="btnCategory">Systems</button>
+  </div>
+  <div id="navWorkplace" class="navigationBarContainer">
+    <button id="btnWorkplace01" class="btnWorkplace">Workplace 01</button>
+    <button id="btnWorkplace02" class="btnWorkplace">Workplace 02</button>
+    <button id="btnWorkplace03" class="btnWorkplace">Workplace 03</button>
+  </div>
+  <div id="navOther" class="navigationBarContainer">
+    <button id="btnSwichTheme" class="btnOther">Switch Theme</button>
+    <button id="btnFullScreen" class="btnOther">FullScreen</button>
+    <button id="btnDatetime" class="btnOther">Date & Time</button>
+  </div>
+  <div id="navTray" class="navigationBarContainer">
+    <button id="btnConnection" class="btnOther">C</button>
+    <button id="btnApi" class="btnOther">A</button>
+    <button id="btnVolume" class="btnOther">V</button>
+  </div>
+</div>
+<div id="windowBar">
+  <div id="winWorkplace01" class="windowBarContainer">Workplace 01</div>
+  <div id="winWorkplace02" class="windowBarContainer">Workplace 02</div>
+  <div id="winWorkplace03" class="windowBarContainer">Workplace 03</div>
+</div>
+
+<script>
+  const btnFullScreen = document.getElementById('btnFullScreen');
+  btnFullScreen.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } 
+    else {
+      document.exitFullscreen();
+    }
+  });
+</script>
+</body>
+</html>

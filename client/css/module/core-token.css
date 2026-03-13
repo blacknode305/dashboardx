@@ -1,0 +1,84 @@
+:root,
+:root[data-theme="dark"] {
+  --bg-main: #0b0e1a;
+  --bg-panel: #14172b;
+  --bg-panel-inside: #0f1326;
+  --bg-panel-light: #1c2040;
+  --bg-linear-gradient: linear-gradient(180deg, #141a3a, #0f1326);
+  /* --bg-linear-gradient: linear-gradient(180deg, #141a3a90, #0f132690); */
+  --bg-body-shadow: rgba(10,12,25,.75);
+
+  --text-main: #f8fafc;
+  --text-muted: #9aa3b2;
+
+  --blue: #3b82f6;
+  --green: #25c55f;
+  --red: #ef4444;
+  --yellow: #facc15;
+
+  --border: #262a4a;
+  --divider: rgba(255,255,255,.08);
+  --shadow: 0 12px 32px rgba(0,0,0,.55);
+
+  --radius: 4px;
+  --radius-sm: 2px;
+  --control-h: 30px;
+  --font-sm: 14px;
+
+  --z-bg: 1;
+  --z-shadow: 3;
+  --z-widget: 10;
+  --z-widget-focus: 20;
+  --z-nav: 50;
+  --z-overlay: 80;
+  --z-modal: 100;
+  
+  --f-family-inter: "Inter", system-ui, sans-serif;;
+  --f-family-mono: "JetBrains Mono", monospace;
+  --f-family-stm: "Share Tech Mono", monospace;
+}
+
+}
+:root[data-theme="light"] {
+  --bg-main: #f6f8fc;
+  --bg-panel: #ffffff;
+  --bg-panel-light: #f1f4fb;
+  --bg-linear-gradient: linear-gradient(180deg, #f6f8fc, #ffffff);
+  --bg-body-shadow: rgba(230,233,240,.75);
+
+  --text-main: #0f172a;
+  --text-muted: #475569;
+
+  --blue: #2563eb;
+  --green: #16a34a;
+  --red: #dc2626;
+  --yellow: #ca8a04;
+
+  --border: #dbe1ee;
+  --divider: rgba(0,0,0,.08);
+  --shadow: 0 10px 24px rgba(0,0,0,.12);
+}
+.blue-color {
+  color: var(--blue);
+}
+.green-color {
+  color: var(--green);
+}
+.red-color {
+  color: var(--red);
+}
+.yellow-color {
+  color: var(--yellow);
+}
+.blue-background {
+  background: var(--blue);
+}
+.green-background {
+  background: var(--green);
+}
+.red-background {
+  background: var(--red);
+}
+.yellow-background {
+  background: var(--yellow);
+}

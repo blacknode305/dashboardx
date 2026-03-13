@@ -1,0 +1,107 @@
+[data-id="telegramBot"] {
+  
+}
+
+.tg-widget {
+  width: 100%;
+  overflow: hidden;
+}
+.tg-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: linear-gradient(90deg,#1b5cff,#19398a);
+  font-weight: 600;
+}
+.tg-logo {
+  margin-right: 8px;
+}
+.tg-status.online {
+  color: #3cff7f;
+}
+.tg-body {
+  display: flex;
+  height: 520px;
+}
+
+/* SIDEBAR */
+.tg-sidebar {
+  padding: 16px;
+  border-right: 1px solid #222;
+}
+.tg-sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+.tg-sidebar li {
+  padding: 8px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.tg-sidebar li.active,
+.tg-sidebar li:hover {
+  background: #1d2432;
+}
+.tg-stats {
+  margin-top: 20px;
+  font-size: 13px;
+  opacity: .9;
+}
+
+/* CHAT */
+.tg-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.chat-header {
+  padding: 12px;
+  background: #181e29;
+  border-bottom: 1px solid #222;
+}
+.chat-messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+.msg {
+  max-width: 65%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.msg.user {
+  background: #2b6fff;
+  margin-left: auto;
+}
+.msg.bot {
+  background: #242b3a;
+}
+.msg.bot.success {
+  background: #173c2b;
+  color: #7dffb3;
+}
+.chat-input {
+  display: flex;
+  padding: 12px;
+  background: #181e29;
+}
+.chat-input input {
+  flex: 1;
+  background: #0f131b;
+  border: none;
+  color: #fff;
+  padding: 10px;
+  border-radius: 6px;
+}
+.chat-input button {
+  margin-left: 10px;
+  background: #2b6fff;
+  border: none;
+  padding: 10px 16px;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}

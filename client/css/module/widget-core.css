@@ -1,0 +1,75 @@
+.widget--element {
+  position: absolute;
+  padding: 4px;
+  background: var(--bg-linear-gradient);
+  /* background: var(--bg-linear-gradient); */
+  /* background: #9c9c9c61; */
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  z-index: var(--z-widget);
+}
+.widget--element.is-focus {
+  z-index: var(--z-widget-focus);
+}
+.widget--element.is-pinned {
+  z-index: calc(var(--z-widget-focus) + 5);
+}
+
+.widget--element--header,
+.widget--element--footer {
+  display: flex;
+  width: 100%;
+  min-height: 30px;
+  flex-direction: row;
+  align-items: center;
+}
+.widget--element--header > .title {
+  margin: 0 auto;
+  font-weight: 900;
+  user-select: none;
+  text-transform: uppercase;
+}
+.widget--element--footer {
+  justify-content: flex-end;
+}
+.widget--element--footer-button {
+  width: 18px;
+  height: 18px;
+  background: var(--bg-panel-light);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-left: 5px;
+}
+.widget--element--footer-button:hover {
+  filter: brightness(1.1);
+}
+.widget--element--footer-button:active {
+  transform: scale(0.96);
+}
+.widget--element--footer-button > svg {
+  fill: var(--text-muted);
+}
+.widget--element--footer-button:hover > svg {
+  fill: var(--text-main);
+}
+.widget--element--footer-button:active > svg {
+  fiil: var(--text-main);
+}
+
+/* .widget--element--body {
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-panel-inside);
+  border: 1px solid var(--bg-shadow);
+  gap: 6px;
+  border-radius: 1px;
+  overflow: scroll;
+  box-shadow:
+    inset 1px 1px 1px var(--bg-body-shadow),
+    inset -1px -1px 1px var(--bg-body-shadow);
+} */

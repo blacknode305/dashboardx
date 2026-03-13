@@ -1,0 +1,89 @@
+/* ROOT */
+[data-id="binanceApi"] {
+  background: linear-gradient(180deg, #141a3a, #0f1326);
+  border: 1px solid var(--border);
+  padding: 14px;
+  color: #cfd3ff;
+  display: grid;
+  gap: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.4);
+}
+
+/* HEADER */
+[data-id="binanceApi"] > header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+/* SYMBOL */
+[data-id="binanceApi"] > [data-role="symbol"] {
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #7d86c9;
+}
+
+/* PRICE */
+[data-id="binanceApi"] > [data-role="price"] {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* CHANGE */
+[data-id="binanceApi"] > [data-role="change"] {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  padding: 2px 8px;
+  background: rgba(255,255,255,.05);
+  border-radius: 999px;
+}
+[data-id="binanceApi"] > [data-role="change"].green {
+  color: var(--green);
+  background: rgba(45,255,139,.12);
+}
+[data-id="binanceApi"] > [data-role="change"].red {
+  color: var(--red);
+  background: rgba(255,77,77,.12);
+}
+
+/* STATS */
+[data-id="binanceApi"] > [data-role="stats"] {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 6px 10px;
+  font-size: 12px;
+}
+[data-id="binanceApi"] > [data-role="stats"] div {
+  display: flex;
+  justify-content: space-between;
+  color: #7d86c9;
+}
+[data-id="binanceApi"] > [data-role="stats"] span {
+  font-family: "JetBrains Mono", monospace;
+  color: #cfd3ff;
+}
+
+/* INTERVAL */
+[data-id="binanceApi"] > select[data-role="interval"] {
+  justify-self: end;
+  background: #151a3a;
+  color: #cfd3ff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* CHART */
+[data-id="binanceApi"] > canvas {
+  width: 100% !important;
+  height: 160px !important;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(122,162,255,.08), transparent);
+  filter: drop-shadow(0 0 6px rgba(122,162,255,.4));
+}

@@ -1,0 +1,56 @@
+{
+  "name": "dashboardx",
+  "version": "1.0.0",
+  "private": true,
+  "description": "dashboard",
+  "keywords": [
+    "server",
+    "nodejs",
+    "ws",
+    "axios",
+    "nodemon",
+    "api",
+    "binance",
+    "telegram",
+    "grammy",
+    "androidBridge",
+    "client",
+    "html",
+    "css",
+    "js",
+    "webpack"
+  ],
+  "license": "MIT",
+  "author": "",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prod:server": "node server/index.js",
+    "prod:client": "webpack",
+    "prod": "npm run prod:client && npm run prod:server",
+    "dev:server": "nodemon server/index.js",
+    "dev:client": "webpack --watch",
+    "dev": "npm-run-all -p dev:*"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.0",
+    "@types/node": "^25.2.3",
+    "babel-loader": "^10.0.0",
+    "css-loader": "^7.1.3",
+    "html-webpack-plugin": "^5.6.6",
+    "mini-css-extract-plugin": "^2.10.0",
+    "nodemon": "^3.1.11",
+    "npm-run-all": "^1.1.3",
+    "typescript": "^5.9.3",
+    "webpack": "^5.104.1",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "axios": "^1.13.4",
+    "dotenv": "^17.2.3",
+    "grammy": "^1.39.3",
+    "ws": "^8.18.3"
+  }
+}

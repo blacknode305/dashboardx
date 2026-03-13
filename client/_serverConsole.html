@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280, initial-scale=1.0">
+  <link rel="stylesheet" href="./css/style.css">
+  <title>DashboardX</title>
+</head>
+<body>
+  
+  <template
+    data-widget
+    data-id="serverConsole"
+    data-category="system"
+    data-title="Server Console"
+  >
+    <div class="console-body" data-role="server-console">
+      <div class="line">
+        <span class="time">[17:32:45]</span>
+        <div>
+          <span class="ok">Server started on port 3000</span>
+        </div>
+      </div>
+      <div class="line">
+        <span class="time">[17:32:47]</span>
+        <div>
+          <span class="info">New WS connection from client 1234567890</span>
+      </div>
+      </div>
+      <div class="line">
+        <span class="time">[17:33:01]</span> 
+        <div>
+          <span class="send">Sent message to client 1234567890:</span><br>
+          <span class="message">Welcome to the server!</span>
+        </div>
+      </div>
+      <div class="line">
+        <span class="time">[17:33:10]</span> 
+        <div>
+          <span class="recv">Received message from client 1234567890:</span><br>
+          <span class="message">Hello, server!</span>
+        </div>
+      </div>
+      <div class="line">
+        <span class="time">[17:33:12]</span>
+        <div>
+          <span class="error">Unexpected initialization:</span><br>
+          <span class="message">Symbol var do not read!</span>
+        </div>
+      </div>
+      <div class="line">
+        <span class="time">[17:33:40]</span>
+        <div>
+          <span class="send">Sent data to client 1234567890:</span><br>
+          <span class="message">Here is the information you requested.</span>
+        </div>
+      </div>
+    </div>
+    <div class="console-input">
+      <div class="line user">
+        <span>user@client: </span>
+        <input type="text">
+      </div>
+    </div>
+    <!-- <div class="consoles">
+      <div class="console server">
+        <div class="console-header">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+          <span class="title">Server Console</span>
+        </div>
+      </div>
+      <div class="console client">
+        <div class="console-header">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+          <span class="title">Client Console</span>
+        </div>
+        <div class="console-body">
+          <div class="line user">user@client:~ $</div>
+    
+          <div class="line"><span class="time">[17:32:47]</span> <span class="ok">Connected to server via WebSocket.</span></div>
+    
+          <div class="line"><span class="time">[17:33:01]</span> <span class="recv">Received message from server:</span></div>
+          <div class="message">Welcome to the server!</div>
+    
+          <div class="line"><span class="time">[17:33:10]</span> <span class="send">Sent message to server:</span> <span class="accent">Hello, server!</span></div>
+    
+          <div class="line"><span class="time">[17:33:40]</span> <span class="ok">Received data from server:</span></div>
+          <div class="message">Here is the information you requested.</div>
+        </div>
+      </div>
+    </div> -->
+  </template>
+
+  <template id="iconSize" data-ui="icon" data-action="size">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 10V4h6"/>
+      <path d="M20 14v6h-6"/>
+    </svg>
+  </template>
+  <template id="iconSave" data-ui="icon" data-action="save">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 4h14l2 2v14H4z"/>
+      <path d="M16 4v6H8V4"/>
+      <rect x="8" y="14" width="8" height="4" rx="1"/>
+    </svg>
+  </template>
+  <template id="iconPin" data-ui="icon" data-action="pin">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 4l6 6"/>
+      <path d="M8 10l6 6"/>
+      <path d="M9 15l-5 5"/>
+      <path d="M15 9l5-5"/>
+    </svg>
+  </template>
+  <template id="iconHide" data-ui="icon" data-action="hide">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M3 3l18 18"/>
+    </svg>
+  </template>
+  <template id="iconFavorite" data-ui="icon" data-action="favorite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.8 6.1 21l1.2-6.5L2.5 9.9l6.6-.9z"/>
+    </svg>
+  </template>
+  <template id="iconWorkplace" data-ui="icon" data-action="workplace">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+  </template>
+
+  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+  <script type="module" src="./js/index.js"></script>
+</body>
+</html>

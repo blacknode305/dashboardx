@@ -1,0 +1,11 @@
+.datetime {
+  display: flex;
+  justify-content: space-between;
+}
+.datetime > div {
+  font-size: 26px;
+  font-weight: 900;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel-light);
+}

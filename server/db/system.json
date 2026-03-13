@@ -1,0 +1,51 @@
+{
+  "alarm": [
+    {
+      "type": "time",
+      "target": "time:dayOnWeek",
+      "message": "Work Alarm!",
+      "soundSrc": "src/link"
+    },
+    {
+      "type": "datetime",
+      "target": "datetime:datespan",
+      "message": "Work Alarm!",
+      "soundSrc": "src/link"
+    },
+    {
+      "type": "crypto",
+      "target": "crypto:ETH/USDT:priceUpTo50",
+      "message": "Price up to 50$!",
+      "soundSrc": "src/link"
+    }
+  ],
+  "theme": {
+    "list": [
+      "black",
+      "white"
+    ],
+    "active": "black"
+  },
+  "audio": {
+    "volume": 100
+  },
+  "workplace": [
+    {
+      "name": "Worplace 01 Finance",
+      "widget": [
+        {
+          "id": "widgetPanel",
+          "size": {
+            "width": "150px",
+            "height": "150px"
+          },
+          "position": {
+            "top": "50px",
+            "left": "50px"
+          },
+          "isPined": true
+        }
+      ]
+    }
+  ]
+}

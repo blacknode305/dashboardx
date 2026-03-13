@@ -1,0 +1,16 @@
+.finance-summary {
+  display: flex;
+}
+.finance-summary > span,
+.finance-summary > span {
+  width: 50%;
+  padding: 6px;
+  font-size: var(--font-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-panel-light);
+  text-transform: uppercase;
+}
+.finance-summary > span:last-child {
+  text-align: right;
+  font-weight: 900;
+}

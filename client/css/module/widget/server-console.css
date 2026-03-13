@@ -1,0 +1,118 @@
+body {
+  width: 98%;
+  width: 98%;
+  margin: 6px;
+  padding: 0px;
+  background: radial-gradient(circle at top, #3a3f4b, #1e222a);
+  font-family: "JetBrains Mono", monospace;
+  color: #eaeaea;
+  overflow: hidden;
+}
+.consoles {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.console {
+  width: 420px;
+  background: linear-gradient(180deg, #2b2f3a, #14161c);
+  border-radius: 14px;
+  box-shadow:
+    0 30px 60px rgba(0,0,0,.6),
+    inset 0 0 0 1px rgba(255,255,255,.05);
+  overflow: hidden;
+}
+.console-header {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+}
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+.red { background: #ff5f56; }
+.yellow { background: #ffbd2e; }
+.green { background: #27c93f; }
+.title {
+  margin-left: auto;
+  margin-right: auto;
+  font-weight: 600;
+  color: #dcdcdc;
+  font-size: 14px;
+}
+
+.console-body {
+  margin: 2px;
+  font-size: 12px;
+  /* line-height: 1.5; */
+  overflow: scroll;
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-panel-inside);
+  border: 1px solid var(--bg-shadow);
+  gap: 6px;
+  border-radius: 1px;
+  overflow: scroll;
+  box-shadow:
+    inset 1px 1px 1px var(--bg-body-shadow),
+    inset -1px -1px 1px var(--bg-body-shadow);
+}
+.console-input {
+  font-size: 10px;
+  /* line-height: 1.5; */
+  overflow: scroll;
+}
+.console-input > div {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+}
+.console-input > div > span {
+  flex-shrink: 0;
+}
+.console-input > div > input {
+  all: unset;
+  box-sizing: border-box;
+  font: inherit;
+  width: 100%;
+  flex-shrink: 1;
+  color: #eaeaea;
+}
+
+.line {
+  margin-bottom: 8px;
+}
+.message {
+  color: #eaeaea;
+}
+.user {
+  color: #4fd1ff;
+}
+.time {
+  color: #ffd166;
+}
+.ok {
+  color: #7CFF7C;
+}
+.info {
+  color: #4fd1ff;
+}
+.send {
+  color: #9effff;
+}
+.recv {
+  color: #a78bfa;
+}
+.accent {
+  color: #4fd1ff;
+}
+.error {
+  color: #ff4040;
+}
