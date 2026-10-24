@@ -1188,3 +1188,191 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 @media (prefers-reduced-transparency:reduce) {
   #workspace-canvas .widget--element,#app-toolbar,#widget-navigation {backdrop-filter:none}
 }
+
+
+/* DashboardX urban hover/focus system — consistent mouse and keyboard feedback.
+   Matte color shift + border only: no neon glow, resizing or layout movement. */
+:root {
+  --dx-hover-bg:#3a4852;
+  --dx-hover-soft:#34414c;
+  --dx-hover-border:#87a5b5;
+  --dx-hover-text:#fff;
+  --dx-hover-danger-bg:#68474c;
+  --dx-hover-danger-border:#c58a90;
+  --dx-focus-outline:#acc6d3;
+}
+:root[data-theme="light"] {
+  --dx-hover-bg:#d5e1e4;
+  --dx-hover-soft:#e0e9ea;
+  --dx-hover-border:#698a9b;
+  --dx-hover-text:#24333c;
+  --dx-hover-danger-bg:#f1dfe1;
+  --dx-hover-danger-border:#ae6970;
+  --dx-focus-outline:#638b9c;
+}
+/* Simple interaction cues, with no changes to a button's geometry. */
+#app-toolbar button,
+#workspace-tabs button,
+#widget-navigation button,
+#workspace-canvas .widget--element button,
+#workspace-canvas .dx-picker > summary,
+#app-toolbar .brand-profile {
+  transition:background-color .14s ease,border-color .14s ease,color .14s ease;
+}
+#app-toolbar .toolbar-controls > button:hover:not(:disabled),
+#app-toolbar .language-pills button:hover:not(:disabled):not([aria-pressed="true"]) {
+  background:var(--dx-hover-bg);
+  border-color:var(--dx-hover-border);
+  color:var(--dx-hover-text);
+}
+#app-toolbar .toolbar-controls > #clear-storage:hover:not(:disabled) {
+  background:var(--dx-hover-danger-bg);
+  border-color:var(--dx-hover-danger-border);
+  color:var(--dx-hover-text);
+}
+#app-toolbar .language-pills button[aria-pressed="true"]:hover {
+  filter:brightness(1.12);
+  border-color:var(--dx-hover-text);
+}
+/* Workspaces: both the clickable title and the tile show a hover state. */
+#workspace-tabs .workspace-tile:hover {
+  background:var(--dx-hover-soft);
+  border-color:var(--dx-hover-border);
+}
+#workspace-tabs .workspace-name:hover:not(:disabled) {
+  background:var(--dx-hover-soft);
+  color:var(--dx-hover-text);
+}
+#workspace-tabs .workspace-delete:hover:not(:disabled) {
+  background:var(--dx-hover-danger-bg);
+  color:var(--dx-bad);
+  border-left-color:var(--dx-hover-danger-border);
+}
+#workspace-tabs #create-workspace:hover:not(:disabled) {
+  background:var(--dx-hover-bg);
+  color:var(--dx-hover-text);
+  border-color:var(--dx-hover-border);
+}
+/* Keep pressed navigation buttons visibly active; elevate unpressed hover. */
+#widget-navigation .nav--element:hover:not(:disabled):not([aria-pressed="true"]) {
+  background:var(--dx-hover-bg);
+  color:var(--dx-hover-text);
+  border-bottom-color:var(--dx-hover-border);
+}
+#widget-navigation .nav--element[aria-pressed="true"]:hover {
+  background:var(--dx-hover-soft);
+  border-bottom-color:var(--dx-accent);
+}
+/* Window controls. */
+#workspace-canvas .widget--element .window-action:hover:not(:disabled):not(.window-close) {
+  background:var(--dx-hover-bg);
+  border-color:var(--dx-hover-border);
+  color:var(--dx-hover-text);
+}
+#workspace-canvas .widget--element .window-action.window-close:hover:not(:disabled) {
+  background:var(--dx-hover-danger-bg);
+  border-color:var(--dx-hover-danger-border);
+  color:var(--dx-hover-text);
+}
+#workspace-canvas .widget--element .window-resize-handle:hover:not(:disabled) {
+  color:var(--dx-hover-text);
+  background:var(--dx-hover-soft);
+}
+/* Widget manager: dropdown, rows, add/show/copy/share/remove. */
+#workspace-canvas .dx-picker > summary:hover {
+  background:var(--dx-hover-soft);
+  color:var(--dx-hover-text);
+}
+#workspace-canvas .dx-picker-option:hover:not(:disabled),
+#workspace-canvas .dx-picker-option:focus-visible {
+  background:var(--dx-hover-bg);
+  color:var(--dx-hover-text);
+}
+#workspace-canvas .manager-actions > button:hover:not(:disabled),
+#workspace-canvas .manager-instance-actions > button:hover:not(:disabled):not(.is-danger) {
+  background:var(--dx-hover-bg);
+  color:var(--dx-hover-text);
+  border-color:var(--dx-hover-border);
+}
+#workspace-canvas .manager-actions > button.dx-primary:hover:not(:disabled) {
+  filter:brightness(1.12);
+  border-color:var(--dx-focus-outline);
+}
+#workspace-canvas .manager-instance-actions > button.is-danger:hover:not(:disabled) {
+  background:var(--dx-hover-danger-bg);
+  color:var(--dx-hover-text);
+  border-color:var(--dx-hover-danger-border);
+}
+/* Currency search choices and pair actions. */
+#workspace-canvas .fx-choice:hover:not(:disabled) {
+  background:var(--dx-hover-bg);
+  color:var(--dx-hover-text);
+}
+#workspace-canvas .fx-add-button:hover:not(:disabled),
+#workspace-canvas .fx-refresh-button:hover:not(:disabled) {
+  filter:brightness(1.13);
+  border-color:var(--dx-hover-border);
+}
+#workspace-canvas .fx-remove:hover:not(:disabled) {
+  background:var(--dx-hover-danger-bg);
+  border-color:var(--dx-hover-danger-border);
+  color:var(--dx-hover-text);
+}
+/* Income, expense, Telegram, calculator and legacy widget action buttons. */
+#workspace-canvas [data-widget-type="dayBalance"] .day-income > button:hover:not(:disabled),
+#workspace-canvas [data-widget-type="dayBalance"] .day-expense > button:hover:not(:disabled) {
+  filter:brightness(1.19);
+  border-color:var(--dx-hover-border);
+}
+#workspace-canvas [data-widget-type="telegramSettings"] .telegram-settings button:hover:not(:disabled) {
+  background:var(--dx-hover-bg);
+  border-color:var(--dx-hover-border);
+  color:var(--dx-hover-text);
+}
+#workspace-canvas [data-widget-type="telegramSettings"] .tg-settings-actions > button[type="submit"]:hover:not(:disabled) {
+  filter:brightness(1.14);
+}
+#workspace-canvas .calculator-grid button:hover:not(:disabled) {
+  background:var(--dx-hover-bg);
+  color:var(--dx-hover-text);
+  border-color:var(--dx-hover-border);
+}
+#workspace-canvas .calculator-grid button[data-key="="]:hover:not(:disabled) {
+  background:var(--dx-blue-gradient);
+  filter:brightness(1.18);
+}
+#workspace-canvas .widget--element .btn:hover:not(:disabled),
+#workspace-canvas .widget--element button.btn:hover:not(:disabled) {
+  background:var(--dx-hover-bg);
+  border-color:var(--dx-hover-border);
+  color:var(--dx-hover-text);
+}
+/* A fallback for custom/legacy widget buttons that have no explicit hover.
+   Specialized hover states above remain more specific. */
+#workspace-canvas .widget--element .widget--element--body button:hover:not(:disabled) {
+  border-color:var(--dx-hover-border);
+}
+/* Keyboard feedback mirrors mouse feedback; disabled buttons remain inactive. */
+#app-toolbar button:focus-visible,
+#workspace-tabs button:focus-visible,
+#widget-navigation button:focus-visible,
+#workspace-canvas .widget--element button:focus-visible,
+#workspace-canvas .dx-picker > summary:focus-visible {
+  outline:2px solid var(--dx-focus-outline);
+  outline-offset:2px;
+}
+#workspace-canvas .widget--element button:disabled,
+#app-toolbar button:disabled,
+#workspace-tabs button:disabled,
+#widget-navigation button:disabled {
+  cursor:not-allowed;
+}
+@media (prefers-reduced-motion:reduce) {
+  #app-toolbar button,
+  #workspace-tabs button,
+  #widget-navigation button,
+  #workspace-canvas .widget--element button,
+  #workspace-canvas .dx-picker > summary {
+    transition:none;
+  }
+}
