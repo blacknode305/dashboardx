@@ -1,3 +1,4 @@
+import { t, locale } from '../i18n.js';
 // Импорт базового класса виджета (пока не используется напрямую)
 import WidgetBase from '../WidgetBase.js';
 // Импорт класса для работы с DOM-элементами виджета
@@ -71,9 +72,9 @@ export default class BinanceApiWidget {
 
       if (this.statsEl) {
         this.statsEl.innerHTML = `
-          <div>High: ${high.toFixed(2)}</div>
-          <div>Low: ${low.toFixed(2)}</div>
-          <div>Volume: ${volume.toFixed(2)}</div>
+          <div>${t('finance.high')}: ${high.toFixed(2)}</div>
+          <div>${t('finance.low')}: ${low.toFixed(2)}</div>
+          <div>${t('finance.volume')}: ${volume.toFixed(2)}</div>
         `;
       }
     } catch (e) {
@@ -92,7 +93,7 @@ export default class BinanceApiWidget {
       const data = await res.json();
 
       const labels = data.map(d =>
-        new Date(d[0]).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+        new Date(d[0]).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
       );
       const prices = data.map(d => +d[4]);
 

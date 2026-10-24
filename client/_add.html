@@ -1,35 +1,31 @@
-<!doctype html>
-<html lang="ru">
-<body>
-<template data-widget data-id="add" data-category="system" data-title="Добавить виджет">
-  <section class="widget-manager" aria-label="Управление виджетами">
-    <div class="manager-section">
-      <h3 class="manager-heading">Новый экземпляр</h3>
-      <div class="manager-actions">
-        <details class="dx-picker" data-role="type-picker">
-          <summary aria-label="Выбрать тип нового виджета"><span data-role="type-label">Выбрать виджет</span><span class="dx-chevron" aria-hidden="true">⌄</span></summary>
-          <div class="dx-picker-options" data-role="type-options"></div>
-        </details>
-        <button type="button" class="dx-primary" data-action="create-instance" disabled>Добавить</button>
-      </div>
-      <p class="manager-hint">Каждое добавление создаёт новый ID. Можно разместить несколько одинаковых виджетов.</p>
+<!doctype html><html lang="ru"><body>
+<template data-widget data-id="add" data-category="system" data-title="Add widget">
+<section class="widget-manager">
+  <div class="manager-section">
+    <h3 class="manager-heading" data-i18n="manager.new">Новый экземпляр</h3>
+    <div class="manager-actions">
+      <details class="dx-picker" data-role="type-picker">
+        <summary data-i18n-aria="manager.chooseType"><span data-role="type-label" data-i18n="manager.chooseType">Выбрать тип виджета</span><span class="dx-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="dx-picker-options" data-role="type-options"></div>
+      </details>
+      <button type="button" class="dx-primary" data-action="create-instance" data-i18n="manager.create" disabled>Добавить</button>
     </div>
-    <div class="manager-section">
-      <h3 class="manager-heading">Существующий экземпляр</h3>
-      <div class="manager-actions">
-        <details class="dx-picker" data-role="existing-picker">
-          <summary aria-label="Выбрать существующий виджет"><span data-role="existing-label">Выбрать по ID</span><span class="dx-chevron" aria-hidden="true">⌄</span></summary>
-          <div class="dx-picker-options" data-role="existing-options"></div>
-        </details>
-        <button type="button" data-action="link-instance" disabled>Показать</button>
-      </div>
-      <p class="manager-hint">Этот же ID будет виден на двух столах. Настройки расположения останутся отдельными.</p>
+    <p class="manager-hint" data-i18n="manager.createHint"></p>
+  </div>
+  <div class="manager-section">
+    <h3 class="manager-heading" data-i18n="manager.existing">Существующий экземпляр</h3>
+    <div class="manager-actions">
+      <details class="dx-picker" data-role="existing-picker">
+        <summary data-i18n-aria="manager.chooseId"><span data-role="existing-label" data-i18n="manager.chooseId">Выбрать по ID</span><span class="dx-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="dx-picker-options" data-role="existing-options"></div>
+      </details>
+      <button type="button" data-action="link-instance" data-i18n="manager.show" disabled>Показать</button>
     </div>
-    <div class="manager-section manager-section-last">
-      <h3 class="manager-heading">На этом рабочем столе <span data-role="instance-count" class="manager-count">0</span></h3>
-      <div class="manager-instances" data-role="instances-list"></div>
-    </div>
-  </section>
-</template>
-</body>
-</html>
+    <p class="manager-hint" data-i18n="manager.existingHint"></p>
+  </div>
+  <div class="manager-section manager-section-last">
+    <h3 class="manager-heading"><span data-i18n="manager.onDesk">На этом рабочем столе</span> <span data-role="instance-count" class="manager-count">0</span></h3>
+    <div class="manager-instances" data-role="instances-list"></div>
+  </div>
+</section>
+</template></body></html>

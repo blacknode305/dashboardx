@@ -6,9 +6,9 @@ function initialState() {
   return {
     version, userId: 'local',
     finance: { table: [], crypto: {}, fiat: {} },
-    rate: {}, system: { theme: { active: 'dark' } },
+    rate: {}, system: { theme: { active: 'dark' }, language: 'ru' },
     instances: {}, nextInstance: 0,
-    workspaces: [{ id: 'home', name: 'Главная', widgets: [] }],
+    workspaces: [{ id: 'home', name: 'Главная', widgets: [], backgroundUrl: '' }],
     activeWorkspaceId: 'home',
   };
 }
@@ -40,6 +40,7 @@ export default class ClientDB {
       if (Array.isArray(saved.finance?.table)) state.finance = saved.finance;
       if (saved.rate && typeof saved.rate === 'object' && !Array.isArray(saved.rate)) state.rate = saved.rate;
       state.system.theme.active = saved.system?.theme?.active === 'light' ? 'light' : 'dark';
+      state.system.language = ['ru','kz','en'].includes(saved.system?.language) ? saved.system.language : 'ru';
       if (!saved.instances || typeof saved.instances !== 'object' || Array.isArray(saved.instances)) return state;
       state.nextInstance = Number.isSafeInteger(saved.nextInstance) && saved.nextInstance >= 0 ? saved.nextInstance : 0;
       for (const [id, instance] of Object.entries(saved.instances)) {
@@ -58,7 +59,8 @@ export default class ClientDB {
           return true;
         }).map(w => ({
           id: w.id, name: String(w.name || 'Рабочий стол').slice(0, 60),
-          widgets: [...new Set(w.widgets.filter(id => typeof id === 'string' && own(state.instances, id)))]
+          widgets: [...new Set(w.widgets.filter(id => typeof id === 'string' && own(state.instances, id)))],
+          backgroundUrl: typeof w.backgroundUrl === 'string' && /^https?:\/\//i.test(w.backgroundUrl) ? w.backgroundUrl : ''
         }));
         if (valid.length) state.workspaces = valid;
       }
@@ -104,7 +106,7 @@ export default class ClientDB {
   addWorkspace(name) {
     const title = String(name || '').trim().slice(0, 60);
     if (!title) return false;
-    const workspace = { id: uid(), name: title, widgets: [] };
+    const workspace = { id: uid(), name: title, widgets: [], backgroundUrl: '' };
     this.state.workspaces.push(workspace);
     this.state.activeWorkspaceId = workspace.id;
     return this.save();
@@ -113,6 +115,20 @@ export default class ClientDB {
   selectWorkspace(id) {
     if (!this.state.workspaces.some(w => w.id === id)) return false;
     this.state.activeWorkspaceId = id;
+    return this.save();
+  }
+
+  setWorkspaceBackground(value) {
+    if (value === '') {
+      this.workspace.backgroundUrl = '';
+      return this.save();
+    }
+    let url;
+    try { url = new URL(String(value).trim()); }
+    catch { return false; }
+    if (!['https:', 'http:'].includes(url.protocol) || !url.hostname || url.username || url.password) return false;
+    if (typeof window !== 'undefined' && window.location?.protocol === 'https:' && url.protocol !== 'https:') return false;
+    this.workspace.backgroundUrl = url.href;
     return this.save();
   }
 
@@ -138,7 +154,7 @@ export default class ClientDB {
     this.state.workspaces = this.state.workspaces.filter(w => w.id !== id);
     this.cleanupLayouts(id);
     if (!this.state.workspaces.length) {
-      this.state.workspaces.push({ id: uid(), name: 'Главная', widgets: [] });
+      this.state.workspaces.push({ id: uid(), name: 'Главная', widgets: [], backgroundUrl: '' });
     }
     if (this.state.activeWorkspaceId === id) this.state.activeWorkspaceId = this.state.workspaces[0].id;
     this.cleanupOrphans();

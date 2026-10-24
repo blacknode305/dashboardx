@@ -1,362 +1,260 @@
-// TODO: Добавить слушатель переключение Navigation или Workplace, 
-// TODO: который эмитит EventBus в Navigation и Workplace, на кнопки из footer.
-// TODO: Решить где он будет находится, в WidgetElement || WidgetBase || WidgetLogic.
-// Экспортируем базовый класс виджета, наследуемся от HTMLElement
+import { t, widgetTitle } from './i18n.js';
+
 export default class WidgetBase extends HTMLElement {
-  // Статический счётчик z-index для всех виджетов
   static zIndexCounter = 10;
-  // Конструктор класса, принимает конфигурацию из html шаблона каждого виджета
+
   constructor(config) {
-    // Вызываем конструктор HTMLElement
     super();
-    // Инициализируем базовые параметры
-    this.initBase(config);
-    // Загружаем сохранённые стили
-    this.loadStyle();
-    // Строим заголовок виджета
-    this.buildHeader();
-    // Строим подвал виджета
-    this.buildFooter();
-  }
-  // Базовая инициализация виджета
-  initBase(config) {
-    // ID виджета из конфига
-    this.id = config.instanceId || config.id + 'Widget';
-    this.instanceId = this.id;
+    this.instanceId = config.instanceId || config.id + '-widget';
+    this.id = this.instanceId;
     this.workspaceId = config.workspaceId || 'home';
     this.legacyKey = config.legacyKey || null;
-    this.storageKey = 'dashboardx.layout.' + this.workspaceId + '.' + this.instanceId;
-    this.dataset.widgetType = config.id;
-    // Категория виджета для навигации
-    this.category = config.category;
-    // CSS классы виджета (основной и категории навигации)
-    this.className = `widget--element ${this.category}--widget`;
-    // Заголовок виджета
-    this.widgetTitle = config.title + (config.id === 'add' ? '' : ' · ' + this.instanceId);
-    // ID шаблона виджета
     this.templateId = config.id;
+    this.category = config.category || 'other';
+    this.dataset.widgetType = this.templateId;
+    this.className = 'widget--element ' + this.category + '--widget';
+    this.storageKey = 'dashboardx.layout.' + this.workspaceId + '.' + this.instanceId;
+    this.styleData = this.readStyle();
+    this.restoreLayout();
+    this.buildHeader();
+    this.buildResizeHandle();
   }
-  // Загрузка сохранённых стилей из localStorage
-  loadStyle() {
-    // Объект со стилями
-    this.styleData = {};
-    // Пробуем получить данные из localStorage
+
+  readStyle() {
     try {
-      // Получаем сохранённые данные
-      const stored = localStorage.getItem(this.storageKey) || (this.legacyKey ? localStorage.getItem(this.legacyKey) : null);
-      // Если данные есть — парсим JSON
-      if (stored) {
-        this.styleData = JSON.parse(stored);
-      }
-    } 
-    // Обработка ошибок парсинга
-    catch (err) {
-      // Выводим предупреждение в консоль
-      console.warn(`Error loading widget style for ${this.id}:`, err);
+      const value = localStorage.getItem(this.storageKey) ||
+        (this.legacyKey ? localStorage.getItem(this.legacyKey) : null);
+      const parsed = value ? JSON.parse(value) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (error) {
+      console.warn('Widget layout could not be read:', error);
+      return {};
     }
-    // Позиция сверху
-    this.style.top = this.styleData.top || '50px';
-    // Позиция слева
-    this.style.left = this.styleData.left || '0px';
-    // Ширина тела виджета (реализованно в WidgetElement))
-    //this.style.width = this.styleData.width || '300px';
-    //this.body.style.width = this.styleData.width || '300px';
-    // Высота тела виджета (реализованно в WidgetElement)
-    //this.style.height = this.styleData.height || '200px';
-    //this.body.style.height = this.styleData.height || '200px';
-    // Если закреплён — добавляем класс
-    if (this.styleData.pinned) this.classList.add('is-pinned');
-    if (this.styleData.favorite) this.classList.add('is-favorite');
-    if (this.styleData.hidden) this.classList.add('is-hidden');
-    // Если скрыт — скрываем
-    if (this.styleData.hidden) this.style.display = 'none';
   }
-  // Сохранение состояния виджета
+
+  restoreLayout() {
+    const saved = this.styleData;
+    this.style.top = saved.top || '50px';
+    this.style.left = saved.left || '0px';
+    if (saved.width) this.style.width = saved.width;
+    if (saved.height) this.style.height = saved.height;
+    if (saved.pinned) this.classList.add('is-pinned');
+    if (saved.favorite) this.classList.add('is-favorite');
+    if (saved.hidden) this.classList.add('is-hidden');
+    if (saved.hidden) this.style.display = 'none';
+  }
+
   saveWidget() {
-    // Формируем объект данных
     const data = {
-      // Текущая позиция сверху
       top: this.style.top,
-      // Текущая позиция слева
       left: this.style.left,
-      // Текущая ширина
-      width: this.body.style.width,
-      // Текущая высота
-      height: this.body.style.height,
-      // Закреплён ли виджет
+      width: this.style.width || '',
+      height: this.style.height || '',
       pinned: this.classList.contains('is-pinned'),
-      // Скрыт ли виджет
       hidden: this.classList.contains('is-hidden'),
       favorite: this.classList.contains('is-favorite')
     };
-    // Сохраняем в localStorage
-    try { localStorage.setItem(this.storageKey, JSON.stringify(data)); }
-    catch (error) { console.warn('Unable to save widget layout:', error); }
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(data));
+      this.styleData = data;
+    } catch (error) { console.warn('Widget layout could not be saved:', error); }
   }
-  // Создание заголовка виджета
-  buildHeader() {
-    // Создаём контейнер хедера
-    this.header = document.createElement('div');
-    // CSS класс хедера
-    this.header.className = 'widget--element--header';
-    // Создаём заголовок
-    const title = document.createElement('h5');
-    // Класс заголовка
-    title.className = 'title';
-    // Текст заголовка
-    title.textContent = this.widgetTitle;
-    // Добавляем элементы в хедер
-    this.header.append(title);
-    if (this.templateId !== 'add') {
-      const removeButton = document.createElement('button');
-      removeButton.className = 'widget-remove';
-      removeButton.type = 'button';
-      removeButton.title = 'Убрать виджет с текущего стола';
-      removeButton.textContent = '×';
-      removeButton.addEventListener('click', event => {
-        event.stopPropagation();
-        window.dispatchEvent(new CustomEvent('dashboardx:remove-widget', { detail: { id: this.instanceId } }));
-      });
-      this.header.append(removeButton);
-    }
-    // Привязываем drag к хэдэру
-    this.bindPointer(this.header, e => this.startDrag(e));
-    // Добавляем хедер в виджет в buildFromTemplate()
-    //this.appendChild(this.header);
-  }
-  // Построение тела виджета из template
-  buildFromTemplate(template) {
-    // Если шаблон не передан — ошибка
-    if (!template) {
-      throw new Error(`Template not provided for widget ${this.id}`);
-    }
-    // Создаём контейнер тела виджета
-    this.body = document.createElement('div');
-    // Назначаем CSS класс
-    this.body.className = 'widget--element--body';
-    // Клонируем содержимое template
-    this.body.appendChild(template.content.cloneNode(true));
-    // Добавляем хедер в виджет
-    this.appendChild(this.header);
-    // Добавляем тело в виджет
-    this.appendChild(this.body);
-    // Добавляем футер в виджет
-    this.appendChild(this.footer);
-    // Хук после сборки (если есть)
-    this.afterBuild?.();
-  }
-  // Создание подвала виджета
-  buildFooter() {
-    // Создаём контейнер футера
-    this.footer = document.createElement('div');
-    // CSS класс футера
-    this.footer.className = 'widget--element--footer';
-    if (this.templateId === 'add') return; // Manager is permanent and has no hide/delete controls.
-    // Добавляем элементы в футер
-    this.footer.append(
-      // Кнопка сохранения
-      this.createFooterButton({
-        cls: 'save',
-        tpl: 'iconSave',
-        events: { click: () => this.saveWidget() }
-      }),
-      // Кнопка окружения
-      this.createFooterButton({
-        cls: 'workplace',
-        tpl: 'iconWorkplace',
-        events: { click: () => this.toggleWorkplace() }
-      }),
-      // Кнопка избранное
-      this.createFooterButton({
-        cls: 'favorite',
-        tpl: 'iconFavorite',
-        events: { click: () => this.toggleFavorite() }
-      }),
-      // Кнопка закрепления
-      this.createFooterButton({
-        cls: 'pin',
-        tpl: 'iconPin',
-        events: { click: () => { this.togglePinned(); } }
-      }),
-      // Кнопка изменения размера
-      this.createFooterButton({
-        cls: 'size',
-        tpl: 'iconSize',
-        events: {
-          mousedown: e => this.startResize(e),
-          touchstart: e => this.startResize(e)
-        }
-      }),
-      // Кнопка скрытия
-      this.createFooterButton({
-        cls: 'hide',
-        tpl: 'iconHide',
-        events: { click: () => { this.toggleHidden(); } }
-      })
-    );
-    // Добавляем футер в виджет в buildFromTemplate()
-    //this.appendChild(this.footer);
-  }
-  // Создание кнопки в заголовке
-  createFooterButton({ cls, tpl, events }) {
-    // Создаём кнопку
+
+  makeButton(symbol, titleKey, handler, extra = '') {
     const btn = document.createElement('button');
-    // CSS класс кнопки
-    btn.className = `widget--element--footer-button ${cls}`;
-    // Получаем template иконки
-    let tplEl = document.getElementById(tpl);
-    // Если шаблон не найден — ошибка (разкомментирована)
-    if (!tplEl) {
-      throw new Error(`Template ${tpl} not found`);
-      // Создаем заглушку иконки
-      //tplEl = document.createElement('div');
-      // Вставляем иконку
-      //btn.appendChild(tplEl.cloneNode(true));
-    }
-    else {
-      // Вставляем иконку из template
-      btn.appendChild(tplEl.content.cloneNode(true));
-    }
-    // Назначаем события
-    Object.entries(events).forEach(([ev, fn]) =>
-      btn.addEventListener(ev, fn)
-    );
-    // Возвращаем кнопку
+    btn.type = 'button';
+    btn.className = 'window-action ' + extra;
+    btn.textContent = symbol;
+    btn.title = t(titleKey);
+    btn.setAttribute('aria-label', t(titleKey));
+    btn.addEventListener('click', event => {
+      event.stopPropagation();
+      handler();
+    });
     return btn;
   }
-  // Универсальный биндинг мыши и тача
-  bindPointer(el, handler) {
-    // Событие мыши
-    el.addEventListener('mousedown', handler);
-    // Событие тача
-    el.addEventListener('touchstart', e => {
-      // Запрещаем скролл
-      e.preventDefault();
-      // Вызываем обработчик
-      handler(e);
-    }, { passive: false });
+
+  buildHeader() {
+    this.header = document.createElement('div');
+    this.header.className = 'widget--element--header';
+    this.header.title = t('ui.frameResize');
+
+    const heading = document.createElement('div');
+    heading.className = 'window-heading';
+    const name = document.createElement('strong');
+    name.className = 'window-title';
+    name.textContent = widgetTitle(this.templateId, this.templateId);
+    heading.append(name);
+    if (this.templateId !== 'add') {
+      const id = document.createElement('small');
+      id.className = 'window-id';
+      id.textContent = this.instanceId;
+      heading.append(id);
+    }
+    this.header.append(heading);
+
+    const actions = document.createElement('div');
+    actions.className = 'window-actions';
+    if (this.templateId !== 'add') {
+      actions.append(
+        this.makeButton('⤓', 'ui.frameSave', () => this.saveWidget(), 'window-save'),
+        this.makeButton('↗', 'ui.frameShare', () => this.toggleWorkplace(), 'window-share'),
+        this.makeButton('☆', 'ui.frameFavorite', () => this.toggleFavorite(), 'window-favorite'),
+        this.makeButton('⌖', 'ui.framePin', () => this.togglePinned(), 'window-pin'),
+        this.makeButton('−', 'ui.frameHide', () => this.toggleHidden(), 'window-hide')
+      );
+    }
+    actions.append(
+      this.makeButton('▢', 'ui.frameExpand', () => this.toggleMaximized(), 'window-expand')
+    );
+    if (this.templateId !== 'add') {
+      actions.append(this.makeButton('×', 'ui.frameClose', () => this.closeWidget(), 'window-close'));
+    }
+    this.header.append(actions);
+    this.header.addEventListener('pointerdown', e => this.startDrag(e));
+    this.refreshActionState();
   }
-  // Начало перетаскивания
-  startDrag(e) {
-    // Предотвращаем стандартное поведение
-    if (e.target.closest('button, input, select, textarea, a')) return;
-    e.preventDefault();
-    // Если закреплён — не двигаем
-    if (this.classList.contains('is-pinned')) return;
-    // Добавляем фокус
+
+  buildResizeHandle() {
+    this.resizeHandle = document.createElement('button');
+    this.resizeHandle.type = 'button';
+    this.resizeHandle.className = 'window-resize-handle';
+    this.resizeHandle.title = t('ui.frameResize');
+    this.resizeHandle.setAttribute('aria-label', t('ui.frameResize'));
+    this.resizeHandle.textContent = '◢';
+    this.resizeHandle.addEventListener('pointerdown', e => this.startResize(e));
+  }
+
+  buildFromTemplate(template) {
+    if (!template) throw new Error('Widget template not provided: ' + this.templateId);
+    this.body = document.createElement('div');
+    this.body.className = 'widget--element--body';
+    this.body.append(template.content.cloneNode(true));
+    this.append(this.header, this.body, this.resizeHandle);
+    this.afterBuild?.();
+  }
+
+  pointerDrag(event, update) {
+    if (event.button !== 0 && event.pointerType !== 'touch') return;
+    event.preventDefault();
     this.classList.add('is-focus');
-    // Увеличиваем z-index
-    WidgetBase.zIndexCounter++;
-    // Назначаем z-index
-    this.style.zIndex = WidgetBase.zIndexCounter;
-    // Начальная позиция X
-    const startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-    // Начальная позиция Y
-    const startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-    // Смещение по X
-    const offsetX = startX - this.offsetLeft;
-    // Смещение по Y
-    const offsetY = startY - this.offsetTop;
-    // Обработчик движения
-    const onMove = ev => {
-      // Текущая позиция X
-      const clientX = ev.type.includes('touch') ? ev.touches[0].clientX : ev.clientX;
-      // Текущая позиция Y
-      const clientY = ev.type.includes('touch') ? ev.touches[0].clientY : ev.clientY;
-      // Обновляем позицию слева с шагом 10px
-      this.style.left = `${Math.round((clientX - offsetX)/10)*10}px`;
-      // Обновляем позицию сверху с шагом 10px
-      this.style.top = `${Math.round((clientY - offsetY)/10)*10}px`;
+    this.style.zIndex = String(++WidgetBase.zIndexCounter);
+    const onMove = move => {
+      if (move.pointerId === event.pointerId) update(move);
     };
-    // Удаление обработчиков
-    const removeListeners = () => {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-      document.removeEventListener('touchmove', onMove);
-      document.removeEventListener('touchend', onUp);
-      // Сохранение при изменении
+    const cleanup = () => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', cleanup);
+      document.removeEventListener('pointercancel', cleanup);
       this.saveWidget();
+      window.dispatchEvent(new CustomEvent('dashboardx:widget-layout'));
     };
-    // Завершение drag
-    const onUp = removeListeners;
-    // Назначаем события
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-    document.addEventListener('touchmove', onMove, { passive: false });
-    document.addEventListener('touchend', onUp);
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', cleanup);
+    document.addEventListener('pointercancel', cleanup);
   }
-  // Начало изменения размера
-  startResize(e) {
-    // Предотвращаем стандартное поведение
-    e.preventDefault();
-    // Если закреплён — не меняем размер
-    if (this.classList.contains('is-pinned')) return;
-    // Добавляем фокус
-    this.classList.add('is-focus');
-    // Увеличиваем z-index
-    WidgetBase.zIndexCounter++;
-    // Назначаем z-index
-    this.style.zIndex = WidgetBase.zIndexCounter;
-    // Начальная позиция X
-    const startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-    // Начальная позиция Y
-    const startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-    // Начальная ширина
-    const startWidth = this.offsetWidth;
-    // Начальная высота
-    const startHeight = this.offsetHeight;
-    // Обработчик изменения размера
-    const onMove = ev => {
-      // Текущая позиция X
-      const clientX = ev.type.includes('touch') ? ev.touches[0].clientX : ev.clientX;
-      // Текущая позиция Y
-      const clientY = ev.type.includes('touch') ? ev.touches[0].clientY : ev.clientY;
-      // Новая ширина
-      this.body.style.width =
-        `${Math.max(100, Math.round((startWidth + (clientX - startX))/10)*10)}px`;
-      // Новая высота
-      this.body.style.height =
-        `${Math.max(50, Math.round((startHeight + (clientY - startY))/10)*10)}px`;
-    };
-    // Удаление обработчиков
-    const removeListeners = () => {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-      document.removeEventListener('touchmove', onMove);
-      document.removeEventListener('touchend', onUp);
-      // Сохранение при изменении
-      this.saveWidget();
-    };
-    // Завершение resize
-    const onUp = removeListeners;
-    // Назначаем события
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-    document.addEventListener('touchmove', onMove, { passive: false });
-    document.addEventListener('touchend', onUp);
+
+  startDrag(event) {
+    if (event.target.closest('button,input,select,a,summary')) return;
+    if (this.classList.contains('is-pinned') || this.classList.contains('is-maximized')) return;
+    const rect = this.getBoundingClientRect();
+    const startX = event.clientX, startY = event.clientY;
+    const left = this.offsetLeft, top = this.offsetTop;
+    this.pointerDrag(event, move => {
+      this.style.left = Math.max(0, Math.round((left + move.clientX - startX) / 5) * 5) + 'px';
+      this.style.top = Math.max(0, Math.round((top + move.clientY - startY) / 5) * 5) + 'px';
+    });
   }
-  // Переключение закрепления
+
+  startResize(event) {
+    if (this.classList.contains('is-pinned') || this.classList.contains('is-maximized')) return;
+    const rect = this.getBoundingClientRect();
+    const startX = event.clientX, startY = event.clientY;
+    this.pointerDrag(event, move => {
+      this.style.width = Math.max(260, Math.round(rect.width + move.clientX - startX)) + 'px';
+      this.style.height = Math.max(150, Math.round(rect.height + move.clientY - startY)) + 'px';
+    });
+  }
+
+  toggleMaximized() {
+    if (this.classList.contains('is-maximized')) {
+      const original = this._restoreSize || {};
+      this.style.width = original.width || '';
+      this.style.height = original.height || '';
+      this.style.left = original.left || '14px';
+      this.style.top = original.top || '14px';
+      this.classList.remove('is-maximized');
+      this._restoreSize = null;
+    } else {
+      this._restoreSize = {
+        width: this.style.width, height: this.style.height,
+        left: this.style.left, top: this.style.top
+      };
+      this.classList.add('is-maximized');
+      this.style.left = '12px';
+      this.style.top = '12px';
+      this.style.width = Math.max(280, window.innerWidth - 28) + 'px';
+      this.style.height = Math.max(220, window.innerHeight - 150) + 'px';
+    }
+    this.refreshActionState();
+    // Temporary maximize state is not saved, so opening again restores normal size.
+    if (!this.classList.contains('is-maximized')) this.saveWidget();
+  }
+
   togglePinned() {
-    // Добавляем или убираем класс
     this.classList.toggle('is-pinned');
-    // Сохранение при изменении
+    this.refreshActionState();
     this.saveWidget();
   }
-  // Переключение видимости
-  toggleHidden() {
-    // Скрываем или показываем виджет
-    this.classList.toggle('is-hidden');
-    this.style.display = this.classList.contains('is-hidden') ? 'none' : 'flex';
-    // Сохранение при изменении
-    this.saveWidget();
-  }
-  // Переключение избранное
+
   toggleFavorite() {
     this.classList.toggle('is-favorite');
+    this.refreshActionState();
     this.saveWidget();
   }
-  // Переключение окружения
+
+  toggleHidden() {
+    this.classList.toggle('is-hidden');
+    this.style.display = this.classList.contains('is-hidden') ? 'none' : 'flex';
+    this.refreshActionState();
+    this.saveWidget();
+    window.dispatchEvent(new CustomEvent('dashboardx:widget-visibility'));
+  }
+
+  refreshActionState() {
+    const pin = this.header.querySelector('.window-pin');
+    if (pin) {
+      pin.setAttribute('aria-pressed', String(this.classList.contains('is-pinned')));
+      pin.title = t(this.classList.contains('is-pinned') ? 'ui.frameUnpin' : 'ui.framePin');
+      pin.setAttribute('aria-label',pin.title);
+    }
+    const favorite = this.header.querySelector('.window-favorite');
+    if (favorite) {
+      favorite.setAttribute('aria-pressed', String(this.classList.contains('is-favorite')));
+      favorite.textContent = this.classList.contains('is-favorite') ? '★' : '☆';
+      favorite.title = t(this.classList.contains('is-favorite') ? 'ui.frameUnfavorite' : 'ui.frameFavorite');
+      favorite.setAttribute('aria-label',favorite.title);
+    }
+    const hide = this.header.querySelector('.window-hide');
+    if (hide) {
+      const hidden = this.classList.contains('is-hidden');
+      hide.textContent = hidden ? '+' : '−';
+      hide.title = t(hidden ? 'ui.frameShow' : 'ui.frameHide');
+      hide.setAttribute('aria-label', hide.title);
+      hide.setAttribute('aria-pressed', String(hidden));
+    }
+    const maximize = this.header.querySelector('.window-expand');
+    if (maximize) {
+      maximize.textContent = this.classList.contains('is-maximized') ? '❐' : '▢';
+      maximize.title = t(this.classList.contains('is-maximized') ? 'ui.frameRestore' : 'ui.frameExpand');
+      maximize.setAttribute('aria-label',maximize.title);
+    }
+  }
+
   toggleWorkplace() {
-    window.dispatchEvent(new CustomEvent('dashboardx:share-widget', { detail: { id: this.instanceId } }));
+    window.dispatchEvent(new CustomEvent('dashboardx:share-widget', { detail: { id:this.instanceId } }));
+  }
+  closeWidget() {
+    window.dispatchEvent(new CustomEvent('dashboardx:remove-widget', { detail:{ id:this.instanceId } }));
   }
 }

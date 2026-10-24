@@ -1,5 +1,7 @@
 // Native <details> gives the widget manager a reliable dropdown without
 // relying on browser-specific <select> popup behaviour or overlay positioning.
+import { t, widgetTitle } from '../i18n.js';
+
 export default class AddWidget {
   constructor(widget) {
     this.widget = widget;
@@ -78,36 +80,36 @@ export default class AddWidget {
     const availableTypes = (window.dashboardxTemplates || []).filter(type => type.id !== 'add');
     this.typeOptions.replaceChildren();
     this.selectedType = null;
-    this.typeLabel.textContent = 'Выбрать тип виджета';
+    this.typeLabel.textContent = t('manager.chooseType');
     this.createButton.disabled = true;
 
     for (const type of availableTypes) {
-      this.typeOptions.append(this.makeOption(type.title || type.id, type.id, () => {
+      this.typeOptions.append(this.makeOption(widgetTitle(type.id,type.title), type.id, () => {
         this.selectedType = type.id;
-        this.typeLabel.textContent = type.title || type.id;
+        this.typeLabel.textContent = widgetTitle(type.id,type.title);
         this.typePicker.open = false;
         this.createButton.disabled = false;
       }));
     }
     if (!availableTypes.length) {
-      this.typeOptions.append(this.makeEmpty('Шаблоны недоступны. Обновите страницу.'));
+      this.typeOptions.append(this.makeEmpty(t('manager.templateUnavailable')));
     }
 
     const current = this.store.workspace;
     const existing = Object.values(this.store.state.instances);
     this.existingOptions.replaceChildren();
     this.selectedInstance = null;
-    this.existingLabel.textContent = 'Выбрать по ID';
+    this.existingLabel.textContent = t('manager.chooseId');
     this.linkButton.disabled = true;
 
     if (existing.length === 0) {
-      this.existingOptions.append(this.makeEmpty('Экземпляров пока нет — сначала создайте один.'));
+      this.existingOptions.append(this.makeEmpty(t('manager.noneCreated')));
     }
     for (const instance of existing) {
       const shown = current.widgets.includes(instance.id);
       const places = this.store.workspaceNamesFor(instance.id).join(', ');
-      const label = instance.type + ' · ' + instance.id;
-      const description = shown ? 'Уже на этом столе' : (places || 'Не размещён');
+      const label = widgetTitle(instance.type,instance.type) + ' · ' + instance.id;
+      const description = shown ? t('manager.already') : (places || t('manager.unplaced'));
       this.existingOptions.append(this.makeOption(label, description, () => {
         if (shown) return;
         this.selectedInstance = instance.id;
@@ -120,7 +122,7 @@ export default class AddWidget {
     const items = current.widgets.map(id => this.store.getInstance(id)).filter(Boolean);
     this.counter.textContent = String(items.length);
     this.list.replaceChildren();
-    if (!items.length) this.list.append(this.makeEmpty('Пока нет виджетов. Создайте новый или выберите существующий.'));
+    if (!items.length) this.list.append(this.makeEmpty(t('manager.empty')));
 
     for (const instance of items) {
       const card = document.createElement('article');
@@ -131,7 +133,7 @@ export default class AddWidget {
       const title = document.createElement('strong');
       title.className = 'manager-instance-title';
       const template = availableTypes.find(t => t.id === instance.type);
-      title.textContent = template?.title || instance.type;
+      title.textContent = widgetTitle(instance.type,template?.title || instance.type);
       const code = document.createElement('code');
       code.className = 'manager-instance-id';
       code.textContent = instance.id;
@@ -140,9 +142,9 @@ export default class AddWidget {
       const controls = document.createElement('div');
       controls.className = 'manager-instance-actions';
       controls.append(
-        this.makeAction('Копия', 'Создать независимый экземпляр с новым ID', () => this.dispatch('clone', { id: instance.id })),
-        this.makeAction('На другой стол', 'Показать тот же экземпляр на другом столе', () => this.dispatch('share', { id: instance.id })),
-        this.makeAction('Убрать', 'Убрать только с текущего стола', () => this.dispatch('remove', { id: instance.id }), true)
+        this.makeAction(t('manager.copy'), t('manager.copyTip'), () => this.dispatch('clone', { id: instance.id })),
+        this.makeAction(t('manager.share'), t('manager.shareTip'), () => this.dispatch('share', { id: instance.id })),
+        this.makeAction(t('manager.remove'), t('manager.removeTip'), () => this.dispatch('remove', { id: instance.id }), true)
       );
       card.append(identity, controls);
       this.list.append(card);

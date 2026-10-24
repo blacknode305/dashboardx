@@ -2,6 +2,7 @@ import eventBus from './module/EventBus.js';
 import ClientDB from './module/ClientDB.js';
 import WidgetElement from './module/WidgetElement.js';
 import NavigationBar from './module/NavigationBar.js';
+import { t, widgetTitle, setLanguage, translateElement } from './module/i18n.js';
 
 const filenames = [
   '_add.html', '_audioPlayer.html', '_binanceApi.html', '_calculator.html',
@@ -11,6 +12,8 @@ const filenames = [
 ];
 const disabled = new Set(['audioPlayer', 'serverConsole', 'telegramBot']);
 const store = new ClientDB();
+let navBar=null;
+const deskName = w => w.name === 'Главная' ? t('ui.defaultWorkspace') : w.name;
 window.dashboardxStore = store;
 let templates = [];
 
@@ -30,7 +33,7 @@ async function loadTemplates() {
   document.body.append(...loaded);
   templates = loaded.filter(template => !disabled.has(template.dataset.id));
   if (!templates.some(template => template.dataset.id === 'add')) {
-    throw new Error('Не загрузился виджет добавления. Проверьте client/_add.html и настройки GitHub Pages.');
+    throw new Error(t('ui.templatesMissing'));
   }
   window.dashboardxTemplates = templates.map(template => ({
     id: template.dataset.id,
@@ -53,8 +56,8 @@ function renderWorkspaceTabs() {
     const title = document.createElement('button');
     title.type = 'button';
     title.className = 'workspace-name';
-    title.textContent = workspace.name;
-    title.title = 'Перейти на стол «' + workspace.name + '»';
+    title.textContent = deskName(workspace);
+    title.title = t('ui.goWorkspace') + ': ' + deskName(workspace);
     title.setAttribute('aria-pressed', String(workspace.id === store.workspace.id));
     title.addEventListener('click', () => {
       if (store.selectWorkspace(workspace.id)) reload();
@@ -64,10 +67,10 @@ function renderWorkspaceTabs() {
     remove.type = 'button';
     remove.className = 'workspace-delete';
     remove.textContent = '×';
-    remove.title = 'Удалить рабочий стол «' + workspace.name + '»';
+    remove.title = t('ui.deleteWorkspace') + ': ' + deskName(workspace);
     remove.setAttribute('aria-label', remove.title);
     remove.addEventListener('click', () => {
-      const question = 'Удалить рабочий стол «' + workspace.name + '»? Он исчезнет вместе с его расположением виджетов. Виджеты на других столах останутся.';
+      const question = t('ui.confirmDelete',{name:deskName(workspace)});
       if (confirm(question) && store.deleteWorkspace(workspace.id)) reload();
     });
     tile.append(title, remove);
@@ -77,10 +80,10 @@ function renderWorkspaceTabs() {
   create.type = 'button';
   create.id = 'create-workspace';
   create.textContent = '+';
-  create.title = 'Создать рабочий стол';
+  create.title = t('ui.createWorkspace');
   create.setAttribute('aria-label', create.title);
   create.addEventListener('click', () => {
-    const name = prompt('Название нового рабочего стола:');
+    const name = prompt(t('ui.newWorkspace'));
     if (name && store.addWorkspace(name)) reload();
   });
   tabs.append(create); // Always exactly one permanent + tile, after all desktops.
@@ -95,7 +98,7 @@ function makeWidget(type, instanceId, index, wide, managerBottom = 400, managerW
     workspaceId: store.workspace.id,
     legacyKey: store.getInstance(instanceId)?.legacyKey,
     category: template.dataset.category || 'other',
-    title: template.dataset.title || type
+    title: widgetTitle(type,template.dataset.title || type)
   });
   if (!instance.styleData.top) {
     const startX = wide ? managerWidth + 30 : 14;
@@ -108,9 +111,21 @@ function makeWidget(type, instanceId, index, wide, managerBottom = 400, managerW
   return instance;
 }
 
+function updateCanvasHeight() {
+  const canvas=document.getElementById('workspace-canvas');
+  let height=Math.max(480,window.innerHeight - canvas.getBoundingClientRect().top);
+  canvas.querySelectorAll('widget-element').forEach(el=>{
+    if (el.style.display !== 'none') height=Math.max(height,el.offsetTop + el.offsetHeight + 55);
+  });
+  canvas.style.minHeight=Math.ceil(height)+'px';
+}
+
 function renderCanvas() {
   const canvas = document.getElementById('workspace-canvas');
   canvas.replaceChildren();
+  const image=store.workspace.backgroundUrl;
+  canvas.style.backgroundImage=image ? 'linear-gradient(rgba(7,12,22,.18),rgba(7,12,22,.2)), url(' + JSON.stringify(image) + ')' : '';
+  canvas.classList.toggle('has-background',Boolean(image));
   // Keep the panel and widgets in separate lanes; avoid covering dropdown controls.
   const wide = window.innerWidth >= 960;
   // Manager is a built-in tool, not a database widget. Users cannot remove or duplicate it.
@@ -131,29 +146,30 @@ function renderCanvas() {
 
   const categories = ['all', 'pinned', 'hidden', 'favorite',
     ...new Set(templates.filter(t => t.dataset.id !== 'add').map(t => t.dataset.category))];
-  const nav = new NavigationBar(categories);
-  document.getElementById('widget-navigation').replaceChildren(nav);
-  nav.filterWidgets('all');
+  navBar = new NavigationBar(categories);
+  document.getElementById('widget-navigation').replaceChildren(navBar);
+  navBar.filterWidgets('all');
+  updateCanvasHeight();
 }
 
 function shareInstance(id) {
   const alternatives = store.state.workspaces.filter(w => w.id !== store.workspace.id);
   if (!alternatives.length) {
-    alert('Сначала создайте ещё один рабочий стол кнопкой + вверху.');
+    alert(t('ui.otherWorkspace'));
     return;
   }
   const choices = alternatives.map((w, index) =>
-    String(index + 1) + '. ' + w.name + (w.widgets.includes(id) ? ' (уже есть)' : '')
+    String(index + 1) + '. ' + deskName(w) + (w.widgets.includes(id) ? ' ('+t('ui.alreadyThere')+')' : '')
   ).join('\n');
-  const response = prompt('На каком рабочем столе показать тот же экземпляр ' + id + '?\n' + choices + '\nВведите номер:');
+  const response = prompt(t('ui.sharePrompt',{id,choices}));
   if (response === null) return;
   const index = Number(response) - 1;
   if (!Number.isInteger(index) || !alternatives[index]) {
-    alert('Неверный номер рабочего стола.');
+    alert(t('ui.invalidWorkspace'));
     return;
   }
   if (!store.showInstance(id, alternatives[index].id)) {
-    alert('Этот экземпляр уже отображается на выбранном рабочем столе.');
+    alert(t('ui.already'));
   } else {
     reload();
   }
@@ -175,7 +191,7 @@ function widgetAction(event) {
       if (store.workspace.widgets.includes(id)) shareInstance(id);
       break;
     case 'remove':
-      if (store.workspace.widgets.includes(id) && confirm('Убрать экземпляр ' + id + ' с этого стола?')) {
+      if (store.workspace.widgets.includes(id) && confirm(t('ui.confirmRemove',{id}))) {
         store.removeInstanceFromWorkspace(id); reload();
       }
       break;
@@ -186,10 +202,26 @@ function widgetAction(event) {
 async function boot() {
   try {
     document.documentElement.dataset.theme = store.state.system.theme.active === 'light' ? 'light' : 'dark';
+    setLanguage(store.state.system.language);
+    translateElement(document);
+    document.getElementById('theme-toggle').textContent =
+      (store.state.system.theme.active === 'dark' ? '☼ ' : '☾ ') + t('ui.theme');
+    const languageSwitch = document.getElementById('language-switch');
+    languageSwitch.value = store.state.system.language;
+    languageSwitch.addEventListener('change', () => {
+      store.state.system.language = languageSwitch.value;
+      store.save();reload();
+    });
+    document.getElementById('background-button').addEventListener('click', () => {
+      const raw=prompt(t('ui.backgroundPrompt',{name:deskName(store.workspace)}),store.workspace.backgroundUrl || '');
+      if (raw === null) return;
+      if (!store.setWorkspaceBackground(raw.trim())) {alert(t('ui.backgroundInvalid'));return;}
+      reload();
+    });
     await loadTemplates();
 
     document.getElementById('clear-storage').addEventListener('click', () => {
-      if (confirm('Очистить localStorage DashboardX? Все рабочие столы, виджеты, финансы и настройки этого приложения будут удалены без возможности отмены.')) {
+      if (confirm(t('ui.confirmReset'))) {
         store.reset(); reload();
       }
     });
@@ -203,6 +235,11 @@ async function boot() {
       widgetAction({ detail: { action: 'remove', id: event.detail.id } })
     );
     window.addEventListener('dashboardx:share-widget', event => shareInstance(event.detail.id));
+    window.addEventListener('dashboardx:widget-layout', updateCanvasHeight);
+    window.addEventListener('dashboardx:widget-visibility', () => {
+      const category=document.querySelector('#widget-navigation .nav--element[aria-pressed="true"]')?.dataset.category || 'all';
+      navBar?.filterWidgets(category);
+    });
     eventBus.on('finance:dayBalanceWidget:updated', () => store.save());
 
     renderWorkspaceTabs();
@@ -213,7 +250,7 @@ async function boot() {
   } catch (error) {
     console.error('DashboardX startup failed:', error);
     const label = document.getElementById('loader-text');
-    if (label) label.textContent = 'Ошибка запуска: ' + error.message;
+    if (label) label.textContent = t('ui.startError',{error:error.message});
   }
 }
 

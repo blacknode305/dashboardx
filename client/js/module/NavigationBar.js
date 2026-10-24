@@ -1,4 +1,5 @@
 import WidgetBase from './WidgetBase.js';
+import { t } from './i18n.js';
 
 export default class NavigationBar extends HTMLElement {
   constructor(categories) {
@@ -8,7 +9,8 @@ export default class NavigationBar extends HTMLElement {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'nav--element';
-      button.textContent = category;
+      button.dataset.category = category;
+      button.textContent = t('nav.' + category);
       button.addEventListener('click', () => this.filterWidgets(category));
       this.appendChild(button);
     });
@@ -16,7 +18,7 @@ export default class NavigationBar extends HTMLElement {
 
   filterWidgets(category) {
     this.querySelectorAll('button').forEach(button =>
-      button.setAttribute('aria-pressed', String(button.textContent === category))
+      button.setAttribute('aria-pressed', String(button.dataset.category === category))
     );
     document.querySelectorAll('widget-element.widget--element').forEach(widget => {
       // Exactly one widget manager stays visible on every workspace and every category.
