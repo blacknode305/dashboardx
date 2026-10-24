@@ -553,3 +553,139 @@ body.has-custom-wallpaper {background-attachment:fixed;}
   #app-toolbar .toolbar-fullscreen {min-width:unset;}
   #workspace-canvas .widget--element .window-actions {margin-top:2px;}
 }
+
+
+/* BUTTONS: content-sized controls, never split a label inside its button. */
+:root {
+  --dx-button-gap: 10px;
+  --dx-button-pad-x: 16px;
+  --dx-button-pad-y: 9px;
+}
+
+/* Text is allowed to wrap in explanatory content, never inside an action label. */
+#app-toolbar > button,
+#workspace-canvas .widget--element .btn,
+#workspace-canvas .widget--element .manager-actions > button,
+#workspace-canvas .widget--element .manager-instance-actions > button {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: max-content;
+  min-width: max-content;
+  max-width: none;
+  min-height: 36px;
+  padding: var(--dx-button-pad-y) var(--dx-button-pad-x);
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
+  hyphens: none;
+  line-height: 1.35;
+  text-align: center;
+}
+
+/* The desktop toolbar may wrap its controls onto a new row as a unit,
+   but individual words and their rectangular buttons remain intact. */
+#app-toolbar > button {
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+#app-toolbar > .reset-storage {
+  flex: 0 0 auto;
+  width: max-content;
+  min-width: max-content;
+  white-space: nowrap;
+  padding-inline: 13px;
+}
+#app-toolbar > .toolbar-fullscreen {
+  flex: 0 0 auto;
+  width: max-content;
+  min-width: max-content;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+/* Income/expense: the input uses leftover space and its button uses exactly
+   the space needed for the label. If a widget is made narrow, wrap the whole
+   button to the next row instead of writing "До / ба / вить". */
+#workspace-canvas .widget--element .day-income,
+#workspace-canvas .widget--element .day-expense {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-flow: row wrap;
+  gap: var(--dx-button-gap);
+  align-items: center;
+  justify-content: flex-start;
+  padding: 9px 12px;
+}
+#workspace-canvas .widget--element .day-income > input,
+#workspace-canvas .widget--element .day-expense > input {
+  box-sizing: border-box;
+  flex: 1 1 170px;
+  width: auto;
+  min-width: min(170px, 100%);
+  max-width: 100%;
+  min-height: 38px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-transform: none;
+}
+#workspace-canvas .widget--element .day-income > button,
+#workspace-canvas .widget--element .day-expense > button {
+  flex: 0 0 auto;
+  width: max-content;
+  min-width: max-content;
+  max-width: none;
+  min-height: 38px;
+  padding: 9px 16px;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+/* The widget manager has a flexible picker and a fixed intrinsic button.
+   A narrow window stacks the entire button below the picker. */
+#workspace-canvas .manager-actions {
+  grid-template-columns: minmax(0, 1fr) max-content;
+}
+#workspace-canvas .manager-actions > button {
+  min-width: max-content;
+  width: max-content;
+  max-width: none;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+#workspace-canvas .manager-instance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+}
+#workspace-canvas .manager-instance-actions > button {
+  flex: 0 0 auto;
+  min-width: max-content;
+  width: max-content;
+  max-width: none;
+  min-height: 34px;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+/* Do not force buttons to break mid-word at small screen widths. */
+@media (max-width: 570px) {
+  #workspace-canvas .manager-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #workspace-canvas .manager-actions > button {
+    width: max-content;
+    min-width: max-content;
+    max-width: 100%;
+  }
+}
