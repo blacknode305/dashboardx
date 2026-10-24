@@ -374,20 +374,20 @@ body { background-image:radial-gradient(ellipse at 55% 0,rgba(132,161,199,.08),t
 /* -----------------------------------------------------------------------
    FIXED WORKSPACE & LEGACY WALLPAPER
    This image was shipped in the original client/src folder.
-   CSS file is client/css/style.css => ../src/dashboardx-wallpaper.svg.
+   CSS file is client/css/style.css => ../src/dashboardx-urban-background.webp.
    ----------------------------------------------------------------------- */
 :root { --dashboard-head-height: 103px; --workspace-padding: 18px; }
 html,body {width:100%;height:100%;min-height:100%;overflow:hidden;}
 body {
   background-color:var(--bg-main);
-  background-image:linear-gradient(rgba(7,11,20,.28),rgba(7,11,20,.33)),url('../src/dashboardx-wallpaper.svg');
+  background-image:linear-gradient(rgba(0,0,0,.12),rgba(0,0,0,.17)),url('../src/dashboardx-urban-background.webp');
   background-size:cover;
   background-position:center center;
   background-repeat:no-repeat;
   background-attachment:fixed;
 }
 :root[data-theme="light"] body {
-  background-image:linear-gradient(rgba(255,255,255,.23),rgba(255,255,255,.33)),url('../src/dashboardx-wallpaper.svg');
+  background-image:linear-gradient(rgba(240,240,240,.27),rgba(240,240,240,.31)),url('../src/dashboardx-urban-background.webp');
 }
 body.has-custom-wallpaper {background-attachment:fixed;}
 #app-toolbar {
@@ -826,14 +826,14 @@ body.has-custom-wallpaper {background-attachment:fixed;}
 html, body { font-family: Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif; }
 body:not(.has-custom-wallpaper) {
   background-color:#171e25;
-  background-image:linear-gradient(rgba(20,27,33,.56),rgba(18,24,30,.68)),url('../src/dashboardx-wallpaper.svg');
+  background-image:linear-gradient(rgba(0,0,0,.10),rgba(0,0,0,.17)),url('../src/dashboardx-urban-background.webp');
   background-position:center center;
   background-size:cover;
   background-attachment:fixed;
 }
 :root[data-theme="light"] body:not(.has-custom-wallpaper) {
   background-color:#e8eceb;
-  background-image:linear-gradient(rgba(233,238,236,.70),rgba(225,231,229,.77)),url('../src/dashboardx-wallpaper.svg');
+  background-image:linear-gradient(rgba(240,240,240,.37),rgba(240,240,240,.43)),url('../src/dashboardx-urban-background.webp');
 }
 /* Generated cosmic overlay stays in the repository, but is not part of Urban. */
 body:not(.has-custom-wallpaper)::before { display:none!important; }
