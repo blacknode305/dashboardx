@@ -1541,3 +1541,98 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   .dx-settings,.optima-suppliers{padding:11px}
   .dx-credential{padding:10px}
 }
+
+
+/* OPTIMA working tables, guarded supplier editor (Urban, responsive). */
+#workspace-canvas [data-widget-type^="optima"] .widget--element--body{box-sizing:border-box;min-width:0}
+#workspace-canvas [data-widget-type^="optima"]{width:min(650px,calc(100vw - 28px));min-width:min(300px,calc(100vw - 28px))}
+#workspace-canvas [data-widget-type="optimaSuppliers"]{width:min(525px,calc(100vw - 28px))}
+#workspace-canvas [data-widget-type="optimaStocks"],
+#workspace-canvas [data-widget-type="optimaCompare"]{width:min(820px,calc(100vw - 28px))}
+#workspace-canvas [data-widget-type^="optima"] .widget--element--body{padding:0}
+.optima-data{box-sizing:border-box;display:grid;gap:10px;width:100%;min-width:0;padding:13px;color:var(--text-main);font:12px/1.45 var(--f-family-inter)}
+.optima-data-filters{
+ display:flex;flex-wrap:wrap;align-items:stretch;gap:7px;width:100%;min-width:0;
+}
+#workspace-canvas .optima-data-filters>input,
+#workspace-canvas .optima-data-filters>select{
+ box-sizing:border-box;flex:1 1 148px;width:auto;min-width:0;max-width:100%;min-height:37px;
+ padding:8px 10px;background:var(--bg-panel-inside);
+ border:1px solid var(--border);border-radius:8px;
+ color:var(--text-main);font:550 11px/1.4 var(--f-family-inter);
+}
+#workspace-canvas .optima-data-filters>input[type="search"]{flex:2 1 190px}
+#workspace-canvas .optima-data-filters>[hidden]{display:none!important}
+.optima-table-scroll{
+ box-sizing:border-box;width:100%;max-width:100%;min-width:0;overflow:auto;
+ border:1px solid var(--border);border-radius:9px;background:var(--bg-panel-inside);
+ scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.optima-grid-table{
+ width:100%;min-width:max-content;border-collapse:separate;border-spacing:0;
+ color:var(--text-main);font:500 11px/1.5 var(--f-family-inter);
+}
+.optima-grid-table th,.optima-grid-table td{
+ box-sizing:border-box;padding:9px 11px;max-width:320px;
+ border:0;border-bottom:1px solid var(--border);
+ text-align:left;vertical-align:top;overflow-wrap:break-word;
+}
+.optima-grid-table thead th{
+ position:sticky;top:0;z-index:1;
+ white-space:nowrap;min-width:85px;font-weight:700;
+ color:var(--text-main);background:var(--bg-panel-light);
+}
+.optima-grid-table tbody tr:last-child td{border-bottom:0}
+.optima-grid-table tbody tr:hover td{background:var(--dx-hover-soft)}
+.optima-grid-table td:first-child{font-weight:650}
+.optima-grid-table .optima-cell-unknown{color:var(--text-muted);background:var(--dx-accent-soft)}
+.optima-grid-table .optima-cell-na{color:var(--text-muted)}
+.optima-grid-table .optima-cell-zero{color:var(--dx-bad);font-weight:750}
+.optima-grid-table .optima-cell-known{color:var(--text-main)}
+.optima-grid-table .optima-cell-best{color:var(--dx-good);font-weight:750}
+.optima-order-lines{display:grid;gap:5px;padding:9px;min-width:180px;color:var(--text-muted);font-weight:400}
+.optima-grid-table details summary{cursor:pointer;text-decoration:underline;text-decoration-color:var(--border)}
+.optima-grid-table details[open]{max-width:260px}
+.optima-supplier-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding-top:3px}
+#workspace-canvas .optima-supplier-actions button,
+#workspace-canvas .optima-editor button{
+ box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;
+ flex:0 0 auto;width:max-content;min-width:max-content;max-width:100%;
+ min-height:35px;padding:8px 12px;border-radius:7px;
+ background:var(--bg-panel-light);color:var(--text-main);
+ border:1px solid var(--border);font:650 11px/1.35 var(--f-family-inter);
+ white-space:nowrap;word-break:keep-all;cursor:pointer;
+}
+#workspace-canvas .optima-supplier-actions button:hover:not(:disabled),
+#workspace-canvas .optima-editor button:hover:not(:disabled){
+ background:var(--dx-hover-bg);color:var(--dx-hover-text);border-color:var(--dx-hover-border);
+}
+#workspace-canvas .optima-editor button.optima-danger{color:var(--dx-bad)}
+#workspace-canvas .optima-editor button.optima-danger:hover{background:var(--dx-hover-danger-bg)}
+.optima-editor{
+ box-sizing:border-box;display:grid;gap:10px;padding:13px;
+ border:1px solid var(--dx-panel-strong);border-radius:9px;
+ background:var(--bg-panel-inside);min-width:0;
+}
+.optima-editor[hidden],.optima-editor [hidden]{display:none!important}
+.optima-editor h3,.optima-editor h4{margin:0;font-size:12px;line-height:1.4;font-weight:700}
+.optima-editor form{display:grid;gap:9px;min-width:0}
+.optima-editor form>label,.optima-edit-schedule>label{
+ display:grid;gap:4px;min-width:0;font-size:11px;font-weight:650;color:var(--text-muted);
+}
+#workspace-canvas .optima-editor input{
+ box-sizing:border-box;display:block;width:100%;min-width:0;min-height:37px;
+ padding:8px 10px;border-radius:7px;
+ border:1px solid var(--border);background:var(--dx-inset);
+ color:var(--text-main);font:500 12px/1.3 var(--f-family-inter);
+}
+.optima-edit-schedule{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:9px;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;margin-block:7px}
+.optima-edit-schedule>button{justify-self:start}
+.optima-editor-buttons{display:flex;flex-wrap:wrap;gap:7px}
+#workspace-canvas .optima-editor-buttons button[type="submit"]{background:var(--dx-blue-gradient);color:white;border-color:var(--dx-accent)}
+.optima-editor-error{margin:0;min-height:16px;color:var(--dx-bad);font-size:11px;overflow-wrap:break-word}
+@media(max-width:510px){
+ .optima-data{padding:10px}
+ .optima-edit-schedule{grid-template-columns:minmax(0,1fr)}
+ .optima-data-filters>input,.optima-data-filters>select{flex:1 1 100%!important}
+}

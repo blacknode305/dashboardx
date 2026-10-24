@@ -23,6 +23,12 @@ const WIDGET_CATALOG = Object.freeze({
   telegramBot:    {category:'telegram', file:'_telegramBot.html',     serverOnly:true},
   dashboardSettings:{category:'system',file:'_dashboardSettings.html'},
   optimaSuppliers:{category:'optima',file:'_optimaSuppliers.html'},
+  optimaProducts:{category:'optima',file:'_optimaProducts.html'},
+  optimaProposals:{category:'optima',file:'_optimaProposals.html'},
+  optimaOffers:{category:'optima',file:'_optimaOffers.html'},
+  optimaCompare:{category:'optima',file:'_optimaCompare.html'},
+  optimaStocks:{category:'optima',file:'_optimaStocks.html'},
+  optimaOrders:{category:'optima',file:'_optimaOrders.html'},
   torrentTracker: {category:'tools',    file:'_torrentTracker.html'},
   nesEmulator:    {category:'games',    file:'_nesEmulator.html'}
 });

@@ -5,7 +5,7 @@
       <strong data-i18n="optima.suppliers">Поставщики PRO-OPTIMA</strong>
       <button type="button" data-role="optima-refresh" data-i18n="optima.refresh">Обновить</button>
     </div>
-    <p class="optima-hint" data-i18n="optima.readonly">Актуальные данные Railway · просмотр</p>
+    <p class="optima-hint" data-i18n="optima.live">Актуальные данные Railway · редактирование с контролем ревизии</p>
     <div class="optima-filters">
       <input data-role="optima-search" type="search" autocomplete="off" data-i18n-placeholder="optima.search" placeholder="Поиск поставщика, контакта, телефона…">
       <select data-role="optima-branch" aria-label="Филиал" data-i18n-aria="optima.branch">
@@ -15,5 +15,23 @@
     <p data-role="optima-status" class="optima-status" role="status" aria-live="polite"></p>
     <div class="optima-summary" data-role="optima-count"></div>
     <div class="optima-supplier-list" data-role="optima-list"></div>
+    <section class="optima-editor" data-role="optima-editor" hidden>
+      <h3 data-role="optima-editor-title"></h3>
+      <form data-role="optima-edit-form" autocomplete="off">
+        <label><span data-i18n="optima.name">Название</span><input data-role="optima-edit-name" required maxlength="160"></label>
+        <label><span data-i18n="optima.contact">Контакт</span><input data-role="optima-edit-contact"></label>
+        <label><span data-i18n="optima.phone">Телефон</span><input data-role="optima-edit-phone"></label>
+        <div data-role="optima-edit-schedules" hidden>
+          <h4 data-i18n="optima.schedulesTitle">Графики</h4>
+          <div data-role="optima-schedule-rows"></div>
+          <button type="button" data-role="optima-add-schedule" data-i18n="optima.addSchedule">Добавить филиал</button>
+        </div>
+        <p class="optima-editor-error" data-role="optima-editor-error" aria-live="polite"></p>
+        <div class="optima-editor-buttons">
+          <button type="submit" data-role="optima-save-edit" data-i18n="optima.save">Сохранить</button>
+          <button type="button" data-role="optima-cancel-edit" data-i18n="optima.cancel">Отмена</button>
+        </div>
+      </form>
+    </section>
   </section>
 </template></body></html>
