@@ -1636,3 +1636,124 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
  .optima-edit-schedule{grid-template-columns:minmax(0,1fr)}
  .optima-data-filters>input,.optima-data-filters>select{flex:1 1 100%!important}
 }
+
+
+/* OPTIMA orders — scheduled cards, integrated production form (Urban). */
+#workspace-canvas [data-widget-type="optimaOrders"]{
+ width:min(685px,calc(100vw - 28px));min-width:min(300px,calc(100vw - 28px));
+}
+#workspace-canvas [data-widget-type="optimaOrders"] .widget--element--body{
+ box-sizing:border-box;padding:0;min-width:0;
+}
+.optima-order-widget{
+ box-sizing:border-box;display:grid;gap:11px;padding:13px;
+ width:100%;min-width:0;color:var(--text-main);
+ font:12px/1.48 var(--f-family-inter);
+}
+.optima-order-filters{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:7px;min-width:0;
+}
+#workspace-canvas .optima-order-filters>*{
+ box-sizing:border-box;display:block;width:100%;min-width:0;
+ min-height:39px;padding:8px 10px;color:var(--text-main);
+ background:var(--bg-panel-inside);border:1px solid var(--border);
+ border-radius:7px;font:550 11px/1.4 var(--f-family-inter);
+}
+#workspace-canvas .optima-order-filters>input[type="search"]{
+ grid-column:span 2;
+}
+.optima-order-list{display:grid;gap:9px;min-width:0}
+.optima-order-card{
+ box-sizing:border-box;display:grid;gap:9px;min-width:0;
+ padding:12px;border:1px solid var(--border);border-radius:10px;
+ background:var(--bg-panel-inside);
+}
+.optima-order-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;min-width:0}
+.optima-order-card-names{display:grid;gap:2px;flex:1 1 150px;min-width:0}
+.optima-order-card-names strong{font-size:12px;font-weight:750;overflow-wrap:anywhere;line-height:1.45}
+.optima-order-card-names span{font-size:11px;color:var(--text-muted);overflow-wrap:break-word}
+.optima-order-badge{
+ display:inline-flex;align-items:center;justify-content:center;
+ box-sizing:border-box;flex:0 1 auto;max-width:100%;min-height:27px;
+ padding:5px 10px;border:1px solid var(--border);border-radius:7px;
+ background:var(--bg-panel-light);color:var(--text-muted);
+ font-size:10px;font-weight:700;line-height:1.35;
+ text-align:center;white-space:normal;overflow-wrap:break-word;
+}
+.optima-order-badge.optima-order-new{border-color:var(--dx-warn);color:var(--dx-warn)}
+.optima-order-badge.optima-order-sent,.optima-order-badge.optima-order-received{border-color:var(--dx-accent);color:var(--dx-accent)}
+.optima-order-badge.optima-order-confirmed,.optima-order-badge.optima-order-done,.optima-order-badge.optima-order-approved{
+ border-color:var(--dx-good);color:var(--dx-good);
+}
+.optima-order-badge.optima-order-overdue,.optima-order-badge.optima-order-rejected,
+.optima-order-badge.optima-order-cancelled{border-color:var(--dx-bad);color:var(--dx-bad)}
+.optima-order-card-dates{display:flex;flex-wrap:wrap;gap:4px 13px;color:var(--text-muted);font-size:11px}
+.optima-order-card-dates span{white-space:normal;overflow-wrap:break-word}
+.optima-order-card-meta{color:var(--text-muted);font-size:10px}
+.optima-order-card-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#workspace-canvas .optima-order-widget button{
+ box-sizing:border-box;display:inline-flex;justify-content:center;align-items:center;
+ flex:0 0 auto;width:max-content;max-width:100%;min-width:max-content;
+ min-height:36px;padding:8px 12px;
+ background:var(--bg-panel-light);color:var(--text-main);
+ border:1px solid var(--border);border-radius:7px;
+ font:680 11px/1.4 var(--f-family-inter);
+ white-space:normal;text-align:center;overflow-wrap:break-word;cursor:pointer;
+}
+#workspace-canvas .optima-order-widget button.optima-order-primary,
+#workspace-canvas .optima-order-widget button[type="submit"]{
+ background:var(--dx-blue-gradient);color:#fff;border-color:var(--dx-panel-strong);
+}
+#workspace-canvas .optima-order-widget button:hover:not(:disabled){
+ background:var(--dx-hover-bg);color:var(--dx-hover-text);border-color:var(--dx-hover-border);
+}
+#workspace-canvas .optima-order-widget button:disabled{cursor:not-allowed;opacity:.55}
+.optima-order-notice{
+ margin:0;padding:9px;background:var(--dx-accent-soft);
+ border:1px solid var(--border);border-radius:7px;
+ color:var(--dx-warn);font-size:11px;overflow-wrap:break-word;
+}
+.optima-order-panel{
+ box-sizing:border-box;display:grid;gap:11px;min-width:0;
+ padding:12px;background:var(--bg-panel-inside);
+ border:1px solid var(--dx-panel-strong);border-radius:9px;
+}
+.optima-order-panel[hidden],.optima-order-panel form[hidden]{display:none!important}
+.optima-order-panel-title{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.optima-order-panel-title strong{font-size:12px;overflow-wrap:anywhere}
+.optima-order-items{display:grid;gap:8px;min-width:0}
+.optima-order-read-item,.optima-order-edit-item{
+ box-sizing:border-box;display:grid;gap:7px;min-width:0;
+ padding:10px;border:1px solid var(--border);border-radius:8px;
+ background:var(--bg-panel);
+}
+.optima-order-read-item strong,.optima-order-edit-item strong{font-size:11px;overflow-wrap:break-word}
+.optima-order-read-item span{font-size:11px;color:var(--text-muted)}
+.optima-order-edit-item{grid-template-columns:repeat(2,minmax(0,1fr))}
+.optima-order-edit-item strong{grid-column:1/-1}
+.optima-order-edit-item label{
+ display:grid;gap:5px;min-width:0;
+ color:var(--text-muted);font-size:11px;
+}
+#workspace-canvas .optima-order-edit-item input,
+#workspace-canvas .optima-order-pin input{
+ box-sizing:border-box;width:100%;min-width:0;
+ min-height:37px;padding:8px 10px;
+ background:var(--bg-panel-inside);color:var(--text-main);
+ border:1px solid var(--border);border-radius:7px;
+ font:500 12px/1.35 var(--f-family-inter);
+}
+.optima-order-panel form{display:grid;gap:10px;min-width:0}
+.optima-order-pin{display:grid;gap:7px;max-width:280px;font-size:11px;color:var(--text-muted)}
+.optima-order-panel-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.optima-order-error{color:var(--dx-bad);font-size:11px;margin:0;overflow-wrap:break-word}
+@media(max-width:590px){
+ .optima-order-widget{padding:10px}
+ .optima-order-filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .optima-order-filters>input[type="search"]{grid-column:1/-1}
+}
+@media(max-width:400px){
+ .optima-order-filters,.optima-order-edit-item{grid-template-columns:1fr}
+ .optima-order-edit-item strong{grid-column:1}
+}

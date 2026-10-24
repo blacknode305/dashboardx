@@ -19,6 +19,7 @@ import TelegramBotWidget from './Widget/TelegramBot.js';
 import DashboardSettingsWidget from './Widget/DashboardSettings.js';
 import OptimaSuppliersWidget from './Widget/OptimaSuppliers.js';
 import OptimaDataWidget from './Widget/OptimaData.js';
+import OptimaOrdersWidget from './Widget/OptimaOrders.js';
 import TorrentTrackerWidget from './Widget/TorrentTracker.js';
 import NesEmulatorWidget from './Widget/NesEmulator.js';
 // TODO: Добавить слушатель переключение Navigation или Workplace, 
@@ -48,7 +49,7 @@ const WidgetLogic = {
   OptimaOffersWidget: OptimaDataWidget,
   OptimaCompareWidget: OptimaDataWidget,
   OptimaStocksWidget: OptimaDataWidget,
-  OptimaOrdersWidget: OptimaDataWidget,
+  OptimaOrdersWidget,
   TorrentTrackerWidget,
   NesEmulatorWidget,
 };
