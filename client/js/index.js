@@ -167,32 +167,19 @@ function updateCanvasHeight() {
   const canvas=document.getElementById('workspace-canvas');
   const surface=document.getElementById('workspace-surface');
   if(!canvas || !surface)return;
-  let bottom=Math.max(canvas.clientHeight+120,Number(surface.dataset.extraBottom||0));
-  let right=Math.max(canvas.clientWidth,Number(surface.dataset.extraRight||0));
+  let bottom=canvas.clientHeight;
+  let right=canvas.clientWidth;
   surface.querySelectorAll('widget-element').forEach(el=>{
     if(el.style.display==='none')return;
-    bottom=Math.max(bottom,el.offsetTop+el.offsetHeight+260);
-    right=Math.max(right,el.offsetLeft+el.offsetWidth+110);
+    bottom=Math.max(bottom,el.offsetTop+el.offsetHeight+120);
+    right=Math.max(right,el.offsetLeft+el.offsetWidth+80);
   });
   surface.style.height=Math.ceil(bottom)+'px';
   surface.style.width=Math.ceil(right)+'px';
 }
 
-// When dragging beyond the previous top edge, add more space above the entire
-// layout and keep the visible position stable by scrolling by the same amount.
-function extendWorkspaceUp(amount=360) {
-  const canvas=document.getElementById('workspace-canvas');
-  const surface=document.getElementById('workspace-surface');
-  if(!canvas||!surface)return;
-  surface.querySelectorAll('widget-element').forEach(el=>{
-    el.style.top=(Math.max(0,el.offsetTop)+amount)+'px';
-    el.saveWidget();
-  });
-  surface.dataset.extraBottom=String(Math.max(surface.offsetHeight,canvas.clientHeight)+amount);
-  canvas.scrollTop+=amount;
-  updateCanvasHeight();
-}
-window.dashboardxExtendWorkspaceUp=extendWorkspaceUp;
+// The canvas begins at Y=0: dragging never creates content above its top edge.
+// Its bounds may only expand downwards and rightwards.
 window.dashboardxUpdateWorkspaceBounds=updateCanvasHeight;
 
 function measureHeader() {

@@ -41,8 +41,12 @@ export default class WidgetBase extends HTMLElement {
 
   restoreLayout() {
     const saved = this.styleData;
-    this.style.top = saved.top || '50px';
-    this.style.left = saved.left || '0px';
+    // Reject legacy negative layout coordinates without deleting the saved layout.
+    // No part of a widget may be positioned above/left of the workspace origin.
+    const top = saved.top ? Number.parseFloat(saved.top) : 50;
+    const left = saved.left ? Number.parseFloat(saved.left) : 0;
+    this.style.top = Math.max(0, Number.isFinite(top) ? top : 50) + 'px';
+    this.style.left = Math.max(0, Number.isFinite(left) ? left : 0) + 'px';
     if (saved.width) this.style.width = saved.width;
     if (saved.height) this.style.height = saved.height;
     if (saved.pinned) this.classList.add('is-pinned');
@@ -176,7 +180,7 @@ export default class WidgetBase extends HTMLElement {
         const bounds=viewport.getBoundingClientRect();
         // Auto-scroll while dragging at the visible top/bottom.
         if(move.clientY < bounds.top+48){
-          if(viewport.scrollTop < 68)window.dashboardxExtendWorkspaceUp?.(330);
+          // Travel upwards only through existing positive scroll space; stop at Y=0.
           viewport.scrollTop=Math.max(0,viewport.scrollTop-22);
         }else if(move.clientY > bounds.bottom-48){
           // First grow the surface so scrolling can continue beyond its old edge.
