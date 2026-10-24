@@ -21,6 +21,7 @@ const WIDGET_CATALOG = Object.freeze({
   videoPlayer:    {category:'media',    file:'_videoPlayer.html'},
   serverConsole:  {category:'system',   file:'_serverConsole.html',   serverOnly:true},
   telegramBot:    {category:'telegram', file:'_telegramBot.html',     serverOnly:true},
+  telegramSettings:{category:'telegram',file:'_telegramSettings.html'},
   torrentTracker: {category:'tools',    file:'_torrentTracker.html'},
   nesEmulator:    {category:'games',    file:'_nesEmulator.html'}
 });
@@ -80,6 +81,21 @@ function reload() {
   location.reload();
 }
 
+// Mouse, keyboard and widget actions share the same renderer. No page refresh.
+function activateWorkspace(id) {
+  if (id !== store.workspace.id && !store.selectWorkspace(id)) return false;
+  renderWorkspaceTabs();
+  renderCanvas();
+  const canvas = document.getElementById('workspace-canvas');
+  canvas.scrollTop = 0;
+  canvas.scrollLeft = 0;
+  measureHeader();
+  return true;
+}
+function updateWorkspace() {
+  return activateWorkspace(store.workspace.id);
+}
+
 function renderWorkspaceTabs() {
   const tabs = document.getElementById('workspace-tabs');
   tabs.replaceChildren();
@@ -94,7 +110,7 @@ function renderWorkspaceTabs() {
     title.title = t('ui.goWorkspace') + ': ' + deskName(workspace);
     title.setAttribute('aria-pressed', String(workspace.id === store.workspace.id));
     title.addEventListener('click', () => {
-      if (store.selectWorkspace(workspace.id)) reload();
+      activateWorkspace(workspace.id);
     });
 
     const remove = document.createElement('button');
@@ -105,7 +121,7 @@ function renderWorkspaceTabs() {
     remove.setAttribute('aria-label', remove.title);
     remove.addEventListener('click', () => {
       const question = t('ui.confirmDelete',{name:deskName(workspace)});
-      if (confirm(question) && store.deleteWorkspace(workspace.id)) reload();
+      if (confirm(question) && store.deleteWorkspace(workspace.id)) updateWorkspace();
     });
     tile.append(title, remove);
     tabs.append(tile);
@@ -118,7 +134,7 @@ function renderWorkspaceTabs() {
   create.setAttribute('aria-label', create.title);
   create.addEventListener('click', () => {
     const name = prompt(t('ui.newWorkspace'));
-    if (name && store.addWorkspace(name)) reload();
+    if (name && store.addWorkspace(name)) updateWorkspace();
   });
   tabs.append(create); // Always exactly one permanent + tile, after all desktops.
 }
@@ -239,14 +255,7 @@ function switchWorkspaceWithShortcut(step) {
   const currentIndex = workspaces.findIndex(ws => ws.id === store.state.activeWorkspaceId);
   const index = currentIndex < 0 ? 0 : currentIndex;
   const nextIndex = (index + step + workspaces.length) % workspaces.length;
-  if (!store.selectWorkspace(workspaces[nextIndex].id)) return false;
-  renderWorkspaceTabs();
-  renderCanvas();
-  const canvas = document.getElementById('workspace-canvas');
-  canvas.scrollTop = 0;
-  canvas.scrollLeft = 0;
-  measureHeader();
-  return true;
+  return activateWorkspace(workspaces[nextIndex].id);
 }
 
 function installWorkspaceShortcuts() {
@@ -298,7 +307,7 @@ function shareInstance(id) {
   if (!store.showInstance(id, alternatives[index].id)) {
     alert(t('ui.already'));
   } else {
-    reload();
+    updateWorkspace();
   }
 }
 
@@ -306,20 +315,20 @@ function widgetAction(event) {
   const { action, type, id } = event.detail || {};
   switch (action) {
     case 'create':
-      if (WIDGET_CATALOG[type] && type !== 'add' && store.createInstance(type)) reload();
+      if (WIDGET_CATALOG[type] && type !== 'add' && store.createInstance(type)) updateWorkspace();
       break;
     case 'link':
-      if (store.showInstance(id)) reload();
+      if (store.showInstance(id)) updateWorkspace();
       break;
     case 'clone':
-      if (store.cloneInstance(id)) reload();
+      if (store.cloneInstance(id)) updateWorkspace();
       break;
     case 'share':
       if (store.workspace.widgets.includes(id)) shareInstance(id);
       break;
     case 'remove':
       if (store.workspace.widgets.includes(id) && confirm(t('ui.confirmRemove',{id}))) {
-        store.removeInstanceFromWorkspace(id); reload();
+        store.removeInstanceFromWorkspace(id); updateWorkspace();
       }
       break;
     default: break;
@@ -337,7 +346,10 @@ async function boot() {
     languageSwitch.value = store.state.system.language;
     languageSwitch.addEventListener('change', () => {
       store.state.system.language = languageSwitch.value;
-      store.save();reload();
+      store.save();
+      setLanguage(languageSwitch.value);
+      translateElement(document);
+      updateWorkspace();
     });
     const fullscreenButton=document.getElementById('fullscreen-toggle');
     const updateFullscreenLabel=()=>{
@@ -356,7 +368,7 @@ async function boot() {
       const raw=prompt(t('ui.backgroundPrompt',{name:deskName(store.workspace)}),store.workspace.backgroundUrl || '');
       if (raw === null) return;
       if (!store.setWorkspaceBackground(raw.trim())) {alert(t('ui.backgroundInvalid'));return;}
-      reload();
+      updateWorkspace();
     });
     await loadTemplates();
 
@@ -367,7 +379,10 @@ async function boot() {
     });
     document.getElementById('theme-toggle').addEventListener('click', () => {
       store.state.system.theme.active = store.state.system.theme.active === 'dark' ? 'light' : 'dark';
-      store.save(); reload();
+      store.save();
+      document.documentElement.dataset.theme = store.state.system.theme.active;
+      document.getElementById('theme-toggle').textContent =
+        (store.state.system.theme.active === 'dark' ? '☼ ' : '☾ ') + t('ui.theme');
     });
 
     window.addEventListener('dashboardx:widget-action', widgetAction);

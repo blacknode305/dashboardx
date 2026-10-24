@@ -374,20 +374,20 @@ body { background-image:radial-gradient(ellipse at 55% 0,rgba(132,161,199,.08),t
 /* -----------------------------------------------------------------------
    FIXED WORKSPACE & LEGACY WALLPAPER
    This image was shipped in the original client/src folder.
-   CSS file is client/css/style.css => ../src/background_1.jpg.
+   CSS file is client/css/style.css => ../src/dashboardx-wallpaper.svg.
    ----------------------------------------------------------------------- */
 :root { --dashboard-head-height: 103px; --workspace-padding: 18px; }
 html,body {width:100%;height:100%;min-height:100%;overflow:hidden;}
 body {
   background-color:var(--bg-main);
-  background-image:linear-gradient(rgba(7,11,20,.28),rgba(7,11,20,.33)),url('../src/background_1.jpg');
+  background-image:linear-gradient(rgba(7,11,20,.28),rgba(7,11,20,.33)),url('../src/dashboardx-wallpaper.svg');
   background-size:cover;
   background-position:center center;
   background-repeat:no-repeat;
   background-attachment:fixed;
 }
 :root[data-theme="light"] body {
-  background-image:linear-gradient(rgba(255,255,255,.23),rgba(255,255,255,.33)),url('../src/background_1.jpg');
+  background-image:linear-gradient(rgba(255,255,255,.23),rgba(255,255,255,.33)),url('../src/dashboardx-wallpaper.svg');
 }
 body.has-custom-wallpaper {background-attachment:fixed;}
 #app-toolbar {
@@ -722,3 +722,29 @@ body.has-custom-wallpaper {background-attachment:fixed;}
 .fx-attribution{display:flex;flex-wrap:wrap;gap:6px 9px;align-items:baseline;padding-top:9px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted)}
 .fx-attribution a{color:var(--dx-accent);text-decoration:underline}
 @media(max-width:420px){.fx-widget{padding:11px}.fx-pair{padding:8px}}
+
+/* DashboardX branding and Telegram session-only settings */
+.dashboard-brand{display:flex;align-items:center;gap:7px 9px;flex-wrap:wrap;min-width:0;max-width:100%}
+.dashboard-brand .app-brand{white-space:nowrap;line-height:1.2;font-size:20px;letter-spacing:-.03em}
+.dashboard-brand .app-brand span{color:var(--dx-accent)}
+.brand-by{font-size:11px;font-weight:500;color:var(--text-muted);white-space:nowrap}
+.brand-profile{font:650 12px/1.35 var(--f-family-inter);color:var(--dx-accent);text-decoration:none;white-space:nowrap;border-bottom:1px solid transparent}
+.brand-profile:hover,.brand-profile:focus-visible{border-color:var(--dx-accent);color:var(--text-main)}
+#workspace-canvas .widget--element[data-widget-type="telegramSettings"]{width:min(395px,calc(100vw - 26px));min-width:min(280px,calc(100vw - 26px))}
+.telegram-settings{box-sizing:border-box;display:grid;gap:15px;min-width:0;width:100%;padding:15px;font:12px/1.5 var(--f-family-inter);color:var(--text-main)}
+.tg-settings-heading{display:flex;align-items:center;gap:10px;min-width:0}
+.tg-settings-heading strong{font-weight:650;overflow-wrap:break-word}
+.tg-settings-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:var(--dx-accent-soft);color:var(--dx-accent);font-size:20px}
+.tg-settings-form{display:grid;gap:10px;min-width:0}
+.tg-settings-form label{font-weight:650;font-size:11px;color:var(--text-muted)}
+.tg-token-row{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
+.tg-token-row input{box-sizing:border-box;min-width:0;flex:1 1 170px;height:38px;padding:9px 11px;background:var(--bg-panel-inside);color:var(--text-main);border:1px solid var(--border);border-radius:8px;font:500 12px/1.3 var(--f-family-inter)}
+.tg-settings-actions{display:flex;flex-wrap:wrap;gap:8px}
+#workspace-canvas .telegram-settings button{box-sizing:border-box;flex:0 0 auto;min-width:max-content;width:max-content;max-width:100%;min-height:37px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-panel-light);color:var(--text-main);font:600 12px/1.35 var(--f-family-inter);white-space:nowrap;word-break:keep-all;cursor:pointer}
+#workspace-canvas .telegram-settings button[type="submit"]{border-color:var(--dx-accent);background:var(--dx-accent-soft)}
+.tg-settings-status,.tg-settings-notice{margin:0;font-size:11px;line-height:1.5;overflow-wrap:break-word}
+.tg-settings-status{color:var(--dx-accent)}
+.tg-settings-notice{color:var(--text-muted)}
+
+/* Make the branded X visible against both theme palettes. */
+#app-toolbar .dashboard-brand .app-brand span{color:var(--dx-accent)}

@@ -1,3 +1,5 @@
+import { clearTelegramToken, clearAllTelegramTokens } from './TelegramSession.js';
+
 const STORAGE_KEY = 'dashboardx.local.v1';
 const LAYOUT_PREFIX = 'dashboardx.layout.';
 const version = 2;
@@ -7,7 +9,7 @@ function initialState() {
     version, userId: 'local',
     finance: { table: [], crypto: {}, fiat: {} },
     rate: {}, system: { theme: { active: 'dark' }, language: 'ru' },
-    instances: {}, nextInstance: 0,
+    instances: {},
     workspaces: [{ id: 'home', name: 'Главная', widgets: [], backgroundUrl: '' }],
     activeWorkspaceId: 'home',
   };
@@ -49,7 +51,6 @@ export default class ClientDB {
       state.system.theme.active = saved.system?.theme?.active === 'light' ? 'light' : 'dark';
       state.system.language = ['ru','kz','en'].includes(saved.system?.language) ? saved.system.language : 'ru';
       if (!saved.instances || typeof saved.instances !== 'object' || Array.isArray(saved.instances)) return state;
-      state.nextInstance = Number.isSafeInteger(saved.nextInstance) && saved.nextInstance >= 0 ? saved.nextInstance : 0;
       for (const [id, instance] of Object.entries(saved.instances)) {
         if (id !== '__proto__' && instance && instance.id === id && typeof instance.type === 'string' && instance.type !== 'add') {
           Object.defineProperty(state.instances, id, {
@@ -87,12 +88,13 @@ export default class ClientDB {
   }
 
   createId(state, type) {
-    let id;
-    do {
-      state.nextInstance += 1;
-      id = type + '-' + String(state.nextInstance).padStart(3, '0');
-    } while (own(state.instances, id));
-    return id;
+    // Per-type, zero-based, reuse the lowest available ID.
+    // Only an instance removed from ALL workspaces can free its number.
+    for (let number = 0; number < Number.MAX_SAFE_INTEGER; number += 1) {
+      const id = type + '-' + String(number).padStart(3, '0');
+      if (!own(state.instances, id)) return id;
+    }
+    throw new Error('No free widget IDs for ' + type);
   }
 
   save() {
@@ -160,7 +162,10 @@ export default class ClientDB {
   cleanupOrphans() {
     const present = new Set(this.state.workspaces.flatMap(w => w.widgets));
     for (const id of Object.keys(this.state.instances)) {
-      if (!present.has(id)) delete this.state.instances[id];
+      if (!present.has(id)) {
+        clearTelegramToken(id); // Avoid reusing ephemeral secrets when a freed ID is assigned again.
+        delete this.state.instances[id];
+      }
     }
   }
 
@@ -229,6 +234,7 @@ export default class ClientDB {
   }
 
   reset() {
+    clearAllTelegramTokens();
     const keys = [];
     for (let i = 0; i < this.storage.length; i++) {
       const key = this.storage.key(i);
