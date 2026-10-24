@@ -85,7 +85,7 @@ export default class AddWidget {
 
     // Group the complete original catalog by category; catalog entries are not
     // removed when a template cannot load or when the widget needs the server.
-    const groups = ['system', 'finance', 'tools', 'media', 'games', 'telegram'];
+    const groups = ['system', 'optima', 'finance', 'tools', 'media', 'games', 'telegram'];
     for (const category of groups) {
       const entries = availableTypes.filter(type => type.category === category);
       if (!entries.length) continue;

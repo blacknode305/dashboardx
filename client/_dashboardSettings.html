@@ -1,0 +1,36 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>DashboardX Settings</title></head><body>
+<template data-widget data-id="dashboardSettings" data-category="system" data-title="Настройки DashboardX">
+  <section class="dx-settings">
+    <header class="dx-settings-head">
+      <span class="dx-settings-mark" aria-hidden="true">⚙</span>
+      <div><strong data-i18n="widget.dashboardSettings">Настройки DashboardX</strong>
+      <p data-i18n="settings.subtitle">Подключение сервисов</p></div>
+    </header>
+    <div class="dx-credential" data-service="telegram">
+      <label data-i18n="settings.telegram">Telegram API Token</label>
+      <form class="dx-credential-form" autocomplete="off" data-service="telegram">
+        <input data-role="credential-input" type="password" autocapitalize="off" spellcheck="false" autocomplete="off" placeholder="Вставьте Telegram API Token" data-i18n-placeholder="settings.telegramPlaceholder">
+        <div class="dx-credential-actions">
+          <button type="submit" class="dx-primary" data-i18n="settings.save">Сохранить</button>
+          <button type="button" data-role="credential-toggle" data-i18n="settings.show">Показать</button>
+          <button type="button" data-role="credential-clear" class="dx-danger" data-i18n="settings.clear">Удалить</button>
+        </div>
+      </form>
+      <p class="dx-credential-status" data-role="credential-status" aria-live="polite"></p>
+    </div>
+    <div class="dx-credential" data-service="optima">
+      <label data-i18n="settings.optima">PRO-OPTIMA Admin Token</label>
+      <form class="dx-credential-form" autocomplete="off" data-service="optima">
+        <input data-role="credential-input" type="password" autocapitalize="off" spellcheck="false" autocomplete="off" placeholder="Вставьте PRO-OPTIMA Admin Token" data-i18n-placeholder="settings.optimaPlaceholder">
+        <div class="dx-credential-actions">
+          <button type="submit" class="dx-primary" data-i18n="settings.save">Сохранить</button>
+          <button type="button" data-role="credential-toggle" data-i18n="settings.show">Показать</button>
+          <button type="button" data-role="credential-clear" class="dx-danger" data-i18n="settings.clear">Удалить</button>
+          <button type="button" data-role="optima-test" data-i18n="settings.test">Проверить</button>
+        </div>
+      </form>
+      <p class="dx-credential-status" data-role="credential-status" aria-live="polite"></p>
+    </div>
+    <p class="dx-settings-warning" data-i18n="settings.warning">Токены сохраняются без шифрования в localStorage этого браузера. Не вводите их на чужом компьютере.</p>
+  </section>
+</template></body></html>

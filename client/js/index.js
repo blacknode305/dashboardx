@@ -21,7 +21,8 @@ const WIDGET_CATALOG = Object.freeze({
   videoPlayer:    {category:'media',    file:'_videoPlayer.html'},
   serverConsole:  {category:'system',   file:'_serverConsole.html',   serverOnly:true},
   telegramBot:    {category:'telegram', file:'_telegramBot.html',     serverOnly:true},
-  telegramSettings:{category:'telegram',file:'_telegramSettings.html'},
+  dashboardSettings:{category:'system',file:'_dashboardSettings.html'},
+  optimaSuppliers:{category:'optima',file:'_optimaSuppliers.html'},
   torrentTracker: {category:'tools',    file:'_torrentTracker.html'},
   nesEmulator:    {category:'games',    file:'_nesEmulator.html'}
 });

@@ -16,7 +16,8 @@ import AudioPlayerWidget from './Widget/AudioPlayer.js';
 import VideoPlayerWidget from './Widget/VideoPlayer.js';
 import ServerConsoleWidget from './Widget/ServerConsole.js';
 import TelegramBotWidget from './Widget/TelegramBot.js';
-import TelegramSettingsWidget from './Widget/TelegramSettings.js';
+import DashboardSettingsWidget from './Widget/DashboardSettings.js';
+import OptimaSuppliersWidget from './Widget/OptimaSuppliers.js';
 import TorrentTrackerWidget from './Widget/TorrentTracker.js';
 import NesEmulatorWidget from './Widget/NesEmulator.js';
 // TODO: Добавить слушатель переключение Navigation или Workplace, 
@@ -39,7 +40,8 @@ const WidgetLogic = {
   WishlistGamesWidget,
   ServerConsoleWidget,
   TelegramBotWidget,
-  TelegramSettingsWidget,
+  DashboardSettingsWidget,
+  OptimaSuppliersWidget,
   TorrentTrackerWidget,
   NesEmulatorWidget,
 };

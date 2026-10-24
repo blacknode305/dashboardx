@@ -1398,3 +1398,146 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   box-shadow:0 0 0 1px var(--dx-accent-soft),var(--shadow);
 }
 #workspace-canvas .widget--element:focus { outline:none; }
+
+
+/* Unified credentials and PRO-OPTIMA widgets — Urban, no neon effects. */
+#workspace-canvas [data-widget-type="dashboardSettings"]{
+  width:min(440px,calc(100vw - 28px));
+  min-width:min(290px,calc(100vw - 28px));
+}
+#workspace-canvas [data-widget-type="optimaSuppliers"]{
+  width:min(525px,calc(100vw - 28px));
+  min-width:min(290px,calc(100vw - 28px));
+}
+#workspace-canvas [data-widget-type="dashboardSettings"] .widget--element--body,
+#workspace-canvas [data-widget-type="optimaSuppliers"] .widget--element--body{
+  box-sizing:border-box;width:100%;min-width:0;padding:0;
+}
+#workspace-canvas [data-widget-type="dashboardSettings"] .window-heading::before{content:"⚙"}
+#workspace-canvas [data-widget-type="optimaSuppliers"] .window-heading::before{content:"▤"}
+.dx-settings,.optima-suppliers{
+  box-sizing:border-box;display:grid;gap:13px;
+  width:100%;min-width:0;padding:15px;
+  color:var(--text-main);font:12px/1.5 var(--f-family-inter);
+}
+.dx-settings-head,.optima-toolbar{
+  box-sizing:border-box;display:flex;align-items:center;gap:10px;
+  flex-wrap:wrap;min-width:0;
+}
+.dx-settings-head>div{flex:1 1 165px;min-width:0}
+.dx-settings-head strong,.optima-toolbar strong{
+  font-weight:700;font-size:13px;overflow-wrap:break-word;
+}
+.dx-settings-head p{margin:2px 0 0;color:var(--text-muted);font-size:11px}
+.dx-settings-mark{
+  box-sizing:border-box;display:grid;place-items:center;
+  flex:0 0 34px;width:34px;height:34px;
+  border:1px solid var(--border);border-radius:8px;
+  background:var(--dx-accent-soft);color:var(--dx-accent);
+  font-size:19px;
+}
+.dx-credential{
+  box-sizing:border-box;display:grid;gap:8px;min-width:0;
+  padding:13px;border:1px solid var(--border);
+  background:var(--bg-panel-inside);border-radius:9px;
+}
+.dx-credential label{font-weight:650;font-size:11px;color:var(--text-main)}
+.dx-credential-form{display:grid;gap:9px;min-width:0}
+#workspace-canvas .dx-credential input{
+  box-sizing:border-box;display:block;
+  width:100%;min-width:0;height:40px;
+  padding:9px 11px;background:var(--dx-inset);
+  border:1px solid var(--border);border-radius:8px;
+  font:500 12px/1.35 var(--f-family-inter);
+}
+.dx-credential-actions{
+  display:flex;flex-wrap:wrap;align-items:center;gap:7px;
+}
+#workspace-canvas .dx-credential-actions button,
+#workspace-canvas .optima-toolbar button{
+  box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 auto;width:max-content;min-width:max-content;max-width:100%;
+  min-height:36px;padding:8px 12px;
+  border:1px solid var(--border);border-radius:8px;
+  background:var(--bg-panel-light);color:var(--text-main);
+  font:650 11px/1.35 var(--f-family-inter);
+  white-space:nowrap;word-break:keep-all;cursor:pointer;
+}
+#workspace-canvas .dx-credential-actions button.dx-primary {
+  color:#fff;background:var(--dx-blue-gradient);
+  border-color:var(--dx-accent);
+}
+#workspace-canvas .dx-credential-actions button.dx-danger{color:var(--dx-bad)}
+#workspace-canvas .dx-credential-actions button:hover:not(:disabled),
+#workspace-canvas .optima-toolbar button:hover:not(:disabled){
+  background:var(--dx-hover-bg);color:var(--dx-hover-text);
+  border-color:var(--dx-hover-border);
+}
+#workspace-canvas .dx-credential-actions button.dx-danger:hover:not(:disabled){
+  background:var(--dx-hover-danger-bg);
+  border-color:var(--dx-hover-danger-border);
+}
+.dx-credential-status,.dx-settings-warning,.optima-hint,.optima-status,.optima-summary{
+  margin:0;min-width:0;font-size:11px;line-height:1.5;
+  overflow-wrap:break-word;color:var(--text-muted);
+}
+.dx-settings-warning{
+  padding:10px;border:1px solid var(--border);border-radius:7px;
+  background:var(--dx-accent-soft);
+}
+.optima-toolbar{justify-content:space-between}
+.optima-hint{font-size:10px}
+.optima-filters{
+  box-sizing:border-box;display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(120px,38%);
+  gap:8px;min-width:0;
+}
+#workspace-canvas .optima-filters>input,
+#workspace-canvas .optima-filters>select{
+  box-sizing:border-box;display:block;
+  width:100%;min-width:0;max-width:100%;
+  min-height:40px;padding:9px 11px;
+  border:1px solid var(--border);border-radius:8px;
+  background:var(--bg-panel-inside);
+  color:var(--text-main);font:550 12px/1.3 var(--f-family-inter);
+}
+.optima-summary{font-weight:650;color:var(--dx-accent)}
+.optima-supplier-list{box-sizing:border-box;display:grid;gap:7px;min-width:0}
+.optima-supplier{
+  box-sizing:border-box;min-width:0;
+  border:1px solid var(--border);
+  border-radius:9px;background:var(--bg-panel-inside);
+}
+.optima-supplier>summary{
+  box-sizing:border-box;display:flex;align-items:center;
+  justify-content:space-between;gap:8px;
+  padding:11px;min-height:42px;
+  color:var(--text-main);cursor:pointer;
+  list-style:none;
+}
+.optima-supplier>summary::-webkit-details-marker{display:none}
+.optima-supplier>summary strong{
+  min-width:0;font-size:12px;font-weight:650;
+  overflow-wrap:break-word;flex:1 1 auto;
+}
+.optima-supplier>summary span{font-size:10px;color:var(--text-muted);white-space:nowrap}
+.optima-supplier>summary:hover{background:var(--dx-hover-soft)}
+.optima-supplier[open]>summary{border-bottom:1px solid var(--border)}
+.optima-supplier-body{display:grid;gap:8px;padding:10px;min-width:0}
+.optima-supplier-body p{margin:0;overflow-wrap:break-word;color:var(--text-muted)}
+.optima-schedule{
+  display:grid;gap:3px;min-width:0;
+  padding:9px;border:1px solid var(--border);
+  border-radius:7px;background:var(--dx-inset);
+  font-size:11px;
+}
+.optima-schedule strong{font-weight:700}
+.optima-schedule span,.optima-schedule small{
+  min-width:0;overflow-wrap:break-word;color:var(--text-muted);
+}
+.optima-empty{margin:0;font-size:11px;color:var(--text-muted)}
+@media(max-width:440px){
+  .optima-filters{grid-template-columns:minmax(0,1fr)}
+  .dx-settings,.optima-suppliers{padding:11px}
+  .dx-credential{padding:10px}
+}

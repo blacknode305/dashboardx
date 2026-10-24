@@ -1,0 +1,19 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>PRO-OPTIMA Suppliers</title></head><body>
+<template data-widget data-id="optimaSuppliers" data-category="optima" data-title="Поставщики">
+  <section class="optima-suppliers">
+    <div class="optima-toolbar">
+      <strong data-i18n="optima.suppliers">Поставщики PRO-OPTIMA</strong>
+      <button type="button" data-role="optima-refresh" data-i18n="optima.refresh">Обновить</button>
+    </div>
+    <p class="optima-hint" data-i18n="optima.readonly">Актуальные данные Railway · просмотр</p>
+    <div class="optima-filters">
+      <input data-role="optima-search" type="search" autocomplete="off" data-i18n-placeholder="optima.search" placeholder="Поиск поставщика, контакта, телефона…">
+      <select data-role="optima-branch" aria-label="Филиал" data-i18n-aria="optima.branch">
+        <option value="" data-i18n="optima.allBranches">Все филиалы</option>
+      </select>
+    </div>
+    <p data-role="optima-status" class="optima-status" role="status" aria-live="polite"></p>
+    <div class="optima-summary" data-role="optima-count"></div>
+    <div class="optima-supplier-list" data-role="optima-list"></div>
+  </section>
+</template></body></html>

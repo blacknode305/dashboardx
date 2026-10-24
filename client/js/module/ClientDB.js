@@ -1,5 +1,3 @@
-import { clearTelegramToken, clearAllTelegramTokens } from './TelegramSession.js';
-
 const STORAGE_KEY = 'dashboardx.local.v1';
 const LAYOUT_PREFIX = 'dashboardx.layout.';
 const version = 2;
@@ -55,7 +53,7 @@ export default class ClientDB {
         if (id !== '__proto__' && instance && instance.id === id && typeof instance.type === 'string' && instance.type !== 'add') {
           Object.defineProperty(state.instances, id, {
             value: {
-              id, type: instance.type,
+              id, type: instance.type === 'telegramSettings' ? 'dashboardSettings' : instance.type,
               legacyKey: typeof instance.legacyKey === 'string' ? instance.legacyKey : undefined,
               // Existing instances get fresh empty settings unless they were saved
               // by the new per-instance state implementation.
@@ -163,7 +161,6 @@ export default class ClientDB {
     const present = new Set(this.state.workspaces.flatMap(w => w.widgets));
     for (const id of Object.keys(this.state.instances)) {
       if (!present.has(id)) {
-        clearTelegramToken(id); // Avoid reusing ephemeral secrets when a freed ID is assigned again.
         delete this.state.instances[id];
       }
     }
@@ -234,12 +231,12 @@ export default class ClientDB {
   }
 
   reset() {
-    clearAllTelegramTokens();
     const keys = [];
     for (let i = 0; i < this.storage.length; i++) {
       const key = this.storage.key(i);
       if (key && (
         key.startsWith('dashboardx.local.') ||
+        key.startsWith('dashboardx.credentials.') ||
         key.startsWith('dashboardx.layout.') ||
         key === 'finance_local' ||
         key === 'finance_blacknode301'
