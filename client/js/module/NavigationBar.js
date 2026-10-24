@@ -1,4 +1,5 @@
 import WidgetBase from './WidgetBase.js';
+
 export default class NavigationBar extends HTMLElement {
   constructor(categories) {
     super();
@@ -9,14 +10,20 @@ export default class NavigationBar extends HTMLElement {
       button.className = 'nav--element';
       button.textContent = category;
       button.addEventListener('click', () => this.filterWidgets(category));
-      this.append(button);
+      this.appendChild(button);
     });
   }
+
   filterWidgets(category) {
     this.querySelectorAll('button').forEach(button =>
       button.setAttribute('aria-pressed', String(button.textContent === category))
     );
     document.querySelectorAll('widget-element.widget--element').forEach(widget => {
+      // Exactly one widget manager stays visible on every workspace and every category.
+      if (widget.templateId === 'add') {
+        widget.style.display = 'flex';
+        return;
+      }
       const hidden = widget.classList.contains('is-hidden');
       let show = false;
       if (category === 'all') show = !hidden;
@@ -29,4 +36,4 @@ export default class NavigationBar extends HTMLElement {
     });
   }
 }
-window.customElements.define('navigation-bar', NavigationBar);
+customElements.define('navigation-bar', NavigationBar);

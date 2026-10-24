@@ -9,6 +9,8 @@ import WidgetLogic from './WidgetLogic.js';
 export default class WidgetElement extends WidgetBase {
   // lifecycle-хук Web Components вызывается автоматически браузером, когда элемент <widget-element> добавлен в DOM
   connectedCallback() {
+    if (this._built) return;
+    this._built = true;
     // Ищем в документе <template> у которого есть атрибут data-widget и data-id равный this.templateId (ID текущего виджета)
     const template = document.querySelector(`template[data-widget][data-id="${this.templateId}"]`);
     // Строим DOM-структуру виджета на основе найденного template метод определён в WidgetBase

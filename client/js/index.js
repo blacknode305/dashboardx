@@ -3,7 +3,6 @@ import ClientDB from './module/ClientDB.js';
 import WidgetElement from './module/WidgetElement.js';
 import NavigationBar from './module/NavigationBar.js';
 
-// Each template is an existing static HTML file. No Node.js or Webpack required.
 const filenames = [
   '_add.html', '_audioPlayer.html', '_binanceApi.html', '_calculator.html',
   '_datetime.html', '_dayBalance.html', '_financeSummary.html', '_financeTable.html',
@@ -12,113 +11,199 @@ const filenames = [
 ];
 const disabled = new Set(['audioPlayer', 'serverConsole', 'telegramBot']);
 const store = new ClientDB();
+window.dashboardxStore = store;
+let templates = [];
 
 async function loadTemplates() {
-  const templates = await Promise.all(filenames.map(async file => {
-    const response = await fetch(new URL('../' + file, import.meta.url));
-    if (!response.ok) throw new Error(file + ': HTTP ' + response.status);
+  const list = await Promise.all(filenames.map(async name => {
+    const response = await fetch(new URL('../' + name, import.meta.url));
+    if (!response.ok) throw new Error(name + ': HTTP ' + response.status);
     const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
     const template = doc.querySelector('template[data-widget]');
-    if (!template) throw new Error(file + ': widget template missing');
+    if (!template) throw new Error(name + ': template missing');
     return document.importNode(template, true);
   }));
-  document.body.append(...templates);
+  document.body.append(...list);
+  templates = list.filter(t => !disabled.has(t.dataset.id));
+  window.dashboardxTemplates = templates.map(t => ({
+    id: t.dataset.id, title: t.dataset.title || t.dataset.id, category: t.dataset.category || 'other'
+  }));
 }
 
-function availableTemplates() {
-  return [...document.querySelectorAll('template[data-widget]')].filter(t => !disabled.has(t.dataset.id));
+function reload() {
+  location.reload();
 }
 
-function render() {
-  const select = document.getElementById('workspace-select');
-  select.replaceChildren();
-  for (const ws of store.state.workspaces) {
-    const option = document.createElement('option');
-    option.value = ws.id;
-    option.textContent = ws.name;
-    select.append(option);
-  }
-  select.value = store.workspace.id;
-  const templates = availableTemplates();
-  const widgetSelect = document.getElementById('widget-select');
-  widgetSelect.replaceChildren();
-  for (const t of templates) {
-    if (store.workspace.widgets.includes(t.dataset.id)) continue;
-    const opt = document.createElement('option');
-    opt.value = t.dataset.id;
-    opt.textContent = t.dataset.title || t.dataset.id;
-    widgetSelect.append(opt);
-  }
-  document.getElementById('add-widget').disabled = widgetSelect.options.length === 0;
+function renderWorkspaceTabs() {
+  const tabs = document.getElementById('workspace-tabs');
+  tabs.replaceChildren();
+  for (const workspace of store.state.workspaces) {
+    const tile = document.createElement('div');
+    tile.className = 'workspace-tile' + (workspace.id === store.workspace.id ? ' is-active' : '');
 
+    const title = document.createElement('button');
+    title.type = 'button';
+    title.className = 'workspace-name';
+    title.textContent = workspace.name;
+    title.title = 'Перейти на стол «' + workspace.name + '»';
+    title.setAttribute('aria-pressed', String(workspace.id === store.workspace.id));
+    title.addEventListener('click', () => {
+      if (store.selectWorkspace(workspace.id)) reload();
+    });
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'workspace-delete';
+    remove.textContent = '×';
+    remove.title = 'Удалить рабочий стол «' + workspace.name + '»';
+    remove.setAttribute('aria-label', remove.title);
+    remove.addEventListener('click', () => {
+      const question = 'Удалить рабочий стол «' + workspace.name + '»? Он исчезнет вместе с его расположением виджетов. Виджеты на других столах останутся.';
+      if (confirm(question) && store.deleteWorkspace(workspace.id)) reload();
+    });
+    tile.append(title, remove);
+    tabs.append(tile);
+  }
+  const create = document.createElement('button');
+  create.type = 'button';
+  create.id = 'create-workspace';
+  create.textContent = '+';
+  create.title = 'Создать рабочий стол';
+  create.setAttribute('aria-label', create.title);
+  create.addEventListener('click', () => {
+    const name = prompt('Название нового рабочего стола:');
+    if (name && store.addWorkspace(name)) reload();
+  });
+  tabs.append(create); // Always exactly one permanent + tile, after all desktops.
+}
+
+function makeWidget(type, instanceId, index, wide) {
+  const template = templates.find(t => t.dataset.id === type);
+  if (!template) return null;
+  const instance = new WidgetElement({
+    id: type,
+    instanceId,
+    workspaceId: store.workspace.id,
+    legacyKey: store.getInstance(instanceId)?.legacyKey,
+    category: template.dataset.category || 'other',
+    title: template.dataset.title || type
+  });
+  if (!instance.styleData.top) {
+    const availableWidth = Math.max(320, window.innerWidth - (wide ? 410 : 20));
+    const cols = wide ? Math.max(1, Math.floor(availableWidth / 350)) : 1;
+    instance.style.top = (wide ? 22 : 465) + Math.floor(index / cols) * 320 + 'px';
+    instance.style.left = (wide ? 390 : 14) + (index % cols) * 350 + 'px';
+  }
+  return instance;
+}
+
+function renderCanvas() {
   const canvas = document.getElementById('workspace-canvas');
   canvas.replaceChildren();
-  const lookup = new Map(templates.map(t => [t.dataset.id, t]));
-  const cols = Math.max(1, Math.floor(Math.max(340, canvas.clientWidth) / 360));
-  store.workspace.widgets.forEach((type, i) => {
-    const t = lookup.get(type);
-    if (!t) return;
-    const element = new WidgetElement({
-      id: type,
-      instanceId: store.workspace.id + '-' + type + '-widget',
-      workspaceId: store.workspace.id,
-      category: t.dataset.category || 'other',
-      title: t.dataset.title || type
-    });
-    if (!element.styleData.top) {
-      element.style.top = 24 + Math.floor(i / cols) * 300 + 'px';
-      element.style.left = 14 + (i % cols) * 360 + 'px';
-    }
-    canvas.appendChild(element);
+  const wide = window.innerWidth >= 760;
+  // Manager is a built-in tool, not a database widget. Users cannot remove or duplicate it.
+  const manager = makeWidget('add', 'manager-' + store.workspace.id, 0, wide);
+  if (manager) {
+    if (!manager.styleData.top) { manager.style.top = '14px'; manager.style.left = '14px'; }
+    canvas.append(manager);
+  }
+
+  store.workspace.widgets.forEach((id, index) => {
+    const instance = store.getInstance(id);
+    if (!instance) return;
+    const el = makeWidget(instance.type, id, index, wide);
+    if (el) canvas.append(el);
   });
 
-  const categories = ['all','pinned','hidden','favorite', ...new Set(templates.map(t => t.dataset.category))];
-  const navbar = new NavigationBar(categories);
-  document.getElementById('widget-navigation').replaceChildren(navbar);
-  navbar.filterWidgets('all');
+  const categories = ['all', 'pinned', 'hidden', 'favorite',
+    ...new Set(templates.filter(t => t.dataset.id !== 'add').map(t => t.dataset.category))];
+  const nav = new NavigationBar(categories);
+  document.getElementById('widget-navigation').replaceChildren(nav);
+  nav.filterWidgets('all');
 }
 
-function reload() { window.location.reload(); }
+function shareInstance(id) {
+  const alternatives = store.state.workspaces.filter(w => w.id !== store.workspace.id);
+  if (!alternatives.length) {
+    alert('Сначала создайте ещё один рабочий стол кнопкой + вверху.');
+    return;
+  }
+  const choices = alternatives.map((w, index) =>
+    String(index + 1) + '. ' + w.name + (w.widgets.includes(id) ? ' (уже есть)' : '')
+  ).join('\n');
+  const response = prompt('На каком рабочем столе показать тот же экземпляр ' + id + '?\n' + choices + '\nВведите номер:');
+  if (response === null) return;
+  const index = Number(response) - 1;
+  if (!Number.isInteger(index) || !alternatives[index]) {
+    alert('Неверный номер рабочего стола.');
+    return;
+  }
+  if (!store.showInstance(id, alternatives[index].id)) {
+    alert('Этот экземпляр уже отображается на выбранном рабочем столе.');
+  } else {
+    reload();
+  }
+}
+
+function widgetAction(event) {
+  const { action, type, id } = event.detail || {};
+  switch (action) {
+    case 'create':
+      if (templates.some(t => t.dataset.id === type && type !== 'add') && store.createInstance(type)) reload();
+      break;
+    case 'link':
+      if (store.showInstance(id)) reload();
+      break;
+    case 'clone':
+      if (store.cloneInstance(id)) reload();
+      break;
+    case 'share':
+      if (store.workspace.widgets.includes(id)) shareInstance(id);
+      break;
+    case 'remove':
+      if (store.workspace.widgets.includes(id) && confirm('Убрать экземпляр ' + id + ' с этого стола?')) {
+        store.removeInstanceFromWorkspace(id); reload();
+      }
+      break;
+    default: break;
+  }
+}
+
 async function boot() {
   try {
     document.documentElement.dataset.theme = store.state.system.theme.active === 'light' ? 'light' : 'dark';
     await loadTemplates();
-    document.getElementById('workspace-select').addEventListener('change', event => {
-      store.selectWorkspace(event.target.value); reload();
-    });
-    document.getElementById('create-workspace').addEventListener('click', () => {
-      const name = prompt('Название нового рабочего стола:');
-      if (name) { store.addWorkspace(name); reload(); }
-    });
-    document.getElementById('add-widget').addEventListener('click', () => {
-      store.addWidget(document.getElementById('widget-select').value); reload();
+
+    document.getElementById('clear-storage').addEventListener('click', () => {
+      if (confirm('Очистить localStorage DashboardX? Все рабочие столы, виджеты, финансы и настройки этого приложения будут удалены без возможности отмены.')) {
+        store.reset(); reload();
+      }
     });
     document.getElementById('theme-toggle').addEventListener('click', () => {
       store.state.system.theme.active = store.state.system.theme.active === 'dark' ? 'light' : 'dark';
       store.save(); reload();
     });
-    window.addEventListener('dashboardx:remove-widget', event => {
-      if (confirm('Удалить этот виджет с рабочего стола?')) {
-        store.removeWidget(event.detail.type); reload();
-      }
-    });
-    window.addEventListener('dashboardx:move-widget', event => {
-      const other = store.state.workspaces.filter(w => w.id !== store.workspace.id);
-      if (!other.length) { alert('Сначала создайте ещё один рабочий стол.'); return; }
-      const requested = prompt('Переместить на рабочий стол: ' + other.map(w => w.name).join(', '));
-      const target = other.find(w => w.name === requested);
-      if (target) { store.moveWidget(event.detail.type, target.id); reload(); }
-    });
+
+    window.addEventListener('dashboardx:widget-action', widgetAction);
+    window.addEventListener('dashboardx:remove-widget', event =>
+      widgetAction({ detail: { action: 'remove', id: event.detail.id } })
+    );
+    window.addEventListener('dashboardx:share-widget', event => shareInstance(event.detail.id));
     eventBus.on('finance:dayBalanceWidget:updated', () => store.save());
-    render();
+
+    renderWorkspaceTabs();
+    renderCanvas();
     store.save();
     document.getElementById('app-loader')?.remove();
   } catch (error) {
-    console.error('DashboardX initialization failed:', error);
+    console.error('DashboardX startup failed:', error);
     const label = document.getElementById('loader-text');
     if (label) label.textContent = 'Ошибка запуска: ' + error.message;
   }
 }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
-else boot();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot, { once: true });
+} else {
+  boot();
+}

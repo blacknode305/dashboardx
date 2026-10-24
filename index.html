@@ -8,12 +8,10 @@
 </head>
 <body>
 <header id="app-toolbar">
-<strong class="app-brand">Dashboard<span>X</span></strong>
-<label>Рабочий стол <select id="workspace-select" aria-label="Рабочий стол"></select></label>
-<button id="create-workspace" type="button">+ Стол</button>
-<label>Виджет <select id="widget-select" aria-label="Виджет"></select></label>
-<button id="add-widget" type="button">+ Добавить</button>
-<button id="theme-toggle" type="button">Тема</button>
+  <strong class="app-brand">Dashboard<span>X</span></strong>
+  <button type="button" id="clear-storage" class="reset-storage" title="Удалить локальные данные DashboardX">Очистить localStorage</button>
+  <button type="button" id="theme-toggle" class="toolbar-theme">Тема</button>
+  <div id="workspace-tabs" role="group" aria-label="Рабочие столы"></div>
 </header>
 <nav id="widget-navigation" aria-label="Категории"></nav>
 <main id="workspace-canvas" aria-label="Рабочая область"></main>

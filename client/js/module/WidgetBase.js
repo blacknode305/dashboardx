@@ -22,13 +22,17 @@ export default class WidgetBase extends HTMLElement {
   initBase(config) {
     // ID виджета из конфига
     this.id = config.instanceId || config.id + 'Widget';
+    this.instanceId = this.id;
     this.workspaceId = config.workspaceId || 'home';
+    this.legacyKey = config.legacyKey || null;
+    this.storageKey = 'dashboardx.layout.' + this.workspaceId + '.' + this.instanceId;
+    this.dataset.widgetType = config.id;
     // Категория виджета для навигации
     this.category = config.category;
     // CSS классы виджета (основной и категории навигации)
     this.className = `widget--element ${this.category}--widget`;
     // Заголовок виджета
-    this.widgetTitle = config.title;
+    this.widgetTitle = config.title + (config.id === 'add' ? '' : ' · ' + this.instanceId);
     // ID шаблона виджета
     this.templateId = config.id;
   }
@@ -39,7 +43,7 @@ export default class WidgetBase extends HTMLElement {
     // Пробуем получить данные из localStorage
     try {
       // Получаем сохранённые данные
-      const stored = localStorage.getItem(this.id);
+      const stored = localStorage.getItem(this.storageKey) || (this.legacyKey ? localStorage.getItem(this.legacyKey) : null);
       // Если данные есть — парсим JSON
       if (stored) {
         this.styleData = JSON.parse(stored);
@@ -86,7 +90,8 @@ export default class WidgetBase extends HTMLElement {
       favorite: this.classList.contains('is-favorite')
     };
     // Сохраняем в localStorage
-    localStorage.setItem(this.id, JSON.stringify(data));
+    try { localStorage.setItem(this.storageKey, JSON.stringify(data)); }
+    catch (error) { console.warn('Unable to save widget layout:', error); }
   }
   // Создание заголовка виджета
   buildHeader() {
@@ -102,13 +107,18 @@ export default class WidgetBase extends HTMLElement {
     title.textContent = this.widgetTitle;
     // Добавляем элементы в хедер
     this.header.append(title);
-    const removeButton = document.createElement('button');
-    removeButton.className = 'widget-remove';
-    removeButton.type = 'button';
-    removeButton.title = 'Удалить виджет';
-    removeButton.textContent = '×';
-    removeButton.addEventListener('click', () => window.dispatchEvent(new CustomEvent('dashboardx:remove-widget', { detail: { type: this.templateId } })));
-    this.header.append(removeButton);
+    if (this.templateId !== 'add') {
+      const removeButton = document.createElement('button');
+      removeButton.className = 'widget-remove';
+      removeButton.type = 'button';
+      removeButton.title = 'Убрать виджет с текущего стола';
+      removeButton.textContent = '×';
+      removeButton.addEventListener('click', event => {
+        event.stopPropagation();
+        window.dispatchEvent(new CustomEvent('dashboardx:remove-widget', { detail: { id: this.instanceId } }));
+      });
+      this.header.append(removeButton);
+    }
     // Привязываем drag к хэдэру
     this.bindPointer(this.header, e => this.startDrag(e));
     // Добавляем хедер в виджет в buildFromTemplate()
@@ -141,6 +151,7 @@ export default class WidgetBase extends HTMLElement {
     this.footer = document.createElement('div');
     // CSS класс футера
     this.footer.className = 'widget--element--footer';
+    if (this.templateId === 'add') return; // Manager is permanent and has no hide/delete controls.
     // Добавляем элементы в футер
     this.footer.append(
       // Кнопка сохранения
@@ -228,6 +239,7 @@ export default class WidgetBase extends HTMLElement {
   // Начало перетаскивания
   startDrag(e) {
     // Предотвращаем стандартное поведение
+    if (e.target.closest('button, input, select, textarea, a')) return;
     e.preventDefault();
     // Если закреплён — не двигаем
     if (this.classList.contains('is-pinned')) return;
@@ -345,6 +357,6 @@ export default class WidgetBase extends HTMLElement {
   }
   // Переключение окружения
   toggleWorkplace() {
-    window.dispatchEvent(new CustomEvent('dashboardx:move-widget', { detail: { type: this.templateId } }));
+    window.dispatchEvent(new CustomEvent('dashboardx:share-widget', { detail: { id: this.instanceId } }));
   }
 }
