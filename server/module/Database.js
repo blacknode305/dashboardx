@@ -37,13 +37,7 @@ class Database {
       catch (err) {
         console.error(`Error loading ${file}:`, err.message);
       }
-      console.log('server ->' + 
-        'module ->' + 
-        'Database.js ->' + 
-        'init() ->' + 
-        'this', 
-        this
-      );
+      console.log('Database loaded:', name);
     }
   }
   update(name) {

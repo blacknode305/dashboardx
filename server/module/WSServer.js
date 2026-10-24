@@ -1,120 +1,120 @@
-import { WebSocketServer } from 'ws';
-
-import db from './Database.js';  
-
+import { WebSocket, WebSocketServer } from 'ws';
+import db from './Database.js';
 import server from './Server.js';
+import {
+  createClientSnapshot,
+  isAllowedWsOrigin,
+  isWsConfigured,
+  verifyWsToken,
+} from './wsSecurity.js';
+
+const AUTH_TIMEOUT_MS = 120000;
+const MAX_MESSAGE_BYTES = 16 * 1024;
 
 class WSServer {
   constructor() {
-    this.wss = new WebSocketServer({ server: server.http });
+    this.wss = new WebSocketServer({
+      server: server.http,
+      maxPayload: MAX_MESSAGE_BYTES,
+      perMessageDeflate: false,
+    });
+    this.clients = new Set(); // Authenticated clients only.
     this.counter = 0;
-    this.ws = [ ];
+    if (!isWsConfigured(process.env.DASHBOARDX_WS_TOKEN)) {
+      console.warn('WebSocket disabled: set DASHBOARDX_WS_TOKEN (32+ characters) in your local .env');
+    }
     this.init();
   }
-  init(wss) {
-    this.wss.on('connection', (ws) => {
+
+  init() {
+    this.wss.on('connection', (ws, request) => {
+      if (!isWsConfigured(process.env.DASHBOARDX_WS_TOKEN)) {
+        ws.close(1013, 'WebSocket authentication is not configured');
+        return;
+      }
+      if (!isAllowedWsOrigin(request.headers.origin, request.headers.host)) {
+        ws.close(1008, 'Origin not allowed');
+        return;
+      }
+
       ws.id = this.counter++;
-      this.ws.push(ws);
-      console.log(`Client WebSocket ${ws.id} connected:`);
-      // Отправка базы данных клиенту
-      const { ROOT_PATH, ...message } = db;
-      this.ws[ws.id].send(JSON.stringify({ 
-        type: 'wsServer:message:db', 
-        message: message
-      }));
-      
-      
-      // TODO: ...
-      ws.on('message', (message) => {
+      let authenticated = false;
+      const authTimeout = setTimeout(() => ws.close(1008, 'Authentication timeout'), AUTH_TIMEOUT_MS);
+      authTimeout.unref?.();
+      ws.send(JSON.stringify({ type: 'wsServer:auth:required' }));
+
+      ws.on('message', (rawMessage) => {
+        let data;
         try {
-          const data = JSON.parse(message);
-          //console.log({ type: 'ws:client:message', message: data });
-          //console.log('clients', wss.clients[0]);
-          
-          // Ответ клиенту
-          if (data.type === 'get#workplace') {
-            console.log('GETWORKPLACE');
+          data = JSON.parse(rawMessage.toString());
+          if (!data || typeof data !== 'object' || Array.isArray(data) || typeof data.type !== 'string') {
+            throw new Error('Invalid request');
           }
-          ws.send(JSON.stringify({ type: 'ws:server:message', message: 'Сообщение получено!' }));
-          
-          // Пример broadcast всем клиентам
-          /*
-          wss.clients.forEach((client) => {
-            db.wss = [ ];
-            if (client !== ws && client.readyState === WebSocket.OPEN) {
-              client.send(JSON.stringify({ type: 'ws:server:message', message: 'Наслаждайся процессом!' }));
-            }
-            if (client === ws && client.readyState === WebSocket.OPEN) {
-              db.wss.push({
-                id: 'id',
-                info: {
-                  username: 'blacknode301',
-                  telegramId: db.telegram[0].id,
-                  telegram: db.telegram[0],
-                  other: undefined,
-                },
-                client: client,
-              });
-              //console.log(db.wss);
-              client.send(JSON.stringify({ type: 'ws:server:message', message: 'Наслаждайся процессом!' }));
-            }
-          });
-          */
-          
-          ws.send(JSON.stringify({ type: 'ws:server:message', message: 'Наслаждайся уверенно!' }));
-        } 
-        catch (err) {
-          console.error('Ошибка парсинга JSON:', err);
-          ws.send(JSON.stringify({ type: 'error', message: 'Неверный JSON' }));
+        } catch {
+          ws.close(1003, 'Invalid message');
+          return;
+        }
+
+        if (!authenticated) {
+          if (data.type !== 'auth' || !verifyWsToken(data.token, process.env.DASHBOARDX_WS_TOKEN)) {
+            ws.close(1008, 'Authentication failed');
+            return;
+          }
+          authenticated = true;
+          clearTimeout(authTimeout);
+          this.clients.add(ws);
+          ws.send(JSON.stringify({ type: 'wsServer:auth:ok' }));
+          ws.send(JSON.stringify({
+            type: 'wsServer:message:db',
+            message: createClientSnapshot(db),
+          }));
+          return;
+        }
+
+        if (data.type === 'get#workplace') {
+          ws.send(JSON.stringify({
+            type: 'wsServer:message:workplace',
+            message: createClientSnapshot(db).workplace,
+          }));
+        } else {
+          ws.send(JSON.stringify({ type: 'wsServer:error', message: 'Unknown request' }));
         }
       });
+
       ws.on('close', () => {
-        console.log('Client WebSocket отключен');
-        //db.ws[ws.id];
+        clearTimeout(authTimeout);
+        this.clients.delete(ws);
       });
+      ws.on('error', (error) => console.warn('WebSocket client error:', error.message));
     });
   }
+
   sendAll(data) {
     const message = JSON.stringify(data);
-    for (const ws of db.ws) {
-      if (ws.readyState === 1) {
-        console.log('log:wsServer.js:sendAll:message', message);
-        ws.send(message);
-      }
+    for (const ws of this.clients) {
+      if (ws.readyState === WebSocket.OPEN) ws.send(message);
     }
   }
+
   sendOne(data, filter) {
     const message = JSON.stringify(data);
-    for (const ws of db.ws) {
-      if (filter(ws) && ws.readyState === 1) {
-        ws.send(message);
-      }
+    for (const ws of this.clients) {
+      if (ws.readyState === WebSocket.OPEN && filter(ws)) ws.send(message);
     }
   }
-  sendLog(link, data) { 
+
+  sendLog(link, data) {
     const date = new Date();
-    const message = JSON.stringify({
+    this.sendAll({
       type: 'serverLog',
-      link: data.link,
+      link,
       datetime: {
         d: date.toLocaleDateString('ru-RU'),
         t: date.toLocaleTimeString('ru-RU'),
       },
-      message: data, 
+      message: data,
     });
-    for (const ws of db.ws) {
-      if (ws.readyState === 1) {
-        console.log(message);
-        ws.send(message);
-      }
-    }
   }
 }
 
 export default new WSServer();
-
-/*
-wsServer.sendOne(ws => ws.id === 'blacknode301', { message: 'hello' });
-wsServer.sendAll({ type: 'eth', price: 2450 });
-
-*/
