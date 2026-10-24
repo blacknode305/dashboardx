@@ -201,7 +201,7 @@ function renderCanvas() {
   const image=store.workspace.backgroundUrl;
   // Wallpaper belongs to the viewport, not the scrollable content.
   document.body.style.backgroundImage=image
-    ? 'linear-gradient(rgba(7,12,22,.20),rgba(7,12,22,.25)),url('+JSON.stringify(image)+')' : '';
+    ? 'linear-gradient(rgba(7,12,22,.13),rgba(7,12,22,.18)),url('+JSON.stringify(image)+')' : '';
   document.body.classList.toggle('has-custom-wallpaper',Boolean(image));
   // Keep the panel and widgets in separate lanes; avoid covering dropdown controls.
   const wide = window.innerWidth >= 960;

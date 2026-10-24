@@ -826,14 +826,14 @@ body.has-custom-wallpaper {background-attachment:fixed;}
 html, body { font-family: Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif; }
 body:not(.has-custom-wallpaper) {
   background-color:#171e25;
-  background-image:linear-gradient(rgba(20,27,33,.69),rgba(18,24,30,.81)),url('../src/dashboardx-wallpaper.svg');
+  background-image:linear-gradient(rgba(20,27,33,.56),rgba(18,24,30,.68)),url('../src/dashboardx-wallpaper.svg');
   background-position:center center;
   background-size:cover;
   background-attachment:fixed;
 }
 :root[data-theme="light"] body:not(.has-custom-wallpaper) {
   background-color:#e8eceb;
-  background-image:linear-gradient(rgba(233,238,236,.83),rgba(225,231,229,.90)),url('../src/dashboardx-wallpaper.svg');
+  background-image:linear-gradient(rgba(233,238,236,.70),rgba(225,231,229,.77)),url('../src/dashboardx-wallpaper.svg');
 }
 /* Generated cosmic overlay stays in the repository, but is not part of Urban. */
 body:not(.has-custom-wallpaper)::before { display:none!important; }
@@ -1375,4 +1375,18 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   #workspace-canvas .dx-picker > summary {
     transition:none;
   }
+}
+
+/* ID-specific toolbar hover: overrides the ID-specific resting backgrounds. */
+#app-toolbar .toolbar-controls > button#fullscreen-toggle:hover:not(:disabled),
+#app-toolbar .toolbar-controls > button#background-button:hover:not(:disabled) {
+  background:var(--dx-hover-bg);
+  border-color:var(--dx-hover-border);
+  color:var(--dx-hover-text);
+}
+/* Keyboard focus matches the hover emphasis on those same controls. */
+#app-toolbar .toolbar-controls > button#fullscreen-toggle:focus-visible,
+#app-toolbar .toolbar-controls > button#background-button:focus-visible {
+  background:var(--dx-hover-soft);
+  border-color:var(--dx-hover-border);
 }
