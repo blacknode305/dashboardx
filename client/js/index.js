@@ -15,18 +15,27 @@ window.dashboardxStore = store;
 let templates = [];
 
 async function loadTemplates() {
-  const list = await Promise.all(filenames.map(async name => {
+  // One unavailable optional template must not disable all widget controls.
+  const results = await Promise.allSettled(filenames.map(async name => {
     const response = await fetch(new URL('../' + name, import.meta.url));
     if (!response.ok) throw new Error(name + ': HTTP ' + response.status);
     const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
     const template = doc.querySelector('template[data-widget]');
-    if (!template) throw new Error(name + ': template missing');
+    if (!template?.dataset.id) throw new Error(name + ': valid widget template missing');
     return document.importNode(template, true);
   }));
-  document.body.append(...list);
-  templates = list.filter(t => !disabled.has(t.dataset.id));
-  window.dashboardxTemplates = templates.map(t => ({
-    id: t.dataset.id, title: t.dataset.title || t.dataset.id, category: t.dataset.category || 'other'
+  const loaded = results.filter(result => result.status === 'fulfilled').map(result => result.value);
+  const failed = results.filter(result => result.status === 'rejected');
+  if (failed.length) console.warn('Some widget templates are unavailable:', failed.map(result => result.reason));
+  document.body.append(...loaded);
+  templates = loaded.filter(template => !disabled.has(template.dataset.id));
+  if (!templates.some(template => template.dataset.id === 'add')) {
+    throw new Error('Не загрузился виджет добавления. Проверьте client/_add.html и настройки GitHub Pages.');
+  }
+  window.dashboardxTemplates = templates.map(template => ({
+    id: template.dataset.id,
+    title: template.dataset.title || template.dataset.id,
+    category: template.dataset.category || 'other'
   }));
 }
 
@@ -77,7 +86,7 @@ function renderWorkspaceTabs() {
   tabs.append(create); // Always exactly one permanent + tile, after all desktops.
 }
 
-function makeWidget(type, instanceId, index, wide) {
+function makeWidget(type, instanceId, index, wide, managerBottom = 400, managerWidth = 490) {
   const template = templates.find(t => t.dataset.id === type);
   if (!template) return null;
   const instance = new WidgetElement({
@@ -89,10 +98,12 @@ function makeWidget(type, instanceId, index, wide) {
     title: template.dataset.title || type
   });
   if (!instance.styleData.top) {
-    const availableWidth = Math.max(320, window.innerWidth - (wide ? 410 : 20));
+    const startX = wide ? managerWidth + 30 : 14;
+    const availableWidth = Math.max(330, window.innerWidth - startX - 18);
     const cols = wide ? Math.max(1, Math.floor(availableWidth / 350)) : 1;
-    instance.style.top = (wide ? 22 : 465) + Math.floor(index / cols) * 320 + 'px';
-    instance.style.left = (wide ? 390 : 14) + (index % cols) * 350 + 'px';
+    const startY = wide ? 18 : managerBottom + 24;
+    instance.style.top = startY + Math.floor(index / cols) * 325 + 'px';
+    instance.style.left = startX + (index % cols) * 350 + 'px';
   }
   return instance;
 }
@@ -100,7 +111,8 @@ function makeWidget(type, instanceId, index, wide) {
 function renderCanvas() {
   const canvas = document.getElementById('workspace-canvas');
   canvas.replaceChildren();
-  const wide = window.innerWidth >= 760;
+  // Keep the panel and widgets in separate lanes; avoid covering dropdown controls.
+  const wide = window.innerWidth >= 960;
   // Manager is a built-in tool, not a database widget. Users cannot remove or duplicate it.
   const manager = makeWidget('add', 'manager-' + store.workspace.id, 0, wide);
   if (manager) {
@@ -108,10 +120,12 @@ function renderCanvas() {
     canvas.append(manager);
   }
 
+  const managerBottom = manager ? manager.offsetTop + Math.max(manager.offsetHeight, 300) : 360;
+  const managerWidth = manager ? Math.max(manager.offsetWidth, 370) : 490;
   store.workspace.widgets.forEach((id, index) => {
     const instance = store.getInstance(id);
     if (!instance) return;
-    const el = makeWidget(instance.type, id, index, wide);
+    const el = makeWidget(instance.type, id, index, wide, managerBottom, managerWidth);
     if (el) canvas.append(el);
   });
 
@@ -193,7 +207,8 @@ async function boot() {
 
     renderWorkspaceTabs();
     renderCanvas();
-    store.save();
+    // Fresh browser storage stays physically empty until the user makes a change.
+    // Do not write starter/demo data simply because the page was opened.
     document.getElementById('app-loader')?.remove();
   } catch (error) {
     console.error('DashboardX startup failed:', error);
