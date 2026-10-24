@@ -38,7 +38,14 @@ export default class ClientDB {
         return state;
       }
       if (Array.isArray(saved.finance?.table)) state.finance = saved.finance;
-      if (saved.rate && typeof saved.rate === 'object' && !Array.isArray(saved.rate)) state.rate = saved.rate;
+      // Do not restore obsolete cached money-conversion quotes (including KZT/RUB/ETH).
+      // Live MoneyConvert quotes are refreshed by each widget and never saved as settings.
+      // Clear ONLY the obsolete rate cache from an existing DashboardX record.
+      // All workspaces, finance entries and user-created instances remain untouched.
+      if (saved.rate && typeof saved.rate === 'object' && Object.keys(saved.rate).length) {
+        try { this.storage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, rate: {} })); }
+        catch (error) { console.warn('Could not clear legacy exchange-rate cache:', error); }
+      }
       state.system.theme.active = saved.system?.theme?.active === 'light' ? 'light' : 'dark';
       state.system.language = ['ru','kz','en'].includes(saved.system?.language) ? saved.system.language : 'ru';
       if (!saved.instances || typeof saved.instances !== 'object' || Array.isArray(saved.instances)) return state;
@@ -46,7 +53,14 @@ export default class ClientDB {
       for (const [id, instance] of Object.entries(saved.instances)) {
         if (id !== '__proto__' && instance && instance.id === id && typeof instance.type === 'string' && instance.type !== 'add') {
           Object.defineProperty(state.instances, id, {
-            value: { id, type: instance.type, legacyKey: typeof instance.legacyKey === 'string' ? instance.legacyKey : undefined },
+            value: {
+              id, type: instance.type,
+              legacyKey: typeof instance.legacyKey === 'string' ? instance.legacyKey : undefined,
+              // Existing instances get fresh empty settings unless they were saved
+              // by the new per-instance state implementation.
+              widgetState: instance.widgetState && typeof instance.widgetState === 'object' &&
+                !Array.isArray(instance.widgetState) ? instance.widgetState : {}
+            },
             enumerable: true, configurable: true, writable: true
           });
         }
@@ -83,7 +97,8 @@ export default class ClientDB {
 
   save() {
     try {
-      this.storage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+      const persistent = { ...this.state, rate: {} };
+      this.storage.setItem(STORAGE_KEY, JSON.stringify(persistent));
       return true;
     } catch (error) {
       console.warn('DashboardX local save failed:', error);
@@ -166,10 +181,29 @@ export default class ClientDB {
     const workspace = this.state.workspaces.find(w => w.id === workspaceId);
     if (!workspace) return null;
     const id = this.createId(this.state, type);
-    this.state.instances[id] = { id, type };
+    this.state.instances[id] = { id, type, widgetState: {} };
     workspace.widgets.push(id);
     this.save();
     return id;
+  }
+
+  // State follows the instance ID, not its workspace placement or geometry.
+  // Sharing one instance across workspaces shares its settings; clones start empty.
+  getWidgetState(instanceId) {
+    const instance = this.getInstance(instanceId);
+    if (!instance) return null;
+    if (!instance.widgetState || typeof instance.widgetState !== 'object' || Array.isArray(instance.widgetState)) {
+      instance.widgetState = {};
+    }
+    return instance.widgetState;
+  }
+
+  updateWidgetState(instanceId, patch) {
+    const instance = this.getInstance(instanceId);
+    if (!instance || !patch || typeof patch !== 'object' || Array.isArray(patch)) return false;
+    const current = this.getWidgetState(instanceId);
+    instance.widgetState = { ...current, ...patch };
+    return this.save();
   }
 
   showInstance(id, workspaceId = this.workspace.id) {

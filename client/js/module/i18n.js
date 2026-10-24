@@ -45,6 +45,7 @@ const dictionaries = {
     'widget.serverConsole':'Консоль сервера',
     'finance.income':'Доход','finance.expense':'Расход','finance.summary':'Итого',
     'finance.date':'Дата','finance.view':'Показать','finance.add':'Добавить',
+    'fx.from':'Исходная валюта','fx.to':'В какую валюту','fx.searchFrom':'Код или название: USD…','fx.searchTo':'Код или название: KZT…','fx.add':'Добавить пару','fx.refresh':'Обновить курсы','fx.loading':'Загрузка доступных валют…','fx.ready':'Валюты загружены','fx.updated':'Курсы обновлены','fx.offline':'Не удалось загрузить курсы. Проверьте интернет и нажмите ↻.','fx.stale':'Нет связи: показаны ранее загруженные данные текущего сеанса.','fx.invalid':'Выберите две валюты из предложенного списка.','fx.same':'Выберите разные валюты.','fx.duplicate':'Эта пара уже добавлена.','fx.savedPairs':'Добавленные пары','fx.empty':'Пока нет пар. Выберите две валюты и нажмите «Добавить пару».','fx.delete':'Удалить пару','fx.rateUnavailable':'Курс недоступен','fx.disclaimer':'Справочные курсы, не для торговых операций',
     'finance.rates':'Курсы валют','finance.addCurrency':'Добавить валюту','finance.high':'Макс.','finance.low':'Мин.','finance.volume':'Объём',
     'wishlist.image':'Изображение','wishlist.name':'Название',
     'wishlist.description':'Описание','wishlist.price':'Цена',
@@ -96,6 +97,7 @@ const dictionaries = {
     'widget.serverConsole':'Сервер консолі',
     'finance.income':'Кіріс','finance.expense':'Шығыс','finance.summary':'Қорытынды',
     'finance.date':'Күні','finance.view':'Көрсету','finance.add':'Қосу',
+    'fx.from':'Бастапқы валюта','fx.to':'Қай валютаға','fx.searchFrom':'Код немесе атау: USD…','fx.searchTo':'Код немесе атау: KZT…','fx.add':'Жұпты қосу','fx.refresh':'Бағамдарды жаңарту','fx.loading':'Валюталар жүктелуде…','fx.ready':'Валюталар жүктелді','fx.updated':'Бағамдар жаңартылды','fx.offline':'Бағамдарды жүктеу мүмкін болмады. Интернетті тексеріп, ↻ басыңыз.','fx.stale':'Желі жоқ: осы сеанстағы алдыңғы деректер көрсетілді.','fx.invalid':'Ұсынылған тізімнен екі валютаны таңдаңыз.','fx.same':'Екі түрлі валютаны таңдаңыз.','fx.duplicate':'Бұл жұп қосылған.','fx.savedPairs':'Қосылған жұптар','fx.empty':'Жұптар жоқ. Екі валютаны таңдап, «Жұпты қосу» түймесін басыңыз.','fx.delete':'Жұпты жою','fx.rateUnavailable':'Бағам қолжетімсіз','fx.disclaimer':'Анықтамалық бағамдар, сауда үшін емес',
     'finance.rates':'Валюта бағамдары','finance.addCurrency':'Валюта қосу','finance.high':'Ең жоғары','finance.low':'Ең төмен','finance.volume':'Көлемі',
     'wishlist.image':'Сурет','wishlist.name':'Атауы',
     'wishlist.description':'Сипаттама','wishlist.price':'Бағасы',
@@ -147,6 +149,7 @@ const dictionaries = {
     'widget.serverConsole':'Server console',
     'finance.income':'Income','finance.expense':'Expense','finance.summary':'Total',
     'finance.date':'Date','finance.view':'View','finance.add':'Add',
+    'fx.from':'From currency','fx.to':'Convert to','fx.searchFrom':'Code or name: USD…','fx.searchTo':'Code or name: KZT…','fx.add':'Add pair','fx.refresh':'Refresh rates','fx.loading':'Loading currencies…','fx.ready':'Currencies loaded','fx.updated':'Rates updated','fx.offline':'Could not load rates. Check the connection and press ↻.','fx.stale':'Offline: showing earlier rates from this browser session.','fx.invalid':'Choose both currencies from the suggestions.','fx.same':'Choose two different currencies.','fx.duplicate':'This pair has already been added.','fx.savedPairs':'Saved pairs','fx.empty':'No pairs yet. Choose two currencies and select Add pair.','fx.delete':'Remove pair','fx.rateUnavailable':'Rate unavailable','fx.disclaimer':'Indicative rates, not for trading',
     'finance.rates':'Exchange rates','finance.addCurrency':'Add currency','finance.high':'High','finance.low':'Low','finance.volume':'Volume',
     'wishlist.image':'Image','wishlist.name':'Name',
     'wishlist.description':'Description','wishlist.price':'Price',
@@ -196,11 +199,6 @@ export function translateWidgetBody(widget,type) {
       if(header)header.textContent=t(key);
     });
     text('[data-action="view-period"]','finance.view');
-  }
-  if(type==='moneyConvertApi') {
-    text('[data-action="add-valute"]','finance.addCurrency');
-    const opt=widget.querySelector('option[value=""]');
-    if(opt)opt.textContent=t('finance.addCurrency');
   }
   if(type==='wishlistPrice') {
     ['image','name','description','price'].forEach(key=>placeholder('[data-input="'+key+'"]','wishlist.'+key));
