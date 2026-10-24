@@ -340,17 +340,30 @@ async function boot() {
     document.documentElement.dataset.theme = store.state.system.theme.active === 'light' ? 'light' : 'dark';
     setLanguage(store.state.system.language);
     translateElement(document);
-    document.getElementById('theme-toggle').textContent =
-      (store.state.system.theme.active === 'dark' ? '☼ ' : '☾ ') + t('ui.theme');
+    document.getElementById('theme-toggle').textContent = store.state.system.theme.active === 'dark' ? '☼' : '☾';
+    document.getElementById('theme-toggle').title = t('ui.theme');
     const languageSwitch = document.getElementById('language-switch');
     languageSwitch.value = store.state.system.language;
+    const languageButtons = document.querySelectorAll('.language-pills [data-lang]');
+    const syncLanguageButtons = () => {
+      languageButtons.forEach(button =>
+        button.setAttribute('aria-pressed', String(button.dataset.lang === languageSwitch.value))
+      );
+    };
     languageSwitch.addEventListener('change', () => {
       store.state.system.language = languageSwitch.value;
       store.save();
       setLanguage(languageSwitch.value);
       translateElement(document);
       updateWorkspace();
+      syncLanguageButtons();
     });
+    languageButtons.forEach(button => button.addEventListener('click', () => {
+      if (languageSwitch.value === button.dataset.lang) return;
+      languageSwitch.value = button.dataset.lang;
+      languageSwitch.dispatchEvent(new Event('change', { bubbles: true }));
+    }));
+    syncLanguageButtons();
     const fullscreenButton=document.getElementById('fullscreen-toggle');
     const updateFullscreenLabel=()=>{
       fullscreenButton.textContent=t(document.fullscreenElement?'ui.exitFullscreen':'ui.fullscreen');
@@ -381,8 +394,8 @@ async function boot() {
       store.state.system.theme.active = store.state.system.theme.active === 'dark' ? 'light' : 'dark';
       store.save();
       document.documentElement.dataset.theme = store.state.system.theme.active;
-      document.getElementById('theme-toggle').textContent =
-        (store.state.system.theme.active === 'dark' ? '☼ ' : '☾ ') + t('ui.theme');
+      document.getElementById('theme-toggle').textContent = store.state.system.theme.active === 'dark' ? '☼' : '☾';
+    document.getElementById('theme-toggle').title = t('ui.theme');
     });
 
     window.addEventListener('dashboardx:widget-action', widgetAction);

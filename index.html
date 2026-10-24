@@ -2,22 +2,33 @@
 <html lang="ru" data-theme="dark">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DashboardX — локальная версия</title>
-<link rel="stylesheet" href="./client/css/style.css?v=dashboardx-brand-20261024">
+<title>DashboardX by blacknode305</title>
+<link rel="stylesheet" href="./client/css/style.css?v=glass-ui-v2">
 </head>
 <body>
 <header id="app-toolbar">
-  <div class="dashboard-brand"><strong class="app-brand">Dashboard<span>X</span></strong><span class="brand-by">by</span><a class="brand-profile" href="https://github.com/blacknode305" target="_blank" rel="noopener noreferrer" aria-label="GitHub profile blacknode305">blacknode305</a></div>
-  <button type="button" id="clear-storage" class="reset-storage" data-i18n="ui.clear" data-i18n-title="ui.clear">Очистить данные</button>
-  <button type="button" id="theme-toggle" class="toolbar-theme" data-i18n="ui.theme" data-i18n-title="ui.theme">Тема</button>
-  <button type="button" id="background-button" class="toolbar-background" data-i18n="ui.background" data-i18n-title="ui.background">Фон</button>
-  <button type="button" id="fullscreen-toggle" class="toolbar-fullscreen" data-i18n="ui.fullscreen" data-i18n-title="ui.fullscreen">Полный экран</button>
-  <label class="toolbar-language" for="language-switch">
-    <span data-i18n="ui.language">Язык</span>
-    <select id="language-switch" aria-label="Language" data-i18n-aria="ui.language">
-      <option value="ru">RU</option><option value="kz">KZ</option><option value="en">EN</option>
-    </select>
-  </label>
+  <div class="dashboard-brand">
+    <strong class="app-brand">Dashboard<span>X</span></strong>
+    <span class="brand-by">by</span>
+    <a class="brand-profile" href="https://github.com/blacknode305" target="_blank" rel="noopener noreferrer" aria-label="GitHub profile blacknode305">blacknode305</a>
+  </div>
+  <div class="toolbar-controls" role="group" aria-label="DashboardX controls">
+    <button type="button" id="theme-toggle" class="toolbar-theme" data-i18n-title="ui.theme" title="Тема">☼</button>
+    <button type="button" id="fullscreen-toggle" class="toolbar-fullscreen" data-i18n="ui.fullscreen" data-i18n-title="ui.fullscreen">Полный экран</button>
+    <button type="button" id="background-button" class="toolbar-background" data-i18n="ui.background" data-i18n-title="ui.background">Фон</button>
+    <button type="button" id="clear-storage" class="reset-storage" data-i18n="ui.clear" data-i18n-title="ui.clear">Очистить данные</button>
+    <div class="toolbar-language" role="group" aria-label="Язык" data-i18n-aria="ui.language">
+      <span data-i18n="ui.language">Язык</span>
+      <div class="language-pills">
+        <button type="button" data-lang="ru" aria-pressed="true">RU</button>
+        <button type="button" data-lang="kz" aria-pressed="false">KZ</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <select id="language-switch" aria-label="Language" data-i18n-aria="ui.language" hidden>
+        <option value="ru">RU</option><option value="kz">KZ</option><option value="en">EN</option>
+      </select>
+    </div>
+  </div>
   <div id="workspace-tabs" role="group" aria-label="Рабочие столы" data-i18n-aria="ui.workspaces"></div>
 </header>
 <nav id="widget-navigation" aria-label="Категории" data-i18n-aria="ui.categories"></nav>
@@ -100,6 +111,6 @@
 </template>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script type="module" src="./client/js/index.js?v=dashboardx-brand-20261024"></script>
+<script type="module" src="./client/js/index.js?v=glass-ui-v2"></script>
 </body>
 </html>
