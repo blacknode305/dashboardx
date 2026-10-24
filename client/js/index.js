@@ -227,6 +227,58 @@ function renderCanvas() {
   updateCanvasHeight();
 }
 
+
+/**
+ * Switch workspaces in place, so holding D + Alt and tapping Tab repeatedly
+ * keeps cycling without resetting the keyboard state on a page reload.
+ * OS-level Alt+Tab cannot be intercepted if the browser never receives it.
+ */
+function switchWorkspaceWithShortcut(step) {
+  const workspaces = store.state.workspaces;
+  if (workspaces.length < 2) return false;
+  const currentIndex = workspaces.findIndex(ws => ws.id === store.state.activeWorkspaceId);
+  const index = currentIndex < 0 ? 0 : currentIndex;
+  const nextIndex = (index + step + workspaces.length) % workspaces.length;
+  if (!store.selectWorkspace(workspaces[nextIndex].id)) return false;
+  renderWorkspaceTabs();
+  renderCanvas();
+  const canvas = document.getElementById('workspace-canvas');
+  canvas.scrollTop = 0;
+  canvas.scrollLeft = 0;
+  measureHeader();
+  return true;
+}
+
+function installWorkspaceShortcuts() {
+  let dHeld = false;
+  window.addEventListener('keydown', event => {
+    if (event.code === 'KeyD') {
+      if (!event.repeat) dHeld = true;
+      // Chrome normally uses Alt+D to focus the address bar.
+      if (event.altKey && store.state.workspaces.length > 1 && !event.ctrlKey && !event.metaKey) {
+        event.preventDefault();
+      }
+      return;
+    }
+    if (!dHeld || !event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return;
+    const tab = event.code === 'Tab';
+    const right = event.code === 'ArrowRight';
+    const left = event.code === 'ArrowLeft';
+    if ((!tab && !right && !left) || store.state.workspaces.length < 2) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.repeat) return;
+    switchWorkspaceWithShortcut(left || (tab && event.shiftKey) ? -1 : 1);
+  }, true);
+  window.addEventListener('keyup', event => {
+    if (event.code === 'KeyD') dHeld = false;
+  }, true);
+  window.addEventListener('blur', () => { dHeld = false; });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) dHeld = false;
+  });
+}
+
 function shareInstance(id) {
   const alternatives = store.state.workspaces.filter(w => w.id !== store.workspace.id);
   if (!alternatives.length) {
@@ -333,6 +385,7 @@ async function boot() {
     renderWorkspaceTabs();
     renderCanvas();
     measureHeader();
+    installWorkspaceShortcuts();
     if(typeof ResizeObserver==='function'){
       const observer=new ResizeObserver(measureHeader);
       observer.observe(document.getElementById('app-toolbar'));
