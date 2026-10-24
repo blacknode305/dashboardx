@@ -32,6 +32,8 @@ window.dashboardxTemplates = CATALOG_ENTRIES.map(([id,entry])=>({
 }));
 const store = new ClientDB();
 let navBar=null;
+// Focus is ephemeral, per workspace, and never written to localStorage.
+const activeWidgetByWorkspace = new Map();
 const deskName = w => w.name === 'Главная' ? t('ui.defaultWorkspace') : w.name;
 window.dashboardxStore = store;
 let templates = [];
@@ -121,7 +123,10 @@ function renderWorkspaceTabs() {
     remove.setAttribute('aria-label', remove.title);
     remove.addEventListener('click', () => {
       const question = t('ui.confirmDelete',{name:deskName(workspace)});
-      if (confirm(question) && store.deleteWorkspace(workspace.id)) updateWorkspace();
+      if (confirm(question) && store.deleteWorkspace(workspace.id)) {
+        activeWidgetByWorkspace.delete(workspace.id);
+        updateWorkspace();
+      }
     });
     tile.append(title, remove);
     tabs.append(tile);
@@ -227,6 +232,11 @@ function renderCanvas() {
   navBar.initialize(categories);
   document.getElementById('widget-navigation').replaceChildren(navBar);
   navBar.filterWidgets('all');
+  const rememberedId = activeWidgetByWorkspace.get(store.workspace.id);
+  const selected = [...surface.querySelectorAll('widget-element')].find(el =>
+    el.instanceId === rememberedId && el.style.display !== 'none'
+  ) || manager;
+  selected?.activate();
   updateCanvasHeight();
 }
 
@@ -391,6 +401,25 @@ async function boot() {
     );
     window.addEventListener('dashboardx:share-widget', event => shareInstance(event.detail.id));
     window.addEventListener('dashboardx:widget-layout', updateCanvasHeight);
+    window.addEventListener('dashboardx:widget-activated', event => {
+      const { workspaceId, id } = event.detail || {};
+      if (workspaceId && id) activeWidgetByWorkspace.set(workspaceId, id);
+    });
+    // Future widgets can listen for dashboardx:widget-keydown on their element.
+    // No default arrow-key actions yet: input fields and page shortcuts keep working.
+    window.addEventListener('keydown', event => {
+      if (event.defaultPrevented || event.isComposing ||
+          event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target;
+      if (target?.isContentEditable ||
+          target?.closest?.('input,textarea,select,[contenteditable="true"]')) return;
+      const active = document.querySelector('#workspace-surface > widget-element.is-focus');
+      if (!active || active.style.display === 'none') return;
+      active.dispatchEvent(new CustomEvent('dashboardx:widget-keydown', {
+        detail: { key:event.key, code:event.code, originalEvent:event },
+        bubbles:false
+      }));
+    });
     window.addEventListener('dashboardx:widget-visibility', () => {
       const category=document.querySelector('#widget-navigation .nav--element[aria-pressed="true"]')?.dataset.category || 'all';
       navBar?.filterWidgets(category);

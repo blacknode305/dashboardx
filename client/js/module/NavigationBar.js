@@ -38,6 +38,12 @@ export default class NavigationBar extends HTMLElement {
       widget.style.display = show ? 'flex' : 'none';
       if (show) widget.style.zIndex = String(WidgetBase.zIndexCounter);
     });
+    // The active window must remain visible; a filter cannot leave focus
+    // attached to an invisible widget and silently steal future shortcuts.
+    const active=document.querySelector('#workspace-surface > widget-element.is-focus');
+    if (active && active.style.display === 'none') {
+      document.querySelector('#workspace-surface > widget-element[data-widget-type="add"]')?.activate();
+    }
   }
 }
 customElements.define('navigation-bar', NavigationBar);

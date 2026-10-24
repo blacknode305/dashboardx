@@ -20,6 +20,7 @@ export default class WidgetBase extends HTMLElement {
     this.category=config.category || 'other';
     this.dataset.widgetType=this.templateId;
     this.className='widget--element ' + this.category + '--widget';
+    this.tabIndex = -1; // An active window can receive keyboard focus without altering tab order.
     this.storageKey='dashboardx.layout.' + this.workspaceId + '.' + this.instanceId;
     this.styleData=this.readStyle();
     this.restoreLayout();
@@ -142,14 +143,44 @@ export default class WidgetBase extends HTMLElement {
     this.body.className = 'widget--element--body';
     this.body.append(template.content.cloneNode(true));
     this.append(this.header, this.body, this.resizeHandle);
+    // Activate even when a child control handles its own pointer or keyboard event.
+    this.addEventListener('pointerdown', event => {
+      this.activate();
+      // Preserve native focus for inputs, buttons, selectors and editable content.
+      const interactive=event.target?.closest?.(
+        'button,input,textarea,select,a,summary,[contenteditable="true"]'
+      );
+      if (!interactive) this.focus({ preventScroll:true });
+    }, { capture:true });
+    this.addEventListener('focusin', () => this.activate());
     this.afterBuild?.();
+  }
+
+  activate() {
+    if (!this.isConnected || this.style.display === 'none') return false;
+    const surface=this.parentElement;
+    if (!surface || surface.id !== 'workspace-surface') return false;
+    if (this.classList.contains('is-focus') &&
+        surface.querySelectorAll('widget-element.is-focus').length === 1) return true;
+    surface.querySelectorAll('widget-element.is-focus').forEach(widget => {
+      if (widget === this) return;
+      widget.classList.remove('is-focus');
+      widget.removeAttribute('data-active');
+      widget.style.zIndex = '';
+    });
+    this.classList.add('is-focus');
+    this.dataset.active = 'true';
+    this.style.zIndex = String(++WidgetBase.zIndexCounter);
+    window.dispatchEvent(new CustomEvent('dashboardx:widget-activated', {
+      detail: { id:this.instanceId, workspaceId:this.workspaceId }
+    }));
+    return true;
   }
 
   pointerDrag(event, update) {
     if (event.button !== 0 && event.pointerType !== 'touch') return;
     event.preventDefault();
-    this.classList.add('is-focus');
-    this.style.zIndex = String(++WidgetBase.zIndexCounter);
+    this.activate();
     const onMove = move => {
       if (move.pointerId !== event.pointerId) return;
       update(move);

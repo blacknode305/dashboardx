@@ -374,20 +374,20 @@ body { background-image:radial-gradient(ellipse at 55% 0,rgba(132,161,199,.08),t
 /* -----------------------------------------------------------------------
    FIXED WORKSPACE & LEGACY WALLPAPER
    This image was shipped in the original client/src folder.
-   CSS file is client/css/style.css => ../src/dashboardx-urban-background.webp.
+   CSS file is client/css/style.css => ../src/dashboardx-urban-background-hq.webp.
    ----------------------------------------------------------------------- */
 :root { --dashboard-head-height: 103px; --workspace-padding: 18px; }
 html,body {width:100%;height:100%;min-height:100%;overflow:hidden;}
 body {
   background-color:var(--bg-main);
-  background-image:linear-gradient(rgba(0,0,0,.12),rgba(0,0,0,.17)),url('../src/dashboardx-urban-background.webp');
+  background-image:linear-gradient(rgba(0,0,0,.12),rgba(0,0,0,.17)),url('../src/dashboardx-urban-background-hq.webp');
   background-size:cover;
   background-position:center center;
   background-repeat:no-repeat;
   background-attachment:fixed;
 }
 :root[data-theme="light"] body {
-  background-image:linear-gradient(rgba(240,240,240,.27),rgba(240,240,240,.31)),url('../src/dashboardx-urban-background.webp');
+  background-image:linear-gradient(rgba(240,240,240,.27),rgba(240,240,240,.31)),url('../src/dashboardx-urban-background-hq.webp');
 }
 body.has-custom-wallpaper {background-attachment:fixed;}
 #app-toolbar {
@@ -826,14 +826,14 @@ body.has-custom-wallpaper {background-attachment:fixed;}
 html, body { font-family: Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif; }
 body:not(.has-custom-wallpaper) {
   background-color:#171e25;
-  background-image:linear-gradient(rgba(0,0,0,.10),rgba(0,0,0,.17)),url('../src/dashboardx-urban-background.webp');
+  background-image:linear-gradient(rgba(0,0,0,.10),rgba(0,0,0,.17)),url('../src/dashboardx-urban-background-hq.webp');
   background-position:center center;
   background-size:cover;
   background-attachment:fixed;
 }
 :root[data-theme="light"] body:not(.has-custom-wallpaper) {
   background-color:#e8eceb;
-  background-image:linear-gradient(rgba(240,240,240,.37),rgba(240,240,240,.43)),url('../src/dashboardx-urban-background.webp');
+  background-image:linear-gradient(rgba(240,240,240,.37),rgba(240,240,240,.43)),url('../src/dashboardx-urban-background-hq.webp');
 }
 /* Generated cosmic overlay stays in the repository, but is not part of Urban. */
 body:not(.has-custom-wallpaper)::before { display:none!important; }
@@ -1390,3 +1390,11 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   background:var(--dx-hover-soft);
   border-color:var(--dx-hover-border);
 }
+
+/* Exactly one selected window: muted Urban border, visible and above its siblings. */
+#workspace-canvas .widget--element.is-focus {
+  z-index:95!important;
+  border-color:var(--dx-panel-strong);
+  box-shadow:0 0 0 1px var(--dx-accent-soft),var(--shadow);
+}
+#workspace-canvas .widget--element:focus { outline:none; }
