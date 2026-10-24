@@ -2,8 +2,10 @@ import WidgetBase from './WidgetBase.js';
 import { t } from './i18n.js';
 
 export default class NavigationBar extends HTMLElement {
-  constructor(categories) {
+  constructor() {
     super();
+  }
+  initialize(categories) {
     this.className = 'nav--container';
     categories.forEach(category => {
       const button = document.createElement('button');

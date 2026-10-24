@@ -83,13 +83,25 @@ export default class AddWidget {
     this.typeLabel.textContent = t('manager.chooseType');
     this.createButton.disabled = true;
 
-    for (const type of availableTypes) {
-      this.typeOptions.append(this.makeOption(widgetTitle(type.id,type.title), type.id, () => {
-        this.selectedType = type.id;
-        this.typeLabel.textContent = widgetTitle(type.id,type.title);
-        this.typePicker.open = false;
-        this.createButton.disabled = false;
-      }));
+    // Group the complete original catalog by category; catalog entries are not
+    // removed when a template cannot load or when the widget needs the server.
+    const groups = ['system', 'finance', 'tools', 'media', 'games', 'telegram'];
+    for (const category of groups) {
+      const entries = availableTypes.filter(type => type.category === category);
+      if (!entries.length) continue;
+      const caption = document.createElement('div');
+      caption.className = 'dx-picker-category';
+      caption.textContent = t('nav.' + category);
+      this.typeOptions.append(caption);
+      for (const type of entries) {
+        const note = type.serverOnly ? t('ui.serverOnly') : type.id;
+        this.typeOptions.append(this.makeOption(widgetTitle(type.id,type.title), note, () => {
+          this.selectedType = type.id;
+          this.typeLabel.textContent = widgetTitle(type.id,type.title);
+          this.typePicker.open = false;
+          this.createButton.disabled = false;
+        }));
+      }
     }
     if (!availableTypes.length) {
       this.typeOptions.append(this.makeEmpty(t('manager.templateUnavailable')));

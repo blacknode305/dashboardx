@@ -11,6 +11,7 @@
   <button type="button" id="clear-storage" class="reset-storage" data-i18n="ui.clear" data-i18n-title="ui.clear">Очистить данные</button>
   <button type="button" id="theme-toggle" class="toolbar-theme" data-i18n="ui.theme" data-i18n-title="ui.theme">Тема</button>
   <button type="button" id="background-button" class="toolbar-background" data-i18n="ui.background" data-i18n-title="ui.background">Фон</button>
+  <button type="button" id="fullscreen-toggle" class="toolbar-fullscreen" data-i18n="ui.fullscreen" data-i18n-title="ui.fullscreen">Полный экран</button>
   <label class="toolbar-language" for="language-switch">
     <span data-i18n="ui.language">Язык</span>
     <select id="language-switch" aria-label="Language" data-i18n-aria="ui.language">
@@ -66,6 +67,37 @@
   </template>
 
 
+<!-- Core system widget is always present, even when template fetches fail. -->
+<template data-widget data-id="add" data-category="system" data-title="Add widget">
+<section class="widget-manager">
+  <div class="manager-section">
+    <h3 class="manager-heading" data-i18n="manager.new">Новый экземпляр</h3>
+    <div class="manager-actions">
+      <details class="dx-picker" data-role="type-picker">
+        <summary data-i18n-aria="manager.chooseType"><span data-role="type-label" data-i18n="manager.chooseType">Выбрать тип виджета</span><span class="dx-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="dx-picker-options" data-role="type-options"></div>
+      </details>
+      <button type="button" class="dx-primary" data-action="create-instance" data-i18n="manager.create" disabled>Добавить</button>
+    </div>
+    <p class="manager-hint" data-i18n="manager.createHint"></p>
+  </div>
+  <div class="manager-section">
+    <h3 class="manager-heading" data-i18n="manager.existing">Существующий экземпляр</h3>
+    <div class="manager-actions">
+      <details class="dx-picker" data-role="existing-picker">
+        <summary data-i18n-aria="manager.chooseId"><span data-role="existing-label" data-i18n="manager.chooseId">Выбрать по ID</span><span class="dx-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="dx-picker-options" data-role="existing-options"></div>
+      </details>
+      <button type="button" data-action="link-instance" data-i18n="manager.show" disabled>Показать</button>
+    </div>
+    <p class="manager-hint" data-i18n="manager.existingHint"></p>
+  </div>
+  <div class="manager-section manager-section-last">
+    <h3 class="manager-heading"><span data-i18n="manager.onDesk">На этом рабочем столе</span> <span data-role="instance-count" class="manager-count">0</span></h3>
+    <div class="manager-instances" data-role="instances-list"></div>
+  </div>
+</section>
+</template>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="module" src="./client/js/index.js"></script>

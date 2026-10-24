@@ -4,42 +4,76 @@ import WidgetElement from './module/WidgetElement.js';
 import NavigationBar from './module/NavigationBar.js';
 import { t, widgetTitle, setLanguage, translateElement } from './module/i18n.js';
 
-const filenames = [
-  '_add.html', '_audioPlayer.html', '_binanceApi.html', '_calculator.html',
-  '_datetime.html', '_dayBalance.html', '_financeSummary.html', '_financeTable.html',
-  '_moneyConvertApi.html', '_nesEmulator.html', '_serverConsole.html', '_telegramBot.html',
-  '_torrentTracker.html', '_videoPlayer.html', '_wishlistGames.html', '_wishlistPrice.html'
-];
-const disabled = new Set(['audioPlayer', 'serverConsole', 'telegramBot']);
+// Canonical catalog of ALL original DashboardX widgets and their original categories.
+// Entries are available immediately; HTML template loading does not control the menu.
+const WIDGET_CATALOG = Object.freeze({
+  add:            {category:'system',   file:'_add.html',             builtIn:true},
+  datetime:       {category:'system',   file:'_datetime.html'},
+  dayBalance:     {category:'finance',  file:'_dayBalance.html'},
+  financeSummary: {category:'finance',  file:'_financeSummary.html'},
+  financeTable:   {category:'finance',  file:'_financeTable.html'},
+  moneyConvertApi:{category:'finance',  file:'_moneyConvertApi.html'},
+  binanceApi:     {category:'finance',  file:'_binanceApi.html'},
+  calculator:     {category:'tools',    file:'_calculator.html'},
+  wishlistPrice:  {category:'finance',  file:'_wishlistPrice.html'},
+  wishlistGames:  {category:'tools',    file:'_wishlistGames.html'},
+  audioPlayer:    {category:'media',    file:'_audioPlayer.html',      serverOnly:true},
+  videoPlayer:    {category:'media',    file:'_videoPlayer.html'},
+  serverConsole:  {category:'system',   file:'_serverConsole.html',   serverOnly:true},
+  telegramBot:    {category:'telegram', file:'_telegramBot.html',     serverOnly:true},
+  torrentTracker: {category:'tools',    file:'_torrentTracker.html'},
+  nesEmulator:    {category:'games',    file:'_nesEmulator.html'}
+});
+window.dashboardxCatalog=WIDGET_CATALOG;
+const CATALOG_ENTRIES = Object.entries(WIDGET_CATALOG);
+window.dashboardxTemplates = CATALOG_ENTRIES.map(([id,entry])=>({
+  id, category:entry.category, title:widgetTitle(id,id),serverOnly:Boolean(entry.serverOnly)
+}));
 const store = new ClientDB();
 let navBar=null;
 const deskName = w => w.name === 'Главная' ? t('ui.defaultWorkspace') : w.name;
 window.dashboardxStore = store;
 let templates = [];
 
+function fallbackTemplate(id,entry) {
+  const template=document.createElement('template');
+  template.dataset.widget='';
+  template.dataset.id=id;
+  template.dataset.category=entry.category;
+  template.dataset.title=widgetTitle(id,id);
+  const message=document.createElement('p');
+  message.className='widget-template-notice';
+  message.textContent=t('ui.templateUnavailable');
+  template.content.append(message);
+  return template;
+}
+
 async function loadTemplates() {
-  // One unavailable optional template must not disable all widget controls.
-  const results = await Promise.allSettled(filenames.map(async name => {
-    const response = await fetch(new URL('../' + name, import.meta.url));
-    if (!response.ok) throw new Error(name + ': HTTP ' + response.status);
-    const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
-    const template = doc.querySelector('template[data-widget]');
-    if (!template?.dataset.id) throw new Error(name + ': valid widget template missing');
-    return document.importNode(template, true);
+  const results=await Promise.allSettled(CATALOG_ENTRIES.map(async ([id,entry])=>{
+    // The manager template is embedded in index.html to survive template fetch failures.
+    const embedded=document.querySelector('template[data-widget][data-id="'+id+'"]');
+    if(embedded) return {id,template:embedded};
+    const response=await fetch(new URL('../'+entry.file,import.meta.url));
+    if(!response.ok)throw Error(entry.file+': HTTP '+response.status);
+    const doc=new DOMParser().parseFromString(await response.text(),'text/html');
+    const source=doc.querySelector('template[data-widget][data-id="'+id+'"]');
+    if(!source)throw Error(entry.file+': expected template '+id+' missing');
+    return {id,template:document.importNode(source,true)};
   }));
-  const loaded = results.filter(result => result.status === 'fulfilled').map(result => result.value);
-  const failed = results.filter(result => result.status === 'rejected');
-  if (failed.length) console.warn('Some widget templates are unavailable:', failed.map(result => result.reason));
-  document.body.append(...loaded);
-  templates = loaded.filter(template => !disabled.has(template.dataset.id));
-  if (!templates.some(template => template.dataset.id === 'add')) {
-    throw new Error(t('ui.templatesMissing'));
+  for(let i=0;i<CATALOG_ENTRIES.length;i++){
+    const [id,entry]=CATALOG_ENTRIES[i];
+    const result=results[i];
+    const template=result.status==='fulfilled'?result.value.template:fallbackTemplate(id,entry);
+    if(result.status==='rejected')console.warn('Widget template failed; using placeholder:',id,result.reason);
+    if(!template.isConnected)document.body.appendChild(template);
   }
-  window.dashboardxTemplates = templates.map(template => ({
-    id: template.dataset.id,
-    title: template.dataset.title || template.dataset.id,
-    category: template.dataset.category || 'other'
+  templates=CATALOG_ENTRIES.map(([id,entry])=>({
+    id,category:entry.category,title:widgetTitle(id,id),
+    serverOnly:Boolean(entry.serverOnly),
+    template:document.querySelector('template[data-widget][data-id="'+id+'"]')
   }));
+  // Not derived from fetch results; keeps every original widget visible in the picker.
+  window.dashboardxTemplates=templates.map(({id,category,title,serverOnly})=>({id,category,title,serverOnly}));
 }
 
 function reload() {
@@ -90,15 +124,16 @@ function renderWorkspaceTabs() {
 }
 
 function makeWidget(type, instanceId, index, wide, managerBottom = 400, managerWidth = 490) {
-  const template = templates.find(t => t.dataset.id === type);
+  const template = templates.find(t => t.id === type);
   if (!template) return null;
-  const instance = new WidgetElement({
+  const instance = document.createElement('widget-element');
+  instance.initialize({
     id: type,
     instanceId,
     workspaceId: store.workspace.id,
     legacyKey: store.getInstance(instanceId)?.legacyKey,
-    category: template.dataset.category || 'other',
-    title: widgetTitle(type,template.dataset.title || type)
+    category: template.category || 'other',
+    title: widgetTitle(type,template.title || type)
   });
   if (!instance.styleData.top) {
     const startX = wide ? managerWidth + 30 : 14;
@@ -111,28 +146,67 @@ function makeWidget(type, instanceId, index, wide, managerBottom = 400, managerW
   return instance;
 }
 
+// Canvas scrolls independently of the header and its stationary wallpaper.
 function updateCanvasHeight() {
   const canvas=document.getElementById('workspace-canvas');
-  let height=Math.max(480,window.innerHeight - canvas.getBoundingClientRect().top);
-  canvas.querySelectorAll('widget-element').forEach(el=>{
-    if (el.style.display !== 'none') height=Math.max(height,el.offsetTop + el.offsetHeight + 55);
+  const surface=document.getElementById('workspace-surface');
+  if(!canvas || !surface)return;
+  let bottom=Math.max(canvas.clientHeight+120,Number(surface.dataset.extraBottom||0));
+  let right=Math.max(canvas.clientWidth,Number(surface.dataset.extraRight||0));
+  surface.querySelectorAll('widget-element').forEach(el=>{
+    if(el.style.display==='none')return;
+    bottom=Math.max(bottom,el.offsetTop+el.offsetHeight+260);
+    right=Math.max(right,el.offsetLeft+el.offsetWidth+110);
   });
-  canvas.style.minHeight=Math.ceil(height)+'px';
+  surface.style.height=Math.ceil(bottom)+'px';
+  surface.style.width=Math.ceil(right)+'px';
 }
+
+// When dragging beyond the previous top edge, add more space above the entire
+// layout and keep the visible position stable by scrolling by the same amount.
+function extendWorkspaceUp(amount=360) {
+  const canvas=document.getElementById('workspace-canvas');
+  const surface=document.getElementById('workspace-surface');
+  if(!canvas||!surface)return;
+  surface.querySelectorAll('widget-element').forEach(el=>{
+    el.style.top=(Math.max(0,el.offsetTop)+amount)+'px';
+    el.saveWidget();
+  });
+  surface.dataset.extraBottom=String(Math.max(surface.offsetHeight,canvas.clientHeight)+amount);
+  canvas.scrollTop+=amount;
+  updateCanvasHeight();
+}
+window.dashboardxExtendWorkspaceUp=extendWorkspaceUp;
+window.dashboardxUpdateWorkspaceBounds=updateCanvasHeight;
+
+function measureHeader() {
+  const toolbar=document.getElementById('app-toolbar');
+  const nav=document.getElementById('widget-navigation');
+  if(!toolbar || !nav)return;
+  const barHeight=toolbar.offsetHeight;
+  nav.style.top=barHeight+'px';
+  document.documentElement.style.setProperty('--dashboard-head-height',barHeight+nav.offsetHeight+'px');
+  updateCanvasHeight();
+}
+
 
 function renderCanvas() {
   const canvas = document.getElementById('workspace-canvas');
-  canvas.replaceChildren();
+  const surface=document.createElement('div');
+  surface.id='workspace-surface';
+  canvas.replaceChildren(surface);
   const image=store.workspace.backgroundUrl;
-  canvas.style.backgroundImage=image ? 'linear-gradient(rgba(7,12,22,.18),rgba(7,12,22,.2)), url(' + JSON.stringify(image) + ')' : '';
-  canvas.classList.toggle('has-background',Boolean(image));
+  // Wallpaper belongs to the viewport, not the scrollable content.
+  document.body.style.backgroundImage=image
+    ? 'linear-gradient(rgba(7,12,22,.20),rgba(7,12,22,.25)),url('+JSON.stringify(image)+')' : '';
+  document.body.classList.toggle('has-custom-wallpaper',Boolean(image));
   // Keep the panel and widgets in separate lanes; avoid covering dropdown controls.
   const wide = window.innerWidth >= 960;
   // Manager is a built-in tool, not a database widget. Users cannot remove or duplicate it.
   const manager = makeWidget('add', 'manager-' + store.workspace.id, 0, wide);
   if (manager) {
     if (!manager.styleData.top) { manager.style.top = '14px'; manager.style.left = '14px'; }
-    canvas.append(manager);
+    surface.append(manager);
   }
 
   const managerBottom = manager ? manager.offsetTop + Math.max(manager.offsetHeight, 300) : 360;
@@ -141,12 +215,13 @@ function renderCanvas() {
     const instance = store.getInstance(id);
     if (!instance) return;
     const el = makeWidget(instance.type, id, index, wide, managerBottom, managerWidth);
-    if (el) canvas.append(el);
+    if (el) surface.append(el);
   });
 
   const categories = ['all', 'pinned', 'hidden', 'favorite',
-    ...new Set(templates.filter(t => t.dataset.id !== 'add').map(t => t.dataset.category))];
-  navBar = new NavigationBar(categories);
+    ...new Set(templates.filter(t => t.id !== 'add').map(t => t.category))];
+  navBar = document.createElement('navigation-bar');
+  navBar.initialize(categories);
   document.getElementById('widget-navigation').replaceChildren(navBar);
   navBar.filterWidgets('all');
   updateCanvasHeight();
@@ -179,7 +254,7 @@ function widgetAction(event) {
   const { action, type, id } = event.detail || {};
   switch (action) {
     case 'create':
-      if (templates.some(t => t.dataset.id === type && type !== 'add') && store.createInstance(type)) reload();
+      if (WIDGET_CATALOG[type] && type !== 'add' && store.createInstance(type)) reload();
       break;
     case 'link':
       if (store.showInstance(id)) reload();
@@ -212,7 +287,20 @@ async function boot() {
       store.state.system.language = languageSwitch.value;
       store.save();reload();
     });
-    document.getElementById('background-button').addEventListener('click', () => {
+    const fullscreenButton=document.getElementById('fullscreen-toggle');
+    const updateFullscreenLabel=()=>{
+      fullscreenButton.textContent=t(document.fullscreenElement?'ui.exitFullscreen':'ui.fullscreen');
+      fullscreenButton.title=fullscreenButton.textContent;
+    };
+    fullscreenButton.addEventListener('click',async()=>{
+      try{
+        if(document.fullscreenElement)await document.exitFullscreen();
+        else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();
+      }catch(error){console.warn('Fullscreen is unavailable:',error);}
+    });
+    document.addEventListener('fullscreenchange',updateFullscreenLabel);
+    updateFullscreenLabel();
+        document.getElementById('background-button').addEventListener('click', () => {
       const raw=prompt(t('ui.backgroundPrompt',{name:deskName(store.workspace)}),store.workspace.backgroundUrl || '');
       if (raw === null) return;
       if (!store.setWorkspaceBackground(raw.trim())) {alert(t('ui.backgroundInvalid'));return;}
@@ -244,6 +332,12 @@ async function boot() {
 
     renderWorkspaceTabs();
     renderCanvas();
+    measureHeader();
+    if(typeof ResizeObserver==='function'){
+      const observer=new ResizeObserver(measureHeader);
+      observer.observe(document.getElementById('app-toolbar'));
+    }
+    window.addEventListener('resize',measureHeader);
     // Fresh browser storage stays physically empty until the user makes a change.
     // Do not write starter/demo data simply because the page was opened.
     document.getElementById('app-loader')?.remove();

@@ -3,18 +3,25 @@ import { t, widgetTitle } from './i18n.js';
 export default class WidgetBase extends HTMLElement {
   static zIndexCounter = 10;
 
-  constructor(config) {
+  // HTMLElement constructors must not attach attributes/children before upgrade.
+  // Configure the element after document.createElement('widget-element').
+  constructor() {
     super();
-    this.instanceId = config.instanceId || config.id + '-widget';
-    this.id = this.instanceId;
-    this.workspaceId = config.workspaceId || 'home';
-    this.legacyKey = config.legacyKey || null;
-    this.templateId = config.id;
-    this.category = config.category || 'other';
-    this.dataset.widgetType = this.templateId;
-    this.className = 'widget--element ' + this.category + '--widget';
-    this.storageKey = 'dashboardx.layout.' + this.workspaceId + '.' + this.instanceId;
-    this.styleData = this.readStyle();
+  }
+
+  initialize(config) {
+    if (this._initialized) throw new Error('Widget already initialized');
+    this._initialized=true;
+    this.instanceId=config.instanceId || config.id + '-widget';
+    this.id=this.instanceId;
+    this.workspaceId=config.workspaceId || 'home';
+    this.legacyKey=config.legacyKey || null;
+    this.templateId=config.id;
+    this.category=config.category || 'other';
+    this.dataset.widgetType=this.templateId;
+    this.className='widget--element ' + this.category + '--widget';
+    this.storageKey='dashboardx.layout.' + this.workspaceId + '.' + this.instanceId;
+    this.styleData=this.readStyle();
     this.restoreLayout();
     this.buildHeader();
     this.buildResizeHandle();
@@ -140,7 +147,9 @@ export default class WidgetBase extends HTMLElement {
     this.classList.add('is-focus');
     this.style.zIndex = String(++WidgetBase.zIndexCounter);
     const onMove = move => {
-      if (move.pointerId === event.pointerId) update(move);
+      if (move.pointerId !== event.pointerId) return;
+      update(move);
+      window.dashboardxUpdateWorkspaceBounds?.();
     };
     const cleanup = () => {
       document.removeEventListener('pointermove', onMove);
@@ -157,14 +166,33 @@ export default class WidgetBase extends HTMLElement {
   startDrag(event) {
     if (event.target.closest('button,input,select,a,summary')) return;
     if (this.classList.contains('is-pinned') || this.classList.contains('is-maximized')) return;
-    const rect = this.getBoundingClientRect();
-    const startX = event.clientX, startY = event.clientY;
-    const left = this.offsetLeft, top = this.offsetTop;
-    this.pointerDrag(event, move => {
-      this.style.left = Math.max(0, Math.round((left + move.clientX - startX) / 5) * 5) + 'px';
-      this.style.top = Math.max(0, Math.round((top + move.clientY - startY) / 5) * 5) + 'px';
+    const viewport=document.getElementById('workspace-canvas');
+    const startX=event.clientX, startY=event.clientY;
+    const initialTop=this.offsetTop, initialLeft=this.offsetLeft;
+    const initialScrollTop=viewport?.scrollTop || 0;
+    const initialScrollLeft=viewport?.scrollLeft || 0;
+    this.pointerDrag(event,move=>{
+      if(viewport){
+        const bounds=viewport.getBoundingClientRect();
+        // Auto-scroll while dragging at the visible top/bottom.
+        if(move.clientY < bounds.top+48){
+          if(viewport.scrollTop < 68)window.dashboardxExtendWorkspaceUp?.(330);
+          viewport.scrollTop=Math.max(0,viewport.scrollTop-22);
+        }else if(move.clientY > bounds.bottom-48){
+          // First grow the surface so scrolling can continue beyond its old edge.
+          window.dashboardxUpdateWorkspaceBounds?.();
+          viewport.scrollTop+=24;
+        }
+        if(move.clientX>bounds.right-45)viewport.scrollLeft+=20;
+        if(move.clientX<bounds.left+45)viewport.scrollLeft=Math.max(0,viewport.scrollLeft-20);
+      }
+      const shiftY=(viewport?.scrollTop||0)-initialScrollTop;
+      const shiftX=(viewport?.scrollLeft||0)-initialScrollLeft;
+      this.style.left=Math.max(0,Math.round((initialLeft+move.clientX-startX+shiftX)/5)*5)+'px';
+      this.style.top=Math.max(0,Math.round((initialTop+move.clientY-startY+shiftY)/5)*5)+'px';
     });
   }
+
 
   startResize(event) {
     if (this.classList.contains('is-pinned') || this.classList.contains('is-maximized')) return;

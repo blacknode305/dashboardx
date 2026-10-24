@@ -1,9 +1,6 @@
 // Импорт базового класса виджета (пока не используется напрямую)
-import WidgetBase from './WidgetBase.js';
 // Импорт класса для работы с DOM-элементами виджета
-import WidgetElement from './WidgetElement.js';
 // Импорт глобальной шины событий (EventBus)
-import eventBus from './EventBus.js';
 // Импорт виджетов
 import AddWidget from './Widget/Add.js';
 import BinanceApiWidget from './Widget/BinanceApi.js';

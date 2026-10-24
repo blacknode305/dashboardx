@@ -1,6 +1,6 @@
 const dictionaries = {
   ru: {
-    'ui.clear':'Очистить данные','ui.theme':'Тема','ui.background':'Фон','ui.language':'Язык',
+    'ui.clear':'Очистить данные','ui.theme':'Тема','ui.background':'Фон','ui.fullscreen':'Полный экран','ui.exitFullscreen':'Выйти из полноэкранного режима','ui.templateUnavailable':'Шаблон этого виджета пока недоступен.','ui.serverOnly':'Для этого виджета требуется сервер; локальная версия показывает только заглушку.','ui.language':'Язык',
     'ui.workspaces':'Рабочие столы','ui.categories':'Категории','ui.canvas':'Рабочая область',
     'ui.createWorkspace':'Создать рабочий стол','ui.deleteWorkspace':'Удалить рабочий стол',
     'ui.goWorkspace':'Открыть рабочий стол','ui.defaultWorkspace':'Главная','ui.newWorkspace':'Название нового рабочего стола:',
@@ -22,7 +22,7 @@ const dictionaries = {
     'ui.frameResize':'Изменить размер, потянув за угол',
     'nav.all':'Все','nav.pinned':'Закреплённые','nav.hidden':'Скрытые','nav.favorite':'Избранное',
     'nav.system':'Система','nav.finance':'Финансы','nav.tools':'Инструменты',
-    'nav.media':'Медиа','nav.games':'Игры','nav.other':'Другое',
+    'nav.media':'Медиа','nav.telegram':'Telegram','nav.games':'Игры','nav.other':'Другое',
     'manager.title':'Добавить виджет','manager.new':'Новый экземпляр',
     'manager.chooseType':'Выбрать тип виджета','manager.create':'Добавить',
     'manager.createHint':'Каждое добавление создаёт новый ID. Можно создать несколько одинаковых виджетов.',
@@ -51,7 +51,7 @@ const dictionaries = {
     'game.start':'Старт','game.select':'Выбор',
   },
   kz: {
-    'ui.clear':'Деректерді тазалау','ui.theme':'Тақырып','ui.background':'Фон','ui.language':'Тіл',
+    'ui.clear':'Деректерді тазалау','ui.theme':'Тақырып','ui.background':'Фон','ui.fullscreen':'Толық экран','ui.exitFullscreen':'Толық экраннан шығу','ui.templateUnavailable':'Бұл виджеттің үлгісі қолжетімсіз.','ui.serverOnly':'Бұл виджетке сервер қажет; жергілікті нұсқада тек хабарлама көрсетіледі.','ui.language':'Тіл',
     'ui.workspaces':'Жұмыс үстелдері','ui.categories':'Санаттар','ui.canvas':'Жұмыс аймағы',
     'ui.createWorkspace':'Жұмыс үстелін жасау','ui.deleteWorkspace':'Жұмыс үстелін жою',
     'ui.goWorkspace':'Жұмыс үстелін ашу','ui.defaultWorkspace':'Басты','ui.newWorkspace':'Жаңа жұмыс үстелінің атауы:',
@@ -73,7 +73,7 @@ const dictionaries = {
     'ui.frameResize':'Бұрышынан тартып өлшемін өзгерту',
     'nav.all':'Барлығы','nav.pinned':'Бекітілген','nav.hidden':'Жасырын','nav.favorite':'Таңдаулылар',
     'nav.system':'Жүйе','nav.finance':'Қаржы','nav.tools':'Құралдар',
-    'nav.media':'Медиа','nav.games':'Ойындар','nav.other':'Басқа',
+    'nav.media':'Медиа','nav.telegram':'Telegram','nav.games':'Ойындар','nav.other':'Басқа',
     'manager.title':'Виджет қосу','manager.new':'Жаңа дана',
     'manager.chooseType':'Виджет түрін таңдаңыз','manager.create':'Қосу',
     'manager.createHint':'Әр қосылған виджет жаңа ID алады. Бір түрден бірнеше виджет жасауға болады.',
@@ -102,7 +102,7 @@ const dictionaries = {
     'game.start':'Бастау','game.select':'Таңдау',
   },
   en: {
-    'ui.clear':'Clear data','ui.theme':'Theme','ui.background':'Background','ui.language':'Language',
+    'ui.clear':'Clear data','ui.theme':'Theme','ui.background':'Background','ui.fullscreen':'Fullscreen','ui.exitFullscreen':'Exit fullscreen','ui.templateUnavailable':'This widget template is unavailable.','ui.serverOnly':'This widget requires a server and is a placeholder in local mode.','ui.language':'Language',
     'ui.workspaces':'Workspaces','ui.categories':'Categories','ui.canvas':'Workspace',
     'ui.createWorkspace':'Create workspace','ui.deleteWorkspace':'Delete workspace',
     'ui.goWorkspace':'Open workspace','ui.defaultWorkspace':'Home','ui.newWorkspace':'New workspace name:',
@@ -124,7 +124,7 @@ const dictionaries = {
     'ui.frameResize':'Drag the corner to resize',
     'nav.all':'All','nav.pinned':'Pinned','nav.hidden':'Hidden','nav.favorite':'Favorites',
     'nav.system':'System','nav.finance':'Finance','nav.tools':'Tools',
-    'nav.media':'Media','nav.games':'Games','nav.other':'Other',
+    'nav.media':'Media','nav.telegram':'Telegram','nav.games':'Games','nav.other':'Other',
     'manager.title':'Add widget','manager.new':'New instance',
     'manager.chooseType':'Choose widget type','manager.create':'Add',
     'manager.createHint':'Each addition gets a new ID. You can create several widgets of the same type.',
