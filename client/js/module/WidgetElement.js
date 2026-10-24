@@ -14,12 +14,17 @@ export default class WidgetElement extends WidgetBase {
     // Строим DOM-структуру виджета на основе найденного template метод определён в WidgetBase
     this.buildFromTemplate(template);
     // Формируем имя класса логики, по this.id
-    const LogicClass = WidgetLogic[this.id[0].toUpperCase() + this.id.slice(1)];
+    const LogicClass = WidgetLogic[this.templateId[0].toUpperCase() + this.templateId.slice(1)];
     //console.log(LogicClass);
     // Проверяем, существует ли такой класс логики
     if (LogicClass) {
       // Создаём экземпляр логики виджета передаём текущий элемент (this) внутрь логики сохраняем ссылку, чтобы позже можно было уничтожить
-      this.logic = new WidgetLogic[this.id[0].toUpperCase() + this.id.slice(1)](this);
+      try {
+        this.logic = new LogicClass(this);
+      } catch (error) {
+        console.error('Widget failed:', this.templateId, error);
+        this.body.textContent = 'Ошибка запуска виджета: ' + this.templateId;
+      }
     }
   }
   // lifecycle-хук Web Components вызывается автоматически, когда элемент удаляется из DOM
@@ -30,9 +35,9 @@ export default class WidgetElement extends WidgetBase {
   // Хук, который вызывается вручную из WidgetBase после того, как template уже вставлен в body виджета
   afterBuild() {
     // Устанавливаем ширину body виджета
-    this.body.style.width = this.styleData.width;
+    if (this.styleData.width) this.body.style.width = this.styleData.width;
     // Устанавливаем высоту body виджета
-    this.body.style.height = this.styleData.height;
+    if (this.styleData.height) this.body.style.height = this.styleData.height;
     // Можно сохранить категорию виджета в data-атрибут чтобы использовать её для CSS-стилей или логики 
     // this.body.dataset.category = this.category;
   }

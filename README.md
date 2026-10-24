@@ -1,40 +1,26 @@
-# DashboardX
+# DashboardX — локальная версия (GitHub Pages)
 
-Node.js dashboard + Web client + Android WebView bridge
+Эта ветка запускается как статический веб-сайт без Node.js, Webpack и WebSocket.
 
-## Stack
-- Node.js + ws + grammy
-- Webpack client
-- Android WebView + JS Bridge
+- Данные виджетов, финансов, рабочих столов и темы хранятся в **localStorage** текущего браузера.
+- Шаблоны виджетов загружаются из `client/_*.html` обычным `fetch()`.
+- В этой версии отключены зависимые от сервера виджеты (Telegram, Server Console, серверный Audio Player).
+- Внешние API (Binance, обменные курсы) требуют интернет и остаются экспериментальными.
+- Для больших файлов и синхронизации между устройствами localStorage не предназначен.
 
-## Description
-- A workspace system with widgets that can:
-- be freely moved around the workspace
-- be resized
-- A navigation menu with:
-- workspace switching
-- hotkey support
-- widget categorization
+## Размещение на GitHub Pages
 
-On the backend, I'm developing an
-HTTP/WebSocket server in Node.js,
-which aggregates data from external APIs, including:
-- Binance
-- MoneyConvert
-- (more integrations planned)
+Откройте **Settings → Pages → Build and deployment → Deploy from a branch**.
+Выберите ветку `feature/dashboardx-local`, каталог `/(root)` и нажмите Save.
 
-Next steps include:
-- Displaying the server console in the client interface
-- Client-side logging
-- Integrating an audio and video player
-- Connecting the Telegram API for bot administration and sending messages
-- Integrating mapping APIs for displaying geolocation
-- Widgets for managing personal finances
+Планируемый адрес: https://blacknode305.github.io/dashboardx/
 
-The client will also be integrated into an Android WebView application
-with an androidBridge implementation for interaction between the
-native part and the server (working with SMS, geolocation, and other system data).
-Similar integration is planned for iOS.
+Файл `.nojekyll` обеспечивает публикацию шаблонов с именами, начинающимися с подчёркивания.
 
-The project is being developed as an extensible modular system
-with the ability to scale functionality.
+## Локальный запуск
+
+Браузер обычно ограничивает ES-модули при открытии через `file://`. Запускайте любой простой статический сервер из корня проекта (например, `python3 -m http.server 8000`), затем откройте `http://localhost:8000/`. Это **не** сервер приложения, а лишь раздача статических файлов.
+
+## Безопасность
+
+Не храните пароли или токены в localStorage. Предыдущие серверные файлы и история разработки остаются в других ветках Git. Ранее опубликованные секреты необходимо заменить: удаление файлов из новой ветки не очищает историю старых коммитов.

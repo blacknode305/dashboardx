@@ -37,8 +37,6 @@
   --f-family-mono: "JetBrains Mono", monospace;
   --f-family-stm: "Share Tech Mono", monospace;
 }
-
-}
 :root[data-theme="light"] {
   --bg-main: #f6f8fc;
   --bg-panel: #ffffff;

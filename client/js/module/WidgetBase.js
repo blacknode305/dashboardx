@@ -21,7 +21,8 @@ export default class WidgetBase extends HTMLElement {
   // Базовая инициализация виджета
   initBase(config) {
     // ID виджета из конфига
-    this.id = config.id + 'Widget';
+    this.id = config.instanceId || config.id + 'Widget';
+    this.workspaceId = config.workspaceId || 'home';
     // Категория виджета для навигации
     this.category = config.category;
     // CSS классы виджета (основной и категории навигации)
@@ -61,6 +62,8 @@ export default class WidgetBase extends HTMLElement {
     //this.body.style.height = this.styleData.height || '200px';
     // Если закреплён — добавляем класс
     if (this.styleData.pinned) this.classList.add('is-pinned');
+    if (this.styleData.favorite) this.classList.add('is-favorite');
+    if (this.styleData.hidden) this.classList.add('is-hidden');
     // Если скрыт — скрываем
     if (this.styleData.hidden) this.style.display = 'none';
   }
@@ -79,7 +82,8 @@ export default class WidgetBase extends HTMLElement {
       // Закреплён ли виджет
       pinned: this.classList.contains('is-pinned'),
       // Скрыт ли виджет
-      hidden: this.style.display === 'none'
+      hidden: this.classList.contains('is-hidden'),
+      favorite: this.classList.contains('is-favorite')
     };
     // Сохраняем в localStorage
     localStorage.setItem(this.id, JSON.stringify(data));
@@ -98,6 +102,13 @@ export default class WidgetBase extends HTMLElement {
     title.textContent = this.widgetTitle;
     // Добавляем элементы в хедер
     this.header.append(title);
+    const removeButton = document.createElement('button');
+    removeButton.className = 'widget-remove';
+    removeButton.type = 'button';
+    removeButton.title = 'Удалить виджет';
+    removeButton.textContent = '×';
+    removeButton.addEventListener('click', () => window.dispatchEvent(new CustomEvent('dashboardx:remove-widget', { detail: { type: this.templateId } })));
+    this.header.append(removeButton);
     // Привязываем drag к хэдэру
     this.bindPointer(this.header, e => this.startDrag(e));
     // Добавляем хедер в виджет в buildFromTemplate()
@@ -252,7 +263,7 @@ export default class WidgetBase extends HTMLElement {
       document.removeEventListener('touchmove', onMove);
       document.removeEventListener('touchend', onUp);
       // Сохранение при изменении
-      // this.saveWidget();
+      this.saveWidget();
     };
     // Завершение drag
     const onUp = removeListeners;
@@ -302,7 +313,7 @@ export default class WidgetBase extends HTMLElement {
       document.removeEventListener('touchmove', onMove);
       document.removeEventListener('touchend', onUp);
       // Сохранение при изменении
-      // this.saveWidget();
+      this.saveWidget();
     };
     // Завершение resize
     const onUp = removeListeners;
@@ -317,21 +328,23 @@ export default class WidgetBase extends HTMLElement {
     // Добавляем или убираем класс
     this.classList.toggle('is-pinned');
     // Сохранение при изменении
-    // this.saveWidget();
+    this.saveWidget();
   }
   // Переключение видимости
   toggleHidden() {
     // Скрываем или показываем виджет
-    this.style.display = this.style.display === 'none' ? 'flex' : 'none';
+    this.classList.toggle('is-hidden');
+    this.style.display = this.classList.contains('is-hidden') ? 'none' : 'flex';
     // Сохранение при изменении
-    // this.saveWidget();
+    this.saveWidget();
   }
   // Переключение избранное
-  toogleFavorite() {
-    console.log('toggleFavorite');
+  toggleFavorite() {
+    this.classList.toggle('is-favorite');
+    this.saveWidget();
   }
   // Переключение окружения
   toggleWorkplace() {
-    console.log('toggleWorkplace');
+    window.dispatchEvent(new CustomEvent('dashboardx:move-widget', { detail: { type: this.templateId } }));
   }
 }
