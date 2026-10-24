@@ -235,7 +235,12 @@ export default class WidgetBase extends HTMLElement {
     const startX = event.clientX, startY = event.clientY;
     this.pointerDrag(event, move => {
       this.style.width = Math.max(260, Math.round(rect.width + move.clientX - startX)) + 'px';
-      this.style.height = Math.max(150, Math.round(rect.height + move.clientY - startY)) + 'px';
+      // CSS caps every window at one workspace viewport; persist its visible
+      // height rather than storing an oversized value that cannot be displayed.
+      const cssLimit = Number.parseFloat(getComputedStyle(this).maxHeight);
+      const requestedHeight = Math.max(150, Math.round(rect.height + move.clientY - startY));
+      const maxHeight = Number.isFinite(cssLimit) ? cssLimit : requestedHeight;
+      this.style.height = Math.min(requestedHeight, maxHeight) + 'px';
     });
   }
 

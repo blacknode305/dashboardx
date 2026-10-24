@@ -1757,3 +1757,42 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
  .optima-order-filters,.optima-order-edit-item{grid-template-columns:1fr}
  .optima-order-edit-item strong{grid-column:1}
 }
+
+
+/* GLOBAL WIDGET VIEWPORT HEIGHT — applies to every widget, without exclusions.
+   Windows grow naturally until they fill the available desktop viewport; their
+   content scrolls inside instead of stretching the entire desktop downward. */
+:root {
+  --dx-widget-viewport-clearance: 72px; /* initial Y=50px plus bottom breathing room */
+  --dx-widget-min-height-cap: 180px;
+}
+#workspace-canvas .widget--element {
+  max-height: max(
+    var(--dx-widget-min-height-cap),
+    calc(100vh - var(--dashboard-head-height) - var(--dx-widget-viewport-clearance))
+  );
+  max-height: max(
+    var(--dx-widget-min-height-cap),
+    calc(100dvh - var(--dashboard-head-height) - var(--dx-widget-viewport-clearance))
+  );
+}
+#workspace-canvas .widget--element .widget--element--body {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+/* Keep the built-in manager's original narrower horizontal layout, but use
+   the same overall viewport-height rule and inner scrolling as every window. */
+#workspace-canvas .widget--element[data-widget-type="add"] .widget--element--body {
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+}
+/* Resizing should not let overflowing content conceal the resize corner. */
+#workspace-canvas .widget--element .window-resize-handle {
+  flex: 0 0 auto;
+}
