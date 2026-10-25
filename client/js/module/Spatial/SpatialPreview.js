@@ -9,7 +9,7 @@ import { CSS3DObject, CSS3DRenderer } from 'three/addons/renderers/CSS3DRenderer
 import { getSpatialLayout, saveSpatialLayout, deleteSpatialLayout } from './SpatialLayout.js';
 import { defaultSpatialPose, spatialSizeFromDesktop, SPATIAL_PIXELS_PER_METER } from './SpatialMath.js';
 import { readGlassTransparency, saveGlassTransparency, glassBackgroundAlpha } from './SpatialGlass.js';
-import { makeSpatialRoom, makeFallbackSpatialRoom, ROOM_BOUNDS } from './SpatialRoom.js';
+import { makeSpatialRoom, makeFallbackSpatialRoom, ROOM_BOUNDS, getRoomTheme, getRoomPalette } from './SpatialRoom.js';
 
 const clamp = (number, min, max) => Math.min(max, Math.max(min, number));
 const round = number => Math.round(number * 100) / 100;
@@ -26,6 +26,7 @@ export default class SpatialPreview {
     this.pitch = 0.15;
     this.distance = 3.8;
     this.roomVisible = true;
+    this.roomTheme = getRoomTheme(document.documentElement.dataset.theme);
     this.target = new THREE.Vector3(0, 1.47, -1.8);
     this.handleResize = () => this.resize();
     this.handleKey = event => {
@@ -73,6 +74,8 @@ export default class SpatialPreview {
     this.root = document.createElement('section');
     this.root.id = 'spatial-preview';
     this.root.setAttribute('aria-label', 'DashboardX Spatial Preview');
+    this.roomTheme = getRoomTheme(document.documentElement.dataset.theme);
+    this.root.dataset.roomTheme = this.roomTheme;
     this.root.innerHTML = `
       <div class="spatial-topbar">
         <div class="spatial-heading"><strong>DashboardX <span>Spatial Preview</span></strong>
@@ -91,7 +94,8 @@ export default class SpatialPreview {
           <label>X, м <input data-spatial="x" type="number" step="0.1"></label>
           <label>Y, м <input data-spatial="y" type="number" step="0.1"></label>
           <label>Z, м <input data-spatial="z" type="number" step="0.1"></label>
-          <label>Поворот Y, ° <input data-spatial="rotate" type="number" step="5"></label>
+          <label>Поворот X, ° <input data-spatial="rotate-x" type="number" min="-180" max="180" step="5"></label>
+          <label>Поворот Y, ° <input data-spatial="rotate" type="number" min="-180" max="180" step="5"></label>
         </div>
         <div class="spatial-desktop-size" data-spatial="desktop-size" aria-live="polite"></div>
         <label class="spatial-glass-control">
@@ -113,9 +117,11 @@ export default class SpatialPreview {
     document.body.classList.add('dx-spatial-active');
     try {
       this.stage = this.root.querySelector('[data-spatial="stage"]');
+      this.stage.dataset.roomTheme=this.roomTheme;
       this.scene = new THREE.Scene();
-      this.scene.background = new THREE.Color(0x121a20);
-      this.scene.fog = new THREE.Fog(0x121a20, 7, 24);
+      const palette=getRoomPalette(this.roomTheme);
+      this.scene.background = new THREE.Color(palette.clear);
+      this.scene.fog = new THREE.Fog(palette.fog, 10, 35);
       this.camera = new THREE.PerspectiveCamera(52, 1, 0.05, 80);
       this.cssScene = new THREE.Scene();
       this.cssRenderer = new CSS3DRenderer();
@@ -128,7 +134,7 @@ export default class SpatialPreview {
         this.glRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         this.glRenderer.domElement.classList.add('spatial-gl-layer');
         this.stage.prepend(this.glRenderer.domElement);
-        this.room3d = makeSpatialRoom(THREE, document);
+        this.room3d = makeSpatialRoom(THREE, document, this.roomTheme);
         this.scene.add(this.room3d.group);
         this.stage.dataset.roomRenderer='webgl';
         this.stage.dataset.roomParts=String(this.room3d.getParts());
@@ -151,6 +157,13 @@ export default class SpatialPreview {
       this.resize();
       window.addEventListener('resize', this.handleResize);
       window.addEventListener('keydown', this.handleKey);
+      this.themeObserver=new MutationObserver(()=>{
+        const next=getRoomTheme(document.documentElement.dataset.theme);
+        if(next!==this.roomTheme) this.applyRoomTheme(next);
+      });
+      this.themeObserver.observe(document.documentElement,{
+        attributes:true,attributeFilter:['data-theme']
+      });
       this.render();
     } catch (error) {
       this.close();
@@ -166,13 +179,40 @@ export default class SpatialPreview {
   installCssRoomFallback(message) {
     if (!this.isOpen || this.roomFallback?.length) return;
     this.room3d?.group && (this.room3d.group.visible=false);
-    this.roomFallback=makeFallbackSpatialRoom(CSS3DObject,document);
+    this.roomFallback=makeFallbackSpatialRoom(CSS3DObject,document,this.roomTheme);
     this.roomFallback.forEach(obj=>this.cssScene.add(obj));
     this.stage.dataset.roomRenderer='css3d';
     this.stage.dataset.roomParts=String(this.roomFallback.length);
     this.setRoomStatus(message);
     this.setRoomVisibility(this.roomVisible);
     this.render();
+  }
+
+  applyRoomTheme(theme) {
+    if(!this.isOpen) return;
+    const next=getRoomTheme(theme);
+    if(next===this.roomTheme) return;
+    this.roomTheme=next;
+    this.root.dataset.roomTheme=next;
+    const palette=getRoomPalette(next);
+    this.scene.background.setHex(palette.clear);
+    this.scene.fog.color.setHex(palette.fog);
+    if(this.stage.dataset.roomRenderer==='webgl' && this.room3d) {
+      this.scene.remove(this.room3d.group);
+      this.room3d.dispose();
+      this.room3d=makeSpatialRoom(THREE,document,next);
+      this.scene.add(this.room3d.group);
+      this.stage.dataset.roomParts=String(this.room3d.getParts());
+    } else if(this.roomFallback?.length) {
+      this.roomFallback.forEach(obj=>{
+        this.cssScene.remove(obj);
+        obj.element?.remove();
+      });
+      this.roomFallback=makeFallbackSpatialRoom(CSS3DObject,document,next);
+      this.roomFallback.forEach(obj=>this.cssScene.add(obj));
+    }
+    this.stage.dataset.roomTheme=next;
+    this.setRoomVisibility(this.roomVisible);
   }
 
   setRoomVisibility(visible) {
@@ -286,7 +326,7 @@ export default class SpatialPreview {
 
   syncInspector() {
     const record = this.selected;
-    for (const id of ['x','y','z','rotate']) {
+    for (const id of ['x','y','z','rotate-x','rotate']) {
       const input = this.root.querySelector('[data-spatial="'+id+'"]');
       if (!input) continue;
       input.disabled = !record;
@@ -294,6 +334,7 @@ export default class SpatialPreview {
       const p = record.pose;
       input.value = String(id==='x'?round(p.position[0]):id==='y'?round(p.position[1]):
         id==='z'?round(p.position[2]):
+        id==='rotate-x'?Math.round(THREE.MathUtils.radToDeg(p.rotation[0])):
         Math.round(THREE.MathUtils.radToDeg(p.rotation[1])));
     }
     const dimensions = this.root.querySelector('[data-spatial="desktop-size"]');
@@ -350,12 +391,13 @@ export default class SpatialPreview {
     }
     selector.addEventListener('change',()=>this.select(this.records.find(
       r=>r.widget.instanceId===selector.value) || null));
-    for (const [field,index] of [['x',0],['y',1],['z',2],['rotate',null]]) {
+    for (const [field,index] of [['x',0],['y',1],['z',2],['rotate-x',null],['rotate',null]]) {
       read(field).addEventListener('change',event=>{
         const record=this.selected;
         const value=Number(event.target.value);
         if (!record || !Number.isFinite(value)) return;
         if (index!==null) record.pose.position[index]=clamp(value,-20,20);
+        else if (field==='rotate-x') record.pose.rotation[0]=THREE.MathUtils.degToRad(clamp(value,-180,180));
         else if (field==='rotate') record.pose.rotation[1]=THREE.MathUtils.degToRad(clamp(value,-180,180));
         this.applyPose(record);this.syncInspector();this.persist(record);this.render();
       });
@@ -419,6 +461,8 @@ export default class SpatialPreview {
     this.isOpen=false;
     window.removeEventListener('resize',this.handleResize);
     window.removeEventListener('keydown',this.handleKey);
+    this.themeObserver?.disconnect();
+    this.themeObserver=null;
     this.abortController?.abort();
     this.abortController=null;
     // Restore the exact original DOM instances BEFORE removing the CSS renderer.
