@@ -1,0 +1,461 @@
+/*
+ * DashboardX | HORIZON AR 2026
+ * A cohesive glass-and-light design system for existing live widgets.
+ * Pure presentation layer — no window geometry, drag/drop, storage, API or
+ * application state changes. Loaded LAST after legacy and Spatial styles.
+ * Deep-indigo / ocean-blue / mineral-teal / iris, not flashing cyberpunk.
+ */
+
+/* 1. DESIGN TOKENS. All old 28 widget modules still use these variables. */
+:root,
+:root[data-theme="dark"] {
+  color-scheme:dark;
+  --bg-main:#060d20;
+  --bg-panel:rgba(19,32,61,.80);
+  --bg-panel-inside:rgba(7,19,43,.77);
+  --bg-panel-light:rgba(36,55,91,.82);
+  --bg-linear-gradient:linear-gradient(143deg,rgba(37,62,99,.80),rgba(12,26,57,.78) 65%,rgba(23,29,63,.76));
+  --text-main:#f0f7ff;--text-muted:#acbdd7;
+  --blue:#7fdcf7;--green:#74e4bd;--red:#ff92a6;--yellow:#f0c88b;
+  --border:rgba(133,185,230,.27);
+  --shadow:0 18px 55px rgba(0,5,23,.37),0 3px 12px rgba(0,9,30,.20);
+  --radius:12px;--radius-sm:9px;
+  --dx-glass:rgba(19,35,71,.74);
+  --dx-glass-header:rgba(38,60,108,.65);
+  --dx-panel-line:rgba(123,180,229,.25);
+  --dx-panel-strong:rgba(102,217,244,.75);
+  --dx-surface-raised:rgba(43,67,108,.72);
+  --dx-accent:#87e2f7;--dx-accent-soft:rgba(81,204,232,.15);
+  --dx-good:#71e3b6;--dx-bad:#f59aab;--dx-warn:#f6c47f;
+  --dx-hover-bg:#294f78;--dx-hover-soft:rgba(55,96,143,.82);
+  --dx-hover-border:#87e6ef;--dx-hover-text:#f7fdff;
+  --dx-hover-danger-bg:#664459;--dx-hover-danger-border:#ef9aaf;
+  --dx-focus-outline:#8ef0e9;
+  --dx-blue-gradient:linear-gradient(110deg,#375caa,#237ca1);
+  --dx-green-gradient:linear-gradient(110deg,#1b7c77,#237e6b);
+  --dx-red-gradient:linear-gradient(110deg,#954f73,#8b5261);
+  --dx-horizon-sheen:linear-gradient(126deg,rgba(158,219,255,.10),transparent 42%,rgba(137,114,255,.075));
+  --dx-horizon-grid:rgba(116,197,248,.055);
+  --dx-horizon-line:rgba(136,188,241,.27);
+  --dx-horizon-inset:rgba(9,22,50,.56);
+  --dx-horizon-quiet:rgba(43,64,115,.52);
+  --dx-horizon-cyan:#80e6f1;
+  --dx-horizon-iris:#a7a1ff;
+  --dx-horizon-card:rgba(19,34,71,.78);
+  --dx-horizon-glass-blur:blur(20px) saturate(132%);
+  --dx-horizon-contrast:#ecf9ff;
+  --f-family-inter:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+:root[data-theme="light"] {
+  color-scheme:light;
+  --bg-main:#dce9f4;
+  --bg-panel:rgba(239,248,255,.81);
+  --bg-panel-inside:rgba(232,244,255,.83);
+  --bg-panel-light:rgba(218,236,254,.89);
+  --bg-linear-gradient:linear-gradient(137deg,rgba(249,252,255,.88),rgba(224,241,254,.83) 55%,rgba(229,230,255,.82));
+  --text-main:#142a47;--text-muted:#48637c;
+  --blue:#176e9d;--green:#147964;--red:#b23d68;--yellow:#8c5d15;
+  --border:rgba(52,115,169,.25);
+  --shadow:0 15px 46px rgba(24,75,120,.13),0 2px 10px rgba(45,85,140,.11);
+  --dx-glass:rgba(241,249,255,.78);
+  --dx-glass-header:rgba(218,239,253,.75);
+  --dx-panel-line:rgba(52,115,169,.26);
+  --dx-panel-strong:rgba(23,136,174,.69);
+  --dx-surface-raised:rgba(221,237,254,.81);
+  --dx-accent:#166d94;--dx-accent-soft:rgba(28,135,182,.11);
+  --dx-good:#197f64;--dx-bad:#b64669;--dx-warn:#946220;
+  --dx-hover-bg:rgba(188,222,245,.96);
+  --dx-hover-soft:rgba(214,236,250,.92);
+  --dx-hover-border:#248bb8;
+  --dx-hover-text:#153753;
+  --dx-hover-danger-bg:#f4dce7;--dx-hover-danger-border:#cb7d94;
+  --dx-focus-outline:#167ba9;
+  --dx-blue-gradient:linear-gradient(110deg,#2872b0,#188ab5);
+  --dx-green-gradient:linear-gradient(110deg,#197c79,#2b9786);
+  --dx-red-gradient:linear-gradient(110deg,#b7557b,#ae6272);
+  --dx-horizon-sheen:linear-gradient(123deg,rgba(255,255,255,.40),transparent 50%,rgba(117,160,242,.085));
+  --dx-horizon-grid:rgba(23,91,145,.07);
+  --dx-horizon-line:rgba(53,114,173,.24);
+  --dx-horizon-inset:rgba(225,242,255,.75);
+  --dx-horizon-quiet:rgba(218,232,249,.73);
+  --dx-horizon-cyan:#16779b;
+  --dx-horizon-iris:#5e5fb3;
+  --dx-horizon-card:rgba(243,250,255,.88);
+  --dx-horizon-glass-blur:blur(18px) saturate(125%);
+  --dx-horizon-contrast:#152f49;
+}
+
+/* 2. BACKDROP — architectural lightfields, low-amplitude grid and depth.
+   Retain the user's own wallpaper when one is selected. */
+body:not(.has-custom-wallpaper),
+:root[data-theme="dark"] body:not(.has-custom-wallpaper) {
+  background-color:#071023!important;
+  background-image:
+    radial-gradient(ellipse 45% 49% at 8% 1%,rgba(26,113,169,.37),transparent 75%),
+    radial-gradient(ellipse 55% 68% at 89% 13%,rgba(97,58,171,.28),transparent 73%),
+    radial-gradient(ellipse 54% 56% at 56% 95%,rgba(15,117,126,.20),transparent 80%),
+    repeating-linear-gradient(90deg,transparent 0px,transparent 79px,rgba(100,183,241,.055) 80px),
+    repeating-linear-gradient(0deg,transparent 0px,transparent 79px,rgba(100,183,241,.053) 80px),
+    linear-gradient(160deg,#071125 0%,#0b1937 48%,#0c122c 100%)!important;
+  background-size:auto!important;
+  background-position:center!important;
+  background-attachment:fixed!important;
+}
+:root[data-theme="light"] body:not(.has-custom-wallpaper) {
+  background-color:#dcebf6!important;
+  background-image:
+    radial-gradient(ellipse 45% 50% at 7% 6%,rgba(78,166,216,.22),transparent 78%),
+    radial-gradient(ellipse 55% 55% at 88% 15%,rgba(148,133,225,.20),transparent 75%),
+    repeating-linear-gradient(90deg,transparent 0px,transparent 79px,rgba(44,108,161,.067) 80px),
+    repeating-linear-gradient(0deg,transparent 0px,transparent 79px,rgba(44,108,161,.067) 80px),
+    linear-gradient(145deg,#f2f9ff,#d9ebfb 53%,#e6e7fa)!important;
+}
+body.has-custom-wallpaper {
+  background-color:var(--bg-main)!important;
+}
+/* The scrollable canvas remains transparent, so wallpapers and lightfields show. */
+#workspace-canvas,
+#workspace-canvas.has-background {background-color:transparent!important}
+
+/* 3. GLOBAL NAVIGATION / APP CHROME — light, layered, accessible. */
+#app-toolbar {
+  background:linear-gradient(108deg,rgba(13,27,58,.91),rgba(20,34,72,.83) 55%,rgba(30,31,77,.86))!important;
+  border-bottom:1px solid var(--dx-horizon-line)!important;
+  box-shadow:0 4px 26px rgba(3,11,32,.28),inset 0 1px rgba(193,230,255,.10)!important;
+  -webkit-backdrop-filter:var(--dx-horizon-glass-blur)!important;
+  backdrop-filter:var(--dx-horizon-glass-blur)!important;
+}
+:root[data-theme="light"] #app-toolbar {
+  background:linear-gradient(108deg,rgba(239,249,255,.94),rgba(221,238,252,.88) 60%,rgba(233,233,255,.9))!important;
+  box-shadow:0 6px 25px rgba(32,78,119,.12),inset 0 1px #fff!important;
+}
+#app-toolbar .dashboard-brand {
+  align-items:center;gap:8px;
+}
+#app-toolbar .dashboard-brand .app-brand {
+  font-size:clamp(19px,2.2vw,23px);
+  font-weight:800;letter-spacing:-.045em;line-height:1.1;
+  text-shadow:0 1px 17px rgba(101,204,240,.13);
+}
+#app-toolbar .dashboard-brand .app-brand span {
+  color:var(--dx-horizon-cyan)!important;
+}
+#app-toolbar .brand-by {color:var(--text-muted)!important;opacity:.9}
+#app-toolbar .brand-profile {
+  color:var(--dx-horizon-cyan)!important;
+  text-decoration:none;border-bottom:1px solid transparent;
+}
+#app-toolbar .brand-profile:hover {border-bottom-color:currentColor}
+#app-toolbar .dashboard-brand::after {
+  content:"SPATIAL READY";
+  display:inline-flex;align-items:center;white-space:nowrap;
+  margin-left:7px;padding:5px 7px;
+  border:1px solid rgba(119,220,230,.32);
+  border-radius:999px;color:var(--dx-horizon-cyan);
+  background:rgba(33,113,147,.12);
+  font:750 9px/1 var(--f-family-inter);letter-spacing:.11em;
+}
+#app-toolbar .toolbar-controls > button,
+#app-toolbar .toolbar-language button,
+#workspace-tabs #create-workspace {
+  color:var(--text-main);
+  background:linear-gradient(137deg,var(--dx-horizon-sheen),var(--bg-panel-light))!important;
+  border:1px solid var(--dx-horizon-line)!important;
+  border-radius:10px!important;
+  box-shadow:inset 0 1px rgba(189,228,255,.085)!important;
+  font-weight:650;min-height:34px;
+  transition:background-color .16s,border-color .16s,color .16s,box-shadow .16s!important;
+}
+#app-toolbar .toolbar-controls > button:hover:not(:disabled),
+#app-toolbar .toolbar-language button:hover:not(:disabled),
+#workspace-tabs #create-workspace:hover {
+  background:var(--dx-hover-bg)!important;
+  color:var(--dx-hover-text)!important;
+  border-color:var(--dx-hover-border)!important;
+  box-shadow:0 0 0 1px rgba(102,214,238,.12),inset 0 1px rgba(229,255,255,.08)!important;
+}
+#app-toolbar #spatial-toggle {
+  color:var(--dx-horizon-contrast)!important;
+  background:linear-gradient(115deg,#2b809f,#4862ac)!important;
+  border-color:rgba(123,231,244,.60)!important;
+  font-weight:780!important;
+  box-shadow:inset 0 1px rgba(230,255,255,.24),0 3px 14px rgba(34,109,156,.18)!important;
+}
+:root[data-theme="light"] #app-toolbar #spatial-toggle {color:#fff!important}
+#app-toolbar #spatial-toggle:hover:not(:disabled) {
+  background:linear-gradient(115deg,#379bb4,#5e73c1)!important;
+  border-color:#b0faff!important;
+}
+#widget-navigation {
+  background:rgba(10,21,46,.78)!important;
+  border-bottom:1px solid var(--dx-horizon-line)!important;
+  -webkit-backdrop-filter:blur(17px) saturate(125%)!important;
+  backdrop-filter:blur(17px) saturate(125%)!important;
+}
+:root[data-theme="light"] #widget-navigation {background:rgba(235,246,255,.86)!important}
+#widget-navigation .nav--element {
+  color:var(--text-muted)!important;
+  letter-spacing:.07em!important;
+  transition:color .15s,background-color .15s,border-color .15s;
+}
+#widget-navigation .nav--element:hover:not(:disabled),
+#widget-navigation .nav--element[aria-pressed="true"] {
+  color:var(--text-main)!important;
+  background:rgba(74,146,184,.14)!important;
+}
+#widget-navigation .nav--element[aria-pressed="true"] {
+  border-bottom:2px solid var(--dx-horizon-cyan)!important;
+  box-shadow:inset 0 -1px 0 var(--dx-horizon-cyan)!important;
+}
+.workspace-tile {
+  background:var(--dx-horizon-quiet)!important;
+  border-color:var(--dx-horizon-line)!important;
+  border-radius:10px!important;
+}
+.workspace-tile.is-active {
+  background:linear-gradient(120deg,rgba(43,115,155,.24),rgba(102,88,174,.13))!important;
+  border-color:var(--dx-horizon-cyan)!important;
+  box-shadow:inset 0 -2px var(--dx-horizon-cyan)!important;
+}
+#workspace-tabs .workspace-name {color:var(--text-main)!important}
+#workspace-tabs .workspace-delete {color:var(--dx-bad)!important}
+#workspace-tabs .workspace-tile:not(.is-active):hover {
+  background:var(--dx-hover-soft)!important;
+}
+
+/* 4. LIVE WIDGET SURFACES — glass without dimming their content. */
+#workspace-canvas > #workspace-surface > .widget--element {
+  background:var(--bg-linear-gradient)!important;
+  background-color:var(--bg-panel)!important;
+  border:1px solid var(--dx-horizon-line)!important;
+  border-radius:15px!important;
+  box-shadow:var(--shadow)!important;
+  -webkit-backdrop-filter:var(--dx-horizon-glass-blur)!important;
+  backdrop-filter:var(--dx-horizon-glass-blur)!important;
+  color:var(--text-main)!important;
+  outline:1px solid rgba(160,207,255,.035);
+  outline-offset:-2px;
+  transition:border-color .17s,box-shadow .17s,background-color .17s;
+}
+#workspace-canvas > #workspace-surface > .widget--element.is-focus,
+#workspace-canvas > #workspace-surface > .widget--element:focus-within {
+  border-color:var(--dx-panel-strong)!important;
+  box-shadow:0 20px 65px rgba(0,5,23,.36),0 0 0 1px rgba(98,224,239,.24)!important;
+}
+#workspace-canvas > #workspace-surface > .widget--element.is-pinned {
+  box-shadow:var(--shadow),inset 0 3px 0 var(--dx-horizon-iris)!important;
+}
+#workspace-canvas > #workspace-surface > .widget--element .widget--element--header {
+  background:linear-gradient(110deg,rgba(73,114,171,.19),rgba(50,69,145,.13))!important;
+  border-bottom:1px solid var(--dx-horizon-line)!important;
+  min-height:43px;
+  color:var(--text-main);
+}
+:root[data-theme="light"] #workspace-canvas > #workspace-surface > .widget--element .widget--element--header {
+  background:linear-gradient(110deg,rgba(148,204,240,.20),rgba(172,172,235,.14))!important;
+}
+#workspace-canvas .widget--element .window-title,
+#workspace-canvas .widget--element .window-heading,
+#workspace-canvas .widget--element .title {
+  color:var(--text-main)!important;
+  letter-spacing:.012em;
+}
+#workspace-canvas .widget--element .window-id {
+  color:var(--text-muted)!important;opacity:.94;
+}
+#workspace-canvas > #workspace-surface > .widget--element .widget--element--body {
+  color:var(--text-main);scrollbar-color:rgba(124,187,224,.37) transparent;
+}
+#workspace-canvas .widget--element.is-focus .window-heading::before,
+#workspace-canvas .widget--element.is-pinned .window-heading::before {
+  color:var(--dx-horizon-cyan)!important;
+}
+#workspace-canvas .window-actions button,
+#workspace-canvas .window-action,
+#workspace-canvas .widget--element--footer-button {
+  border-radius:8px!important;
+  border-color:var(--dx-horizon-line)!important;
+  color:var(--text-muted)!important;
+  background:var(--dx-horizon-quiet)!important;
+}
+#workspace-canvas .window-actions button:hover:not(:disabled),
+#workspace-canvas .window-action:hover:not(:disabled),
+#workspace-canvas .widget--element--footer-button:hover:not(:disabled) {
+  border-color:var(--dx-horizon-cyan)!important;
+  background:var(--dx-hover-soft)!important;
+  color:var(--text-main)!important;
+}
+/* Minimize decoration: no animated glow and no forced widget widths/heights. */
+#workspace-canvas .widget--element input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+#workspace-canvas .widget--element select,
+#workspace-canvas .widget--element textarea {
+  background:var(--dx-horizon-inset)!important;
+  border:1px solid var(--dx-horizon-line)!important;
+  border-radius:9px!important;
+  color:var(--text-main)!important;
+  box-shadow:inset 0 1px 3px rgba(0,6,29,.07);
+}
+#workspace-canvas .widget--element input::placeholder,
+#workspace-canvas .widget--element textarea::placeholder {
+  color:var(--text-muted)!important;opacity:.82;
+}
+#workspace-canvas .widget--element input:focus-visible,
+#workspace-canvas .widget--element textarea:focus-visible,
+#workspace-canvas .widget--element select:focus-visible,
+#workspace-canvas .widget--element button:focus-visible {
+  outline:2px solid var(--dx-focus-outline)!important;outline-offset:2px;
+}
+#workspace-canvas .widget--element button:not(:disabled):not(.widget-remove):not(.window-action) {
+  transition:background-color .16s,border-color .16s,color .16s;
+}
+#workspace-canvas .widget--element button:not(:disabled):hover {
+  border-color:var(--dx-hover-border)!important;
+}
+#workspace-canvas .widget--element button:disabled,
+#app-toolbar button:disabled {
+  cursor:not-allowed;opacity:.48;
+}
+#workspace-canvas .widget--element a {color:var(--blue)}
+#workspace-canvas .widget--element a:hover {color:var(--dx-horizon-cyan)}
+#workspace-canvas .dx-picker,
+#workspace-canvas .dx-picker-options,
+#workspace-canvas .dx-integration,
+#workspace-canvas .dx-credential,
+#workspace-canvas .optima-order-card,
+#workspace-canvas .optima-order-panel,
+#workspace-canvas .optima-editor,
+#workspace-canvas .optima-order-edit-item,
+#workspace-canvas .optima-order-read-item {
+  border-color:var(--dx-horizon-line);
+}
+#workspace-canvas .dx-picker,
+#workspace-canvas .dx-picker-options {
+  background:var(--dx-horizon-card)!important;
+  -webkit-backdrop-filter:blur(18px);
+  backdrop-filter:blur(18px);
+  border-radius:10px!important;
+}
+#workspace-canvas .dx-picker-option:hover:not(:disabled),
+#workspace-canvas .manager-mini-action:hover:not(:disabled) {
+  background:var(--dx-hover-soft)!important;color:var(--text-main)!important;
+}
+#workspace-canvas .manager-heading,
+#workspace-canvas .dx-integration h3,
+#workspace-canvas .optima-order-panel-title strong {
+  color:var(--dx-horizon-contrast);
+}
+#workspace-canvas .manager-count,
+#workspace-canvas .dx-credential-status {
+  color:var(--dx-horizon-cyan);
+}
+#workspace-canvas .optima-order-badge {
+  border-radius:9px!important;
+}
+#workspace-canvas .optima-order-badge.optima-order-confirmed,
+#workspace-canvas .optima-order-badge.optima-order-done {background:rgba(59,160,127,.13)}
+#workspace-canvas .optima-order-badge.optima-order-overdue,
+#workspace-canvas .optima-order-badge.optima-order-rejected {background:rgba(196,77,117,.13)}
+
+/* 5. SPATIAL — exact same design language, 3D geometry remains fully live.
+   Do not override --dx-spatial-panel-alpha set by Spatial Preview slider. */
+#spatial-preview {
+  color:#f1faff!important;
+  background:#081125!important;
+}
+#spatial-preview .spatial-stage {
+  background:radial-gradient(ellipse at 23% 12%,#153c61,#111d42 47%,#080e25 90%)!important;
+}
+#spatial-preview .spatial-topbar,
+#spatial-preview .spatial-inspector,
+#spatial-preview .spatial-hint,
+#spatial-preview .spatial-room-status {
+  background:linear-gradient(135deg,rgba(16,35,71,.91),rgba(27,31,78,.89))!important;
+  border:1px solid rgba(134,201,246,.34)!important;
+  border-radius:14px!important;
+  box-shadow:0 14px 44px rgba(0,7,24,.30)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(130%)!important;
+  backdrop-filter:blur(18px) saturate(130%)!important;
+}
+#spatial-preview .spatial-heading strong span,
+#spatial-preview .spatial-glass-control output {
+  color:#80e5f2!important;
+}
+#spatial-preview .spatial-heading small,
+#spatial-preview .spatial-hint,
+#spatial-preview .spatial-room-status {
+  color:#c0d5e9!important;
+}
+#spatial-preview .spatial-actions button,
+#spatial-preview .spatial-inspector button {
+  background:rgba(49,76,126,.79)!important;
+  color:#f4fcff!important;
+  border-color:rgba(124,205,244,.39)!important;
+  border-radius:9px!important;
+}
+#spatial-preview .spatial-actions button:hover:not(:disabled),
+#spatial-preview .spatial-inspector button:hover:not(:disabled) {
+  background:rgba(48,127,173,.88)!important;
+  border-color:#84ebf1!important;
+}
+#spatial-preview .spatial-exit {
+  background:linear-gradient(117deg,#2b809f,#485eaf)!important;
+}
+#spatial-preview .spatial-inspector input,
+#spatial-preview .spatial-inspector select,
+#spatial-preview .spatial-desktop-size,
+#spatial-preview .spatial-glass-control {
+  background:rgba(13,30,67,.72)!important;
+  border-color:rgba(128,188,241,.30)!important;
+  color:#e8f6ff!important;
+  border-radius:9px!important;
+}
+#spatial-preview .spatial-inspector label {color:#d1e3f2!important}
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel {
+  border-color:rgba(133,233,239,.57)!important;
+  background:rgba(13,27,64,.10)!important;
+  box-shadow:0 20px 55px rgba(0,12,44,.35),0 0 0 1px rgba(125,207,245,.12)!important;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel.is-selected {
+  outline:2px solid #87e8f2!important;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel .widget--element {
+  background:rgba(18,43,83,var(--dx-spatial-panel-alpha,.45))!important;
+  background-image:var(--dx-horizon-sheen)!important;
+  border-color:rgba(128,196,238,.47)!important;
+  color:#f1f9ff!important;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel .widget--element--header {
+  background:rgba(48,91,152,.29)!important;
+  border-bottom-color:rgba(139,206,246,.34)!important;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel .widget--element--body {
+  background:transparent!important;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel .widget--element input,
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel .widget--element textarea,
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel .widget--element select {
+  color:#eef8ff!important;
+  background:rgba(13,29,67,.85)!important;
+  border-color:rgba(117,191,234,.36)!important;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel .widget--element .window-heading,
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel .widget--element .window-title {
+  color:#f2faff!important;
+}
+
+/* 6. LAYOUT SAFETY. Always retain the current widget geometries/scrolling. */
+@media (max-width:1160px) {
+  #app-toolbar .dashboard-brand::after{display:none}
+}
+@media (max-width:750px) {
+  #app-toolbar .dashboard-brand .app-brand{font-size:19px}
+  #app-toolbar .toolbar-controls > button{min-height:32px;padding:6px 9px}
+  #workspace-canvas > #workspace-surface > .widget--element{
+    -webkit-backdrop-filter:blur(12px)!important;backdrop-filter:blur(12px)!important;
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  #app-toolbar *,#widget-navigation *,#workspace-canvas .widget--element *{
+    transition-duration:.01ms!important;animation-duration:.01ms!important;
+  }
+}
