@@ -71,6 +71,7 @@ export default class SpatialPreview {
     });
     this.isOpen = true;
     this.surface = surface;
+    this.workspaceId=window.dashboardxStore?.workspace.id || 'home';
     this.root = document.createElement('section');
     this.root.id = 'spatial-preview';
     this.root.setAttribute('aria-label', 'DashboardX Spatial Preview');
@@ -236,6 +237,12 @@ export default class SpatialPreview {
     this.render();
   }
 
+  spatialPoseId(instanceId) {
+    // Existing default-home poses are unchanged. Other workspaces receive
+    // their own 3D coordinates, even if they share the SAME widget instance.
+    return this.workspaceId==='home' ? instanceId : this.workspaceId+'__'+instanceId;
+  }
+
   attach(widget, index, desktopSize) {
     const desktopStyle = widget.getAttribute('style');
     const panel = document.createElement('div');
@@ -258,11 +265,12 @@ export default class SpatialPreview {
     widget.style.display = 'flex';
     widget.classList.add('is-spatial-widget');
 
+    const poseId=this.spatialPoseId(widget.instanceId);
     const stored = (() => {
-      try { return localStorage.getItem('dashboardx:spatial:v1:' + widget.instanceId); }
+      try { return localStorage.getItem('dashboardx:spatial:v1:' + poseId); }
       catch { return null; }
     })();
-    const pose = stored ? getSpatialLayout(widget.instanceId) : defaultSpatialPose(index);
+    const pose = stored ? getSpatialLayout(poseId) : defaultSpatialPose(index);
     // Ignore widths/heights saved by older Spatial versions. Desktop now owns size.
     pose.widthMeters = desktopSize.widthMeters;
     pose.heightMeters = desktopSize.heightMeters;
@@ -316,7 +324,7 @@ export default class SpatialPreview {
   }
 
   persist(record) {
-    saveSpatialLayout(record.widget.instanceId, record.pose);
+    saveSpatialLayout(this.spatialPoseId(record.widget.instanceId), record.pose);
     const saved = this.root.querySelector('[data-spatial="saved"]');
     if (saved) saved.textContent = 'Spatial Layout сохранён';
   }
@@ -398,7 +406,7 @@ export default class SpatialPreview {
     });
     read('reset').addEventListener('click',()=>{
       if (!this.selected) return;
-      deleteSpatialLayout(this.selected.widget.instanceId);
+      deleteSpatialLayout(this.spatialPoseId(this.selected.widget.instanceId));
       this.selected.pose={
         ...defaultSpatialPose(this.selected.index),
         widthMeters:this.selected.desktopSize.widthMeters,
