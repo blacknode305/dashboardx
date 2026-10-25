@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { defaultSpatialPose, resizeSpatialPose } from '../client/js/module/Spatial/SpatialMath.js';
+import { defaultSpatialPose, resizeSpatialPose, spatialSizeFromDesktop, SPATIAL_PIXELS_PER_METER } from '../client/js/module/Spatial/SpatialMath.js';
 import { saveSpatialLayout, getSpatialLayout } from '../client/js/module/Spatial/SpatialLayout.js';
 
 const source = path => readFileSync(new URL(path,import.meta.url),'utf8');
@@ -67,4 +67,26 @@ test('every original and new widget type shares the live 3D manager',()=>{
   assert.match(classes,/GithubControlWidget: GithubControlWidgetView/);
   assert.match(classes,/DashboardAiWidget: DashboardAiWidgetView/);
   assert.match(app,/if \(spatialPreview\?\.isOpen\) spatialPreview\.close\(\)/);
+});
+
+test('Spatial size always derives from actual Desktop pixels, proportion preserved',()=>{
+  assert.equal(SPATIAL_PIXELS_PER_METER,400);
+  assert.deepEqual(spatialSizeFromDesktop(520,280),{
+    widthPx:520,heightPx:280,widthMeters:1.3,heightMeters:0.7
+  });
+  assert.deepEqual(spatialSizeFromDesktop(600,300),{
+    widthPx:600,heightPx:300,widthMeters:1.5,heightMeters:0.75
+  });
+  assert.throws(()=>spatialSizeFromDesktop(0,300));
+  assert.throws(()=>spatialSizeFromDesktop(400,NaN));
+});
+test('Spatial inspector inherits Desktop dimensions and cannot resize independently',()=>{
+  const spatial=source('../client/js/module/Spatial/SpatialPreview.js');
+  assert.match(spatial,/widget\.getBoundingClientRect\(\)/);
+  assert.match(spatial,/pose\.widthMeters = desktopSize\.widthMeters/);
+  assert.match(spatial,/pose\.heightMeters = desktopSize\.heightMeters/);
+  assert.match(spatial,/panel\.style\.width = desktopSize\.widthPx/);
+  assert.match(spatial,/panel\.style\.height = desktopSize\.heightPx/);
+  assert.match(spatial,/\[data-spatial="desktop-size"\]/);
+  assert.doesNotMatch(spatial,/data-spatial="scale"/);
 });
