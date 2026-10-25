@@ -65,7 +65,7 @@ export default class SpatialPreview {
           <label>Поворот Y, ° <input data-spatial="rotate" type="number" step="5"></label>
           <label>Ширина, м <input data-spatial="scale" type="number" step="0.1" min="0.35" max="2.8"></label>
         </div>
-        <div class="spatial-actions"><button type="button" data-spatial="reset">Сбросить позицию</button>
+        <div class="spatial-actions"><button type="button" data-spatial="focus">К виджету</button><button type="button" data-spatial="reset">Сбросить позицию</button>
           <span data-spatial="saved" role="status">Отдельный Spatial Layout</span></div>
       </div>
       <div class="spatial-hint">ЛКМ по пустому месту — вращать сцену · колесо — приблизить ·
