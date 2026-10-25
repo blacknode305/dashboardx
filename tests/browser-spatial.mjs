@@ -21,6 +21,27 @@ try {
   const count=await page.locator('template[data-widget]').count();
   assert.equal(count,28,'All 28 templates must be loaded');
 
+  // Create a classic widget and a newly added Developer widget through
+  // the real built-in manager. This also verifies the Developer category.
+  for (const type of ['datetime','githubControl']) {
+    const created=await page.evaluate(type=>{
+      const manager=document.querySelector('#workspace-surface > widget-element[data-widget-type="add"]');
+      const options=[...manager.querySelectorAll('[data-role="type-options"] .dx-picker-option')];
+      const option=options.find(el=>el.querySelector('.dx-option-note')?.textContent===type);
+      if (!option) return false;
+      option.click();
+      manager.querySelector('[data-action="create-instance"]').click();
+      return true;
+    },type);
+    assert.equal(created,true,'Widget manager must offer '+type);
+    await page.waitForSelector('#workspace-surface > widget-element[data-widget-type="'+type+'"]');
+  }
+  assert.equal(await page.locator('#workspace-surface > widget-element').count(),3);
+  const desktopReferences=await page.evaluate(()=>{
+    window.__spatialSmokeWidgets=[...document.querySelectorAll('#workspace-surface > widget-element')];
+    return window.__spatialSmokeWidgets.map(w=>({id:w.id,style:w.getAttribute('style')}));
+  });
+
   const desktopInfo=await page.evaluate(()=>{
     const widget=document.querySelector('#workspace-surface > widget-element');
     window.__dashboardxSmokeWidget=widget;
@@ -29,12 +50,16 @@ try {
 
   await page.locator('#spatial-toggle').click();
   await page.waitForSelector('#spatial-preview .spatial-panel widget-element',{timeout:18000});
+  assert.equal(await page.locator('#spatial-preview .spatial-panel widget-element').count(),3);
   const spatialInfo=await page.evaluate(()=>{
     const widget=document.querySelector('#spatial-preview .spatial-panel widget-element');
     return {sameWidget:widget===window.__dashboardxSmokeWidget,
       sceneOpen:document.body.classList.contains('dx-spatial-active'),
       widgetId:widget.id,
       managerPresent:Boolean(document.querySelector('#spatial-preview .widget-manager')),
+      allLive:window.__spatialSmokeWidgets.every(w=>w.closest('.spatial-panel')),
+      hasGitHub:Boolean(document.querySelector('#spatial-preview widget-element[data-widget-type="githubControl"]')),
+      hasDateTime:Boolean(document.querySelector('#spatial-preview widget-element[data-widget-type="datetime"]')),
       saveKey:widget.storageKey,
       cssPanel:widget.parentElement.classList.contains('spatial-panel')};
   });
@@ -42,6 +67,9 @@ try {
   assert.equal(spatialInfo.sceneOpen,true);
   assert.equal(spatialInfo.managerPresent,true);
   assert.equal(spatialInfo.cssPanel,true);
+  assert.equal(spatialInfo.allLive,true);
+  assert.equal(spatialInfo.hasGitHub,true);
+  assert.equal(spatialInfo.hasDateTime,true);
 
   await page.locator('#spatial-preview [data-spatial="x"]').fill('1.7');
   await page.locator('#spatial-preview [data-spatial="x"]').dispatchEvent('change');
@@ -57,6 +85,11 @@ try {
       spatialMode:widget._spatialMode};
   });
   assert.equal(restored.same,true,'Exactly the same DOM instance must return');
+  const allRestored=await page.evaluate(()=>window.__spatialSmokeWidgets.map(
+    w=>({same:w.parentElement?.id==='workspace-surface',style:w.getAttribute('style')})
+  ));
+  assert.ok(allRestored.every((record,i)=>record.same &&
+    record.style===desktopReferences[i].style),'All live original and new widget styles must restore');
   assert.equal(restored.style,desktopInfo.style,'Desktop inline style must not change');
   assert.equal(restored.body,true);
   assert.equal(restored.spatialMode,false);
