@@ -7,7 +7,7 @@
 import * as THREE from 'three';
 import { CSS3DObject, CSS3DRenderer } from 'three/addons/renderers/CSS3DRenderer.js';
 import { getSpatialLayout, saveSpatialLayout, deleteSpatialLayout } from './SpatialLayout.js';
-import { defaultSpatialPose, resizeSpatialPose } from './SpatialMath.js';
+import { defaultSpatialPose, spatialSizeFromDesktop, SPATIAL_PIXELS_PER_METER } from './SpatialMath.js';
 
 const clamp = (number, min, max) => Math.min(max, Math.max(min, number));
 const round = number => Math.round(number * 100) / 100;
@@ -40,6 +40,12 @@ export default class SpatialPreview {
     const widgets = [...surface.querySelectorAll(':scope > widget-element')].filter(
       el => el.style.display !== 'none' && !el.classList.contains('is-hidden')
     );
+    // Snapshot rendered Desktop dimensions BEFORE enabling Spatial CSS.
+    // Each widget's size is authoritative here; no separate 3D resize settings.
+    const desktopSizes = widgets.map(widget => {
+      const rect = widget.getBoundingClientRect();
+      return spatialSizeFromDesktop(rect.width, rect.height);
+    });
     this.isOpen = true;
     this.surface = surface;
     this.root = document.createElement('section');
@@ -63,12 +69,14 @@ export default class SpatialPreview {
           <label>Y, м <input data-spatial="y" type="number" step="0.1"></label>
           <label>Z, м <input data-spatial="z" type="number" step="0.1"></label>
           <label>Поворот Y, ° <input data-spatial="rotate" type="number" step="5"></label>
-          <label>Ширина, м <input data-spatial="scale" type="number" step="0.1" min="0.35" max="2.8"></label>
+          </div>
+        <div class="spatial-desktop-size" data-spatial="desktop-size" aria-live="polite"></div>
+        <div class="spatial-fields-placeholder" hidden>
         </div>
         <div class="spatial-actions"><button type="button" data-spatial="focus">К виджету</button><button type="button" data-spatial="reset">Сбросить позицию</button>
           <span data-spatial="saved" role="status">Отдельный Spatial Layout</span></div>
       </div>
-      <div class="spatial-hint">ЛКМ по пустому месту — вращать сцену · колесо — приблизить ·
+      <div class="spatial-hint">Размер каждого виджета берётся из Desktop · ЛКМ по пустому месту — вращать сцену · колесо — приблизить ·
         за заголовок — переместить виджет · все поля и кнопки внутри виджетов остаются рабочими.
         Чтобы добавить виджеты, используй обычный менеджер: после добавления вернись сюда.</div>
     `;
@@ -105,7 +113,7 @@ export default class SpatialPreview {
         this.glRenderer = null;
       }
 
-      widgets.forEach((widget, index) => this.attach(widget, index));
+      widgets.forEach((widget, index) => this.attach(widget, index, desktopSizes[index]));
       this.bindControls();
       this.select(this.records[0] || null);
       this.resize();
@@ -118,13 +126,13 @@ export default class SpatialPreview {
     }
   }
 
-  attach(widget, index) {
+  attach(widget, index, desktopSize) {
     const desktopStyle = widget.getAttribute('style');
     const panel = document.createElement('div');
     panel.className = 'spatial-panel';
     panel.dataset.spatialId = widget.instanceId;
-    panel.style.width = '430px';
-    panel.style.height = '340px';
+    panel.style.width = desktopSize.widthPx + 'px';
+    panel.style.height = desktopSize.heightPx + 'px';
     const header = widget.header;
     // Moving a custom element would ordinarily destroy its widget controller.
     // Suppress teardown during this controlled reparent, never during removal.
@@ -145,9 +153,12 @@ export default class SpatialPreview {
       catch { return null; }
     })();
     const pose = stored ? getSpatialLayout(widget.instanceId) : defaultSpatialPose(index);
+    // Ignore widths/heights saved by older Spatial versions. Desktop now owns size.
+    pose.widthMeters = desktopSize.widthMeters;
+    pose.heightMeters = desktopSize.heightMeters;
     const object = new CSS3DObject(panel);
     this.cssScene.add(object);
-    const record = { widget, desktopStyle, panel, object, pose, index };
+    const record = { widget, desktopStyle, panel, object, pose, index, desktopSize };
     this.records.push(record);
     this.applyPose(record);
 
@@ -190,10 +201,7 @@ export default class SpatialPreview {
     const { object, pose, panel } = record;
     object.position.set(...pose.position);
     object.rotation.set(...pose.rotation);
-    const widthPx = 430;
-    const scale = pose.widthMeters / widthPx;
-    object.scale.setScalar(scale);
-    panel.style.height = Math.round(pose.heightMeters / scale) + 'px';
+    object.scale.setScalar(1 / SPATIAL_PIXELS_PER_METER);
     panel.classList.toggle('is-selected', this.selected === record);
   }
 
@@ -213,16 +221,21 @@ export default class SpatialPreview {
 
   syncInspector() {
     const record = this.selected;
-    for (const id of ['x','y','z','rotate','scale']) {
+    for (const id of ['x','y','z','rotate']) {
       const input = this.root.querySelector('[data-spatial="'+id+'"]');
       if (!input) continue;
       input.disabled = !record;
       if (!record) {input.value='';continue;}
       const p = record.pose;
       input.value = String(id==='x'?round(p.position[0]):id==='y'?round(p.position[1]):
-        id==='z'?round(p.position[2]):id==='rotate'?
-        Math.round(THREE.MathUtils.radToDeg(p.rotation[1])):round(p.widthMeters));
+        id==='z'?round(p.position[2]):
+        Math.round(THREE.MathUtils.radToDeg(p.rotation[1])));
     }
+    const dimensions = this.root.querySelector('[data-spatial="desktop-size"]');
+    if (dimensions) dimensions.textContent = record
+      ? 'Размер из Desktop: ' + record.desktopSize.widthPx + ' × ' +
+        record.desktopSize.heightPx + ' px · меняется только в Desktop'
+      : 'Размер задаётся в Desktop';
   }
 
   bindControls() {
@@ -241,7 +254,11 @@ export default class SpatialPreview {
     read('reset').addEventListener('click',()=>{
       if (!this.selected) return;
       deleteSpatialLayout(this.selected.widget.instanceId);
-      this.selected.pose=defaultSpatialPose(this.selected.index);
+      this.selected.pose={
+        ...defaultSpatialPose(this.selected.index),
+        widthMeters:this.selected.desktopSize.widthMeters,
+        heightMeters:this.selected.desktopSize.heightMeters
+      };
       this.applyPose(this.selected);this.syncInspector();this.render();
       read('saved').textContent='Стандартная позиция';
     });
@@ -255,16 +272,13 @@ export default class SpatialPreview {
     }
     selector.addEventListener('change',()=>this.select(this.records.find(
       r=>r.widget.instanceId===selector.value) || null));
-    for (const [field,index] of [['x',0],['y',1],['z',2],['rotate',null],['scale',null]]) {
+    for (const [field,index] of [['x',0],['y',1],['z',2],['rotate',null]]) {
       read(field).addEventListener('change',event=>{
         const record=this.selected;
         const value=Number(event.target.value);
         if (!record || !Number.isFinite(value)) return;
         if (index!==null) record.pose.position[index]=clamp(value,-20,20);
         else if (field==='rotate') record.pose.rotation[1]=THREE.MathUtils.degToRad(clamp(value,-180,180));
-        else {
-          record.pose = resizeSpatialPose(record.pose,clamp(value,.35,2.8));
-        }
         this.applyPose(record);this.syncInspector();this.persist(record);this.render();
       });
     }
