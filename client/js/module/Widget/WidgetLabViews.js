@@ -7,7 +7,7 @@ import GitHubControlController from './GitHubControl.js';
 import ServerMonitorController from './ServerMonitor.js';
 import SmartContactsController from './SmartContacts.js';
 import DashboardAIController from './DashboardAI.js';
-import { gatewayFetch, gatewayStatus, isOwnerConfigured } from '../AIGatewayAccess.js';
+import { gatewayFetch, gatewayStatus, isGatewayConfigured } from '../AIGatewayAccess.js';
 
 const byRole = (widget, role) => widget.body.querySelector('[data-role="' + role + '"]');
 function line(label, value) {
@@ -143,13 +143,13 @@ export class DashboardAiWidgetView {
     this.button?.addEventListener('click', this.onAsk);
     window.addEventListener('dashboardx:ai-config', this.onConfiguration);
     if (this.button) this.button.disabled = true;
-    setStatus(widget, 'AI только для владельца. Настройте сервер в виджете «Настройки DashboardX».');
+    setStatus(widget, 'Подключи собственный OpenAI API через свой AI-шлюз в «Настройках DashboardX».');
     void this.checkAvailability();
   }
   async checkAvailability() {
     if (this.button) this.button.disabled = true;
-    if (!isOwnerConfigured()) {
-      setStatus(this.widget, 'Для AI укажите адрес сервера и токен владельца в настройках.');
+    if (!isGatewayConfigured()) {
+      setStatus(this.widget, 'Укажите адрес личного AI-сервера и его токен доступа в настройках.');
       return;
     }
     try {
@@ -163,7 +163,7 @@ export class DashboardAiWidgetView {
         setStatus(this.widget, 'Сервер подключён, но OpenAI API-ключ ещё не настроен.');
       }
     } catch {
-      if (this.active) setStatus(this.widget, 'Нет подключения или неверный токен владельца.', true);
+      if (this.active) setStatus(this.widget, 'Нет подключения к вашему AI-серверу или неверный токен доступа.', true);
     }
   }
   async ask() {
