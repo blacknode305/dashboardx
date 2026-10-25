@@ -12,13 +12,13 @@ export function makeSpatialRoom(THREE, documentRef = document) {
   const group = new THREE.Group();
   group.name = 'dashboardx-virtual-room';
   group.userData.dashboardxRoom = true;
-  const walls = new THREE.MeshStandardMaterial({color:0x34434d,roughness:.96,metalness:0});
-  const floorMat = new THREE.MeshStandardMaterial({color:0x26333b,roughness:.91,metalness:.04});
-  const roofMat = new THREE.MeshStandardMaterial({color:0x1e2a32,roughness:.96});
-  const beamMat = new THREE.MeshStandardMaterial({color:0x4b5b64,roughness:.85,metalness:.07});
-  const accentMat = new THREE.MeshStandardMaterial({color:0x718b9a,roughness:.72,metalness:.09});
-  const windowMat = new THREE.MeshBasicMaterial({color:0x243d4b});
-  const windowGlint = new THREE.MeshBasicMaterial({color:0x466273});
+  const walls = new THREE.MeshStandardMaterial({color:0x202f59,roughness:.96,metalness:0});
+  const floorMat = new THREE.MeshStandardMaterial({color:0x142e4a,roughness:.91,metalness:.04});
+  const roofMat = new THREE.MeshStandardMaterial({color:0x131d3e,roughness:.96});
+  const beamMat = new THREE.MeshStandardMaterial({color:0x385779,roughness:.85,metalness:.07});
+  const accentMat = new THREE.MeshStandardMaterial({color:0x62c3cf,roughness:.72,metalness:.09});
+  const windowMat = new THREE.MeshBasicMaterial({color:0x183457});
+  const windowGlint = new THREE.MeshBasicMaterial({color:0x5796b4});
   const materialSet = [walls,floorMat,roofMat,beamMat,accentMat,windowMat,windowGlint];
   const geometrySet = [];
   const addBox = (name,width,height,depth,x,y,z,material) => {
@@ -60,14 +60,14 @@ export function makeSpatialRoom(THREE, documentRef = document) {
   }
   // Central architectural board behind the main panel row.
   addBox('room-brand-board',3.92,1.55,.05,0,2.52,-10.35,
-    new THREE.MeshStandardMaterial({color:0x253741,roughness:.72}));
+    new THREE.MeshStandardMaterial({color:0x152b53,roughness:.72}));
   addBox('room-brand-top',4.04,.037,.10,0,3.31,-10.28,accentMat);
   addBox('room-brand-bottom',4.04,.037,.10,0,1.73,-10.28,beamMat);
   for(const z of [-7.5,-4.2,-.9,2.4]){
     addBox('room-ceiling-crossbeam',11.38,.14,.18,0,4.45,z,beamMat);
     for(const x of [-3.65,0,3.65])
       addBox('room-ceiling-light',1.3,.035,.07,x,4.34,z,
-        new THREE.MeshBasicMaterial({color:0xb0c0bb}));
+        new THREE.MeshBasicMaterial({color:0xb5e5f0}));
   }
   // Human-scale desk silhouettes along the sides, leaving widget field free.
   for(const x of [-4.78,4.78]){
@@ -82,13 +82,13 @@ export function makeSpatialRoom(THREE, documentRef = document) {
   if (ctx) {
     ctx.clearRect(0,0,960,300);
     ctx.textAlign='center';
-    ctx.fillStyle='#d6e0e4';
+    ctx.fillStyle='#e1f4ff';
     ctx.font='600 91px system-ui, sans-serif';
     ctx.fillText('DashboardX',480,132);
     ctx.font='500 30px system-ui, sans-serif';
-    ctx.fillStyle='#8fa7b3';
+    ctx.fillStyle='#8ecfe2';
     ctx.fillText('SPATIAL WORKSPACE   /   BLACKNODE305',480,202);
-    ctx.fillStyle='#4f7888';
+    ctx.fillStyle='#67bfda';
     ctx.fillRect(275,230,410,3);
     const texture=new THREE.CanvasTexture(logoCanvas);
     texture.colorSpace=THREE.SRGBColorSpace;
@@ -101,11 +101,11 @@ export function makeSpatialRoom(THREE, documentRef = document) {
     group.add(plaque);
   }
 
-  group.add(new THREE.HemisphereLight(0xc1d1d9,0x22313a,2.2));
-  const key = new THREE.DirectionalLight(0xffe8ce,2.0);
+  group.add(new THREE.HemisphereLight(0xb3dcef,0x13274a,2.2));
+  const key = new THREE.DirectionalLight(0xd5e8ff,2.0);
   key.position.set(-4,4,3);
   group.add(key);
-  const fill = new THREE.PointLight(0xb5d1de,20,14,2);
+  const fill = new THREE.PointLight(0x9ccbf2,20,14,2);
   fill.position.set(3,3,0);
   group.add(fill);
 
@@ -152,23 +152,23 @@ export function makeFallbackSpatialRoom(CSS3DObject, documentRef=document) {
     return object;
   };
   addPlane('css-room-back',4640,1860,[0,2.3,-10.45],[0,0,0],
-    'linear-gradient(90deg,#3c4a53 0%,#293a45 28%,#283741 70%,#3c4a53 100%)');
+    'linear-gradient(90deg,#284367 0%,#172c52 28%,#202b60 70%,#284367 100%)');
   addPlane('css-room-left',6840,1860,[-5.74,2.3,-2],[0,Math.PI/2,0],
-    'repeating-linear-gradient(90deg,#364651 0px,#364651 680px,#263945 688px,#394a54 697px)');
+    'repeating-linear-gradient(90deg,#233d66 0px,#233d66 680px,#1e315a 688px,#2c476a 697px)');
   addPlane('css-room-right',6840,1860,[5.74,2.3,-2],[0,-Math.PI/2,0],
-    'repeating-linear-gradient(90deg,#364651 0px,#364651 680px,#263945 688px,#394a54 697px)');
+    'repeating-linear-gradient(90deg,#233d66 0px,#233d66 680px,#1e315a 688px,#2c476a 697px)');
   addPlane('css-room-floor',4640,6880,[0,-.03,-2],[-Math.PI/2,0,0],
-    'repeating-linear-gradient(0deg,transparent 0px,transparent 598px,#52646c 601px),' +
-    'repeating-linear-gradient(90deg,#27343d 0px,#27343d 598px,#52646c 601px)');
+    'repeating-linear-gradient(0deg,transparent 0px,transparent 598px,#5083a1 601px),' +
+    'repeating-linear-gradient(90deg,#142c4f 0px,#142c4f 598px,#5083a1 601px)');
   addPlane('css-room-ceiling',4640,6880,[0,4.6,-2],[Math.PI/2,0,0],
-    'linear-gradient(90deg,#1b2831,#35444e,#1b2831)');
+    'linear-gradient(90deg,#131f46,#314877,#131f46)');
   addPlane('css-room-signage',1480,390,[0,2.47,-10.33],[0,0,0],
-    'linear-gradient(90deg,#253640,#354956,#253640)');
+    'linear-gradient(90deg,#1d3158,#345777,#1d3158)');
   const label=cssObjects.at(-1).element;
   label.textContent='DashboardX   /   SPATIAL WORKSPACE';
   Object.assign(label.style,{
-    color:'#c7d9df',display:'flex',alignItems:'center',justifyContent:'center',
-    border:'8px solid #526d7d',font:'600 82px system-ui',letterSpacing:'6px'
+    color:'#e2f8ff',display:'flex',alignItems:'center',justifyContent:'center',
+    border:'8px solid #65c7d8',font:'600 82px system-ui',letterSpacing:'6px'
   });
   return cssObjects;
 }
