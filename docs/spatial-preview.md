@@ -31,7 +31,10 @@ When GitHub Pages is configured for `main` and `/(root)`, you can open:
    **Widget width and height are always inherited from Desktop** (the
    inspector shows their actual pixel sizes, read-only). Resize the window
    normally in Desktop, then reopen Spatial 3D to see the same dimensions
-   and aspect ratio. Use **«К виджету»** to focus the camera on one panel.
+   and aspect ratio. The **«Прозрачность панелей»** slider changes only
+   the spatial backgrounds (0–90% transparency, default 55%) without
+   fading text or controls. The setting persists across 3D sessions.
+   Use **«К виджету»** to focus the camera on one panel.
 5. Click **«← Desktop»** (or Escape) to restore the **same live widgets**
    back to the 2D workspace. Their existing 2D positions and storage are
    not overwritten by 3D pose changes.
