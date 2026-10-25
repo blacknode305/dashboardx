@@ -27,8 +27,11 @@ When GitHub Pages is configured for `main` and `/(root)`, you can open:
    widget JavaScript, plus `WebGLRenderer` for a subtle ground grid.
 4. Drag the **empty background** to orbit; use the **mouse wheel** on the
    empty background to zoom. Drag a **widget header** to move it in X/Y.
-   Select any widget in the right-hand panel and edit X/Y/Z, Y rotation,
-   or physical width. Use **«К виджету»** to focus the camera on one panel.
+   Select any widget in the right-hand panel and edit X/Y/Z or Y rotation.
+   **Widget width and height are always inherited from Desktop** (the
+   inspector shows their actual pixel sizes, read-only). Resize the window
+   normally in Desktop, then reopen Spatial 3D to see the same dimensions
+   and aspect ratio. Use **«К виджету»** to focus the camera on one panel.
 5. Click **«← Desktop»** (or Escape) to restore the **same live widgets**
    back to the 2D workspace. Their existing 2D positions and storage are
    not overwritten by 3D pose changes.
@@ -52,8 +55,11 @@ When GitHub Pages is configured for `main` and `/(root)`, you can open:
   the new interaction is active. 3D layout is stored independently under
   `dashboardx:spatial:v1:<instance-id>`; desktop positions stay under
   `dashboardx.layout.<workspace-id>.<instance-id>`.
-- Default positions spread widgets across a three-column grid; per-widget
-  poses persist locally. Camera position itself is not persisted.
+- Default positions spread widgets across a three-column grid; XYZ/rotation
+  poses persist locally. **Pixel width and height are measured from Desktop
+  on each entry**, at 400 CSS pixels per spatial meter. Previously saved
+  Spatial width/height are ignored, including values from older versions.
+  Camera position itself is not persisted.
 
 ## Current limitations
 
