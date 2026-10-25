@@ -110,3 +110,10 @@ body.dx-spatial-active #workspace-canvas .spatial-panel .widget--element[data-wi
   #spatial-preview .spatial-fields {gap:5px}
   #spatial-preview .spatial-hint {font-size:9px;left:6px;bottom:5px;max-width:calc(100% - 205px)}
 }
+
+/* Read-only Desktop size feedback: all dimensions are controlled from Desktop. */
+#spatial-preview .spatial-desktop-size {
+  color:#d0dfe7;font:500 11px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:#202f38;border:1px solid #445e6c;border-radius:7px;
+  padding:8px;overflow-wrap:anywhere;
+}
