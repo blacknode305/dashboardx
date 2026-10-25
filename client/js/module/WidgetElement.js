@@ -1,3 +1,4 @@
+import widgetRegistry from './WidgetRegistry.js';
 import WidgetBase from './WidgetBase.js';
 import WidgetLogic from './WidgetLogic.js';
 import { translateElement, translateWidgetBody, t } from './i18n.js';
@@ -8,6 +9,7 @@ export default class WidgetElement extends WidgetBase {
     this._built = true;
     const template = document.querySelector('template[data-widget][data-id="' + this.templateId + '"]');
     this.buildFromTemplate(template);
+    widgetRegistry.register(this);
     if (template?.dataset.unavailable === 'true' || window.dashboardxCatalog?.[this.templateId]?.serverOnly) {
       this.body.textContent = t(template?.dataset.unavailable === 'true' ? 'ui.templateUnavailable' : 'ui.serverOnly');
       return;
@@ -24,6 +26,7 @@ export default class WidgetElement extends WidgetBase {
     }
   }
   disconnectedCallback() {
+    widgetRegistry.unregister(this);
     this.logic?.destroy?.();
   }
 }
