@@ -29,8 +29,8 @@ When GitHub Pages is configured for `main` and `/(root)`, you can open:
    empty background to zoom. **W/A/S/D** (or arrow keys) move the camera
    through the room within the wall boundaries. Use **◫ Комната** to hide
    the walls/floor without hiding any widgets. Drag a **widget header** to move it in X/Y.
-   Select any widget in the right-hand panel and edit X/Y/Z or Y rotation.
-   **Widget width and height are always inherited from Desktop** (the
+   Select any widget in the right-hand panel and edit X/Y/Z, **rotation X** (tilt up/down) or rotation Y (turn left/right). Both angles are saved with the widget's 3D position.
+   The room inherits Desktop's **Dark/Light theme** on entry and also reacts\n   to theme changes while Spatial Preview is open. Light mode renders a\n   bright room, dark mode renders a midnight-blue room; both have a\n   full floor, ceiling, four walls, framed windows, a simulated exterior\n   skyline and architectural lighting.\n   **Widget width and height are always inherited from Desktop** (the
    inspector shows their actual pixel sizes, read-only). Resize the window
    normally in Desktop, then reopen Spatial 3D to see the same dimensions
    and aspect ratio. The **«Прозрачность панелей»** slider changes only
@@ -67,7 +67,7 @@ When GitHub Pages is configured for `main` and `/(root)`, you can open:
   `dashboardx:spatial:v1:<instance-id>`; desktop positions stay under
   `dashboardx.layout.<workspace-id>.<instance-id>`.
 - Default positions spread widgets across a three-column grid; XYZ/rotation
-  poses persist locally. **Pixel width and height are measured from Desktop
+  poses persist locally, including independent X and Y rotation angles.\n  **Pixel width and height are measured from Desktop
   on each entry**, at 400 CSS pixels per spatial meter. Previously saved
   Spatial width/height are ignored, including values from older versions.
   Camera position itself is not persisted.
