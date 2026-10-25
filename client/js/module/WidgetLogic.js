@@ -21,6 +21,12 @@ import ServerConsoleWidget from './Widget/ServerConsole.js';
 import TelegramBotWidget from './Widget/TelegramBot.js';
 import TorrentTrackerWidget from './Widget/TorrentTracker.js';
 import NesEmulatorWidget from './Widget/NesEmulator.js';
+import {
+  GithubControlWidgetView,
+  ServerMonitorWidgetView,
+  SmartContactsWidgetView,
+  DashboardAiWidgetView
+} from './Widget/WidgetLabViews.js';
 // TODO: Добавить слушатель переключение Navigation или Workplace, 
 // TODO: который эмитит EventBus в Navigation и Workplace, на кнопки из footer.
 // TODO: Решить где он будет находится, в WidgetElement || WidgetBase || WidgetLogic.
@@ -43,6 +49,10 @@ const WidgetLogic = {
   TelegramBotWidget,
   TorrentTrackerWidget,
   NesEmulatorWidget,
+  GithubControlWidget: GithubControlWidgetView,
+  ServerMonitorWidget: ServerMonitorWidgetView,
+  SmartContactsWidget: SmartContactsWidgetView,
+  DashboardAiWidget: DashboardAiWidgetView,
 };
 // Экспорт реестра
 export default WidgetLogic;
