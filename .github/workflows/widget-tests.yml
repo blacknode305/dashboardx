@@ -1,0 +1,26 @@
+name: Widget platform tests
+on:
+  pull_request:
+    paths:
+      - 'client/js/module/WidgetRegistry.js'
+      - 'client/js/module/Spatial/**'
+      - 'client/js/module/Widget/GitHubControl.js'
+      - 'client/js/module/Widget/ServerMonitor.js'
+      - 'tests/**'
+      - '.github/workflows/widget-tests.yml'
+  workflow_dispatch:
+jobs:
+  widgets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run dependency-free widget tests
+        run: node --test tests/*.test.js
+      - name: Syntax check preview
+        run: |
+          node --check client/js/integrations-preview.js
+          node --check client/js/module/Widget/GitHubControl.js
+          node --check client/js/module/Widget/ServerMonitor.js
