@@ -1,33 +1,29 @@
-# DashboardX licensing and commercial rollout
+# DashboardX — лицензия MIT и открытое развитие
 
-The code previously had an **MIT License** (`LICENSE` in the Git history), which
-allows recipients of those earlier versions to use, modify and commercialize
-those versions subject to the MIT terms. Updating a newer version to
-**proprietary / all rights reserved** does not revoke those permissions.
+**DashboardX теперь снова распространяется по MIT License.**
+Полный текст: [LICENSE](../LICENSE).
 
-For newer original DashboardX code the root `LICENSE` reserves commercial
-rights to its copyright holder. This is **not** an OSI-approved open-source
-license. It does not restrict use of third-party libraries contrary to their
-licenses or establish ownership of material belonging to others.
+Авторство: Copyright (c) 2026 Alexandr Astashov.
+MIT позволяет любому скачивать, использовать, изменять, распространять
+и **коммерчески использовать** лицензированный код, если сохраняются
+текст лицензии и уведомление об авторских правах.
 
-## Protect the commercial product
+Звёздочка GitHub, обратная связь, ссылка на профиль автора,
+исправления ошибок и предложение сотрудничества приветствуются,
+но **не являются юридическими условиями лицензии**.
 
-1. Keep private backend code, payment handling, proprietary AI orchestration,
-   credentials, and subscriber data in a **private repository** and deploy
-   privately (e.g. through Railway), rather than relying on a public notice.
-2. The current public GitHub repository permits viewing and forking under
-   GitHub's platform rules; LICENSE alone cannot stop screenshots, cloning,
-   existing forks, or reuse under older valid MIT grants.
-3. Document code provenance, authorship, and any collaborator/contractor IP
-   assignments. Audit third-party dependencies and art assets before licensing.
-4. For future paid users prepare **Terms of Service**, **Privacy Policy**,
-   refund/billing and subscription terms, a security policy, and a suitable
-   business/tax setup for the jurisdictions where you sell.
-5. Consider protecting the DashboardX name/logo with a trademark where
-   relevant; source-code copyright does not automatically confer exclusive
-   trademark rights.
-6. Discuss finalized commercial terms with a qualified local lawyer; this
-   repository note is not legal advice.
+Разрешено брать деньги за собственный хостинг, кастомизацию,
+консалтинг или разрабатываемый поверх DashboardX сервис.
+При этом лицензионные права других пользователей MIT сохраняются:
+сам по себе MIT не даёт монополию на продажу производных продуктов.
 
-DashboardX AI is **owner-only** until user accounts, subscriptions,
-per-user budgets and other controls are separately built and reviewed.
+GitHub репозиторий: https://github.com/blacknode305/dashboardx
+
+Пользователи DashboardX AI должны самостоятельно приобретать OpenAI API
+и использовать **собственные установки** AI Gateway, а не
+общий API-ключ автора. Это не подписка ChatGPT Plus.
+
+Для будущих закрытых модулей и платного SaaS следует отдельно
+проектировать правила подписки, условия использования, платежи и
+конфиденциальность. Лицензии зависимостей и чужих материалов действуют
+отдельно; проконсультируйтесь с юристом по конкретным условиям бизнеса.
