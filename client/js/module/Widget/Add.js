@@ -85,7 +85,12 @@ export default class AddWidget {
 
     // Group the complete original catalog by category; catalog entries are not
     // removed when a template cannot load or when the widget needs the server.
-    const groups = ['system', 'optima', 'finance', 'tools', 'media', 'games', 'telegram'];
+    // Include every category from the live catalog, including newly added
+    // Developer/Spatial types, without altering the classic category order.
+    const groups = [...new Set([
+      'system', 'optima', 'finance', 'tools', 'developer', 'media', 'games', 'telegram',
+      ...availableTypes.map(type => type.category)
+    ])];
     for (const category of groups) {
       const entries = availableTypes.filter(type => type.category === category);
       if (!entries.length) continue;
