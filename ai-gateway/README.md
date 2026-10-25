@@ -1,58 +1,94 @@
-# DashboardX AI Gateway (owner-only)
+# DashboardX AI — свой OpenAI API-ключ (BYOK)
 
-Node.js 22+ standalone HTTP service intended for a **separate Railway service**.
-DashboardX main frontend is static (GitHub Pages); never put OpenAI credentials
-in the public repository or store them in `localStorage`.
+DashboardX — MIT-лицензированный открытый проект. **Любой человек, команда
+или организация** может установить его и оплатить собственные запросы
+к OpenAI API. Автор DashboardX не предоставляет ключ и не оплачивает
+чужие запросы. Подписка ChatGPT Plus не нужна.
 
-## Before deploy
+> Безопасность: не помещайте OpenAI API-ключ в GitHub, HTML,
+> JavaScript, localStorage или query string. По рекомендациям OpenAI
+> секреты должны находиться на сервере.
+> **Статическая страница GitHub Pages сама не может защищённо хранить ключ.**
 
-Create a Railway service whose root directory is `/ai-gateway` and set
-start command `node server.js`. If Railway requires an explicit runtime build
-plan, use Node.js 22 or higher. Do not reuse the PRO-OPTIMA server.
+## Самый простой локальный запуск (Node.js 22+)
 
-Set these **secrets** in Railway (generate a unique token yourself; do not commit):
+Скачайте репозиторий и откройте терминал в его корне.
+Нужны два терминала — один для DashboardX, второй для AI-шлюза.
 
-- `DASHBOARDX_OWNER_TOKEN`: randomly generated secret, **at least 32 characters**.
-- `DASHBOARDX_SITE_ORIGIN`: `https://blacknode305.github.io` if the DashboardX site is published via this GitHub Pages host; otherwise set its exact HTTPS origin (no trailing path).
-- `OPENAI_MODEL`: `gpt-4.1-mini` by default (optional).
-- `AI_REQUESTS_PER_HOUR`: `20` by default (optional, range 1–120).
-- `OPENAI_API_KEY`: optional secret from Railway Variables for durable configuration after restarts. **Not needed until you buy API access.**
-
-Then open DashboardX → Settings widget → DashboardX AI. Enter the publicly
-accessible HTTPS Railway service URL and the private OWNER TOKEN you configured
-in Railway. Click Connect and test. When you obtain an OpenAI key, paste it
-into the separate OpenAI API-key field and click **Save key on server**.
-
-**Security:** the address (not secret) can be persisted to browser localStorage;
-the owner's token is held only in browser memory until reload, and OpenAI key
-is sent directly to the gateway over HTTPS. When set via DashboardX Settings,
-the API key is held in **server process memory only**, not persisted to disk:
-it must be reinstalled after Railway restarts or instead set as the secret
-`OPENAI_API_KEY` Railway environment variable. The Delete key button removes
-the active in-memory key, but if Railway env still defines one, it will be
-loaded again when the service restarts.
-
-The gateway does not have public/free/paid user modes. It requires the
-long owner bearer token on **all** AI routes, restricts browser origins, limits
-requests to a fixed number per hour, accepts a bounded message, makes only
-the OpenAI Responses API request and returns plain text. It never exposes
-API keys or accepts arbitrary OpenAI model IDs in requests.
-
-## Local test
-
+Терминал 1:
 ```bash
-DASHBOARDX_OWNER_TOKEN="$(openssl rand -hex 32)" \
-DASHBOARDX_SITE_ORIGIN=http://localhost:8000 \
+python3 -m http.server 8000
+```
+
+Терминал 2 (Mac/Linux):
+```bash
+export DASHBOARDX_GATEWAY_TOKEN="$(openssl rand -hex 32)"
+echo "СОХРАНИТЕ ТОКЕН ДЛЯ НАСТРОЕК DashboardX: $DASHBOARDX_GATEWAY_TOKEN"
+export DASHBOARDX_SITE_ORIGIN="http://localhost:8000"
+export HOST="127.0.0.1"
 node ai-gateway/server.js
 ```
 
-Serve the dashboard separately at `http://localhost:8000/`.
-Configure gateway origin `http://localhost:3001` from the Settings widget.
+Перейдите на `http://localhost:8000`. В виджете **«Настройки DashboardX»**
+откройте раздел «DashboardX AI — свой OpenAI API», введите:
 
-**Before public launch** add TLS at Railway edge, password/account login,
-spend-alert rules at OpenAI, regular secret rotation and security monitoring.
-The current gateway is owner-only and is not an authorization system for
-free-tier or paid subscribers.
+1. Адрес своего шлюза: `http://localhost:3001`.
+2. Секретный токен из второго терминала.
+3. После подключения — **свой** OpenAI API-ключ с
+   `https://platform.openai.com/api-keys`.
 
-Use `node --test tests/ai-gateway.test.js` to run isolated tests without
-a live OpenAI API key.
+Нажмите «Установить ключ в моём шлюзе». Откройте виджет
+**DashboardX AI**, проверьте статус, отправьте сообщение.
+
+Ключ, введённый в форме, хранится **только в памяти вашего шлюза**
+до его перезапуска. Альтернативно установите секретную переменную
+`OPENAI_API_KEY` в окружении своего шлюза для сохранения после перезапуска.
+DashboardX не сохраняет сам API-ключ в браузере.
+
+## Как подключить свою организацию / Railway
+
+Разверните **свой собственный экземпляр шлюза**, а не подключайтесь
+к неизвестному общему сервису. В Railway отдельный сервис из директории
+`/ai-gateway` с запуском `npm start` (Node.js >=22).
+Не используйте чужой сервер PRO-OPTIMA.
+
+Переменные окружения **своего** сервиса:
+- `DASHBOARDX_GATEWAY_TOKEN` — свой случайный секрет >=32 символов.
+  Выдавайте его только доверенным людям, которым позволено тратить
+  средства вашей организации и **менять API-ключ в вашем шлюзе**.
+- `DASHBOARDX_SITE_ORIGIN` — точный origin сайта, например
+  `https://blacknode305.github.io` для исходного DashboardX на Pages,
+  либо `https://dashboard.example.org` для своего сайта.
+  Origin содержит только схему/хост/порт, без пути.
+- `OPENAI_API_KEY` — необязательный ключ из защищённых Railway Variables.
+- `OPENAI_MODEL` — необязательный ID доступной вам модели, по умолчанию
+  `gpt-4.1-mini`. Убедитесь, что эта модель доступна вашему API-проекту.
+- `AI_REQUESTS_PER_HOUR` — необязательная защита от перерасхода,
+  20 запросов/час по умолчанию.
+
+Публичный адрес шлюза должен быть HTTPS. Введите его в настройках DashboardX.
+В каждый шлюз вводится **ключ конкретного владельца этого шлюза**.
+Если пользователи подключают разные шлюзы, расходы не смешиваются.
+**Один шлюз = один ключ и один общий бюджет**: это пока не многопользовательская
+система с изоляцией и выставлением счетов. Для организации предоставляйте
+доступ только доверенным сотрудникам либо создавайте отдельные шлюзы.
+
+## Защита и ограничения
+
+- Токен шлюза хранится только в памяти вкладки и очищается при перезагрузке;
+  адрес шлюза можно сохранить в localStorage.
+- Браузер отправляет ключ OpenAI **только в указанный владельцем шлюз**
+  по HTTPS (либо localhost для локальной разработки).
+- Сервер проверяет токен, CORS origin, размер запроса, лимиты запросов.
+- Диалоговый контекст передаётся с браузера и не сохраняется в базе;
+  при перезагрузке страницы контекст виджета теряется.
+- Ввод OpenAI-ключа через форму не проверяет его реальность до первого
+  вызова API. Ошибка оплаты/прав отобразится после запроса.
+- `DASHBOARDX_OWNER_TOKEN` остаётся совместимым старым именем, но для
+  новых установок используйте `DASHBOARDX_GATEWAY_TOKEN`.
+- Перед раздачей сотрудникам настройте расходы и лимиты в OpenAI,
+  не передавайте ключи/токены посторонним, добавьте мониторинг и
+  дополнительные уровни авторизации. **CORS не заменяет авторизацию**.
+
+Тесты: `node --test tests/ai-gateway.test.js`. Эти тесты используют
+поддельный ответ OpenAI; платные запросы не отправляются.
