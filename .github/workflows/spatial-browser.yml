@@ -5,6 +5,7 @@ on:
       - 'client/**'
       - 'index.html'
       - 'tests/browser-spatial.mjs'
+      - 'tests/browser-settings.mjs'
       - '.github/workflows/spatial-browser.yml'
   workflow_dispatch:
 jobs:
@@ -25,6 +26,7 @@ jobs:
           trap 'kill $PID 2>/dev/null || true' EXIT
           sleep 2
           CHROME_BIN=/usr/bin/google-chrome node tests/browser-spatial.mjs
+          CHROME_BIN=/usr/bin/google-chrome node tests/browser-settings.mjs
       - name: Upload Horizon AR visual QA screenshots
         if: always()
         uses: actions/upload-artifact@v4

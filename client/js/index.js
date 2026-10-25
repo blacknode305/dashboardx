@@ -110,6 +110,37 @@ function activateWorkspace(id) {
 function updateWorkspace() {
   return activateWorkspace(store.workspace.id);
 }
+function updateWorkspacePreservingSpatial() {
+  const spatialWasOpen=Boolean(spatialPreview?.isOpen);
+  const result=updateWorkspace();
+  if(spatialWasOpen)queueMicrotask(()=>document.getElementById('spatial-toggle')?.click());
+  return result;
+}
+
+// One command path for header, Settings widget and spatial/AR controls.
+function runWorkspaceCommand({action,id,name}={}) {
+  const current=store.state.workspaces.find(w=>w.id===id);
+  if(action==='select' && current?.id===store.workspace.id)return true;
+  let changed=false;
+  switch(action) {
+    case 'select':
+      changed=Boolean(current && store.selectWorkspace(id));break;
+    case 'create':
+      changed=Boolean(String(name||'').trim() && store.addWorkspace(name));break;
+    case 'rename':
+      changed=Boolean(current && String(name||'').trim() && store.renameWorkspace(id,name));break;
+    case 'delete':
+      if(current && confirm(t('ui.confirmDelete',{name:deskName(current)}))) {
+        changed=store.deleteWorkspace(id);
+        if(changed)activeWidgetByWorkspace.delete(id);
+      }
+      break;
+    default:break;
+  }
+  if(!changed)return false;
+  updateWorkspacePreservingSpatial(); // Also restore the 3D mode after a switch.
+  return true;
+}
 
 function renderWorkspaceTabs() {
   const tabs = document.getElementById('workspace-tabs');
@@ -125,7 +156,7 @@ function renderWorkspaceTabs() {
     title.title = t('ui.goWorkspace') + ': ' + deskName(workspace);
     title.setAttribute('aria-pressed', String(workspace.id === store.workspace.id));
     title.addEventListener('click', () => {
-      activateWorkspace(workspace.id);
+      runWorkspaceCommand({action:'select',id:workspace.id});
     });
 
     const remove = document.createElement('button');
@@ -135,11 +166,7 @@ function renderWorkspaceTabs() {
     remove.title = t('ui.deleteWorkspace') + ': ' + deskName(workspace);
     remove.setAttribute('aria-label', remove.title);
     remove.addEventListener('click', () => {
-      const question = t('ui.confirmDelete',{name:deskName(workspace)});
-      if (confirm(question) && store.deleteWorkspace(workspace.id)) {
-        activeWidgetByWorkspace.delete(workspace.id);
-        updateWorkspace();
-      }
+      runWorkspaceCommand({action:'delete',id:workspace.id});
     });
     tile.append(title, remove);
     tabs.append(tile);
@@ -152,9 +179,10 @@ function renderWorkspaceTabs() {
   create.setAttribute('aria-label', create.title);
   create.addEventListener('click', () => {
     const name = prompt(t('ui.newWorkspace'));
-    if (name && store.addWorkspace(name)) updateWorkspace();
+    if (name) runWorkspaceCommand({action:'create',name});
   });
   tabs.append(create); // Always exactly one permanent + tile, after all desktops.
+  window.dispatchEvent(new Event('dashboardx:workspaces-changed'));
 }
 
 function makeWidget(type, instanceId, index, wide, managerBottom = 400, managerWidth = 490) {
@@ -366,8 +394,9 @@ async function boot() {
       store.save();
       setLanguage(languageSwitch.value);
       translateElement(document);
-      updateWorkspace();
+      updateWorkspacePreservingSpatial();
       syncLanguageButtons();
+      window.dispatchEvent(new Event('dashboardx:ui-changed'));
     });
     languageButtons.forEach(button => button.addEventListener('click', () => {
       if (languageSwitch.value === button.dataset.lang) return;
@@ -387,11 +416,12 @@ async function boot() {
         // Import only when requested: a CDN outage never blocks Desktop startup.
         const { default: SpatialPreview } = await import('./module/Spatial/SpatialPreview.js');
         if (!spatialPreview) spatialPreview=new SpatialPreview({
-          onClose:()=>{spatialButton.setAttribute('aria-pressed','false');spatialButton.textContent='◈ Spatial 3D';}
+          onClose:()=>{spatialButton.setAttribute('aria-pressed','false');spatialButton.textContent='◈ Spatial 3D';window.dispatchEvent(new Event('dashboardx:ui-changed'));}
         });
         spatialPreview.open();
         spatialButton.setAttribute('aria-pressed','true');
         spatialButton.textContent='◈ Закрыть 3D';
+        window.dispatchEvent(new Event('dashboardx:ui-changed'));
       } catch(error) {
         console.error('Spatial Preview could not start',error);
         alert('Не удалось запустить Spatial Preview. Нужен интернет для Three.js и поддержка CSS 3D.\n'+String(error.message||error));
@@ -418,7 +448,7 @@ async function boot() {
       const raw=prompt(t('ui.backgroundPrompt',{name:deskName(store.workspace)}),store.workspace.backgroundUrl || '');
       if (raw === null) return;
       if (!store.setWorkspaceBackground(raw.trim())) {alert(t('ui.backgroundInvalid'));return;}
-      updateWorkspace();
+      updateWorkspacePreservingSpatial();
     });
     await loadTemplates();
 
@@ -433,8 +463,10 @@ async function boot() {
       document.documentElement.dataset.theme = store.state.system.theme.active;
       document.getElementById('theme-toggle').textContent = store.state.system.theme.active === 'dark' ? '☼' : '☾';
     document.getElementById('theme-toggle').title = t('ui.theme');
+      window.dispatchEvent(new Event('dashboardx:ui-changed'));
     });
 
+    window.addEventListener('dashboardx:workspace-command', event=>runWorkspaceCommand(event.detail));
     window.addEventListener('dashboardx:widget-action', widgetAction);
     window.addEventListener('dashboardx:remove-widget', event =>
       widgetAction({ detail: { action: 'remove', id: event.detail.id } })

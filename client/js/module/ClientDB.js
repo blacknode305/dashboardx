@@ -127,6 +127,15 @@ export default class ClientDB {
     return this.save();
   }
 
+  renameWorkspace(id, name) {
+    const workspace=this.state.workspaces.find(w=>w.id===id);
+    const title=String(name||'').trim().slice(0,60);
+    if(!workspace || !title) return false;
+    if(workspace.name===title) return true;
+    workspace.name=title;
+    return this.save();
+  }
+
   selectWorkspace(id) {
     if (!this.state.workspaces.some(w => w.id === id)) return false;
     this.state.activeWorkspaceId = id;

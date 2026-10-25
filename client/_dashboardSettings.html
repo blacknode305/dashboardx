@@ -6,6 +6,41 @@
       <div><strong data-i18n="widget.dashboardSettings">Настройки DashboardX</strong>
       <p data-i18n="settings.subtitle">Подключение сервисов</p></div>
     </header>
+    <details class="dx-settings-fold" data-section="workspaces" open>
+      <summary><span class="dx-settings-fold-icon" aria-hidden="true">◫</span><span>Рабочие пространства <small>Дом · Улица · Кафе</small></span><span class="dx-settings-chevron" aria-hidden="true">⌄</span></summary>
+      <div class="dx-settings-fold-body">
+        <p class="dx-settings-note">Отдельные наборы виджетов для каждого места или сценария. Переключаться можно и из Three.js, не возвращаясь в Desktop.</p>
+        <div class="dx-settings-workspace-list" data-role="settings-workspace-list" aria-label="Список рабочих пространств"></div>
+        <form data-role="settings-workspace-form" class="dx-settings-workspace-form" autocomplete="off">
+          <label>Новое пространство
+            <input data-role="settings-workspace-name" maxlength="60" placeholder="Например: Дом, Улица, Кафе" required>
+          </label>
+          <button type="submit" class="dx-primary">+ Создать</button>
+        </form>
+        <p class="dx-settings-note" data-role="settings-workspace-status" role="status" aria-live="polite"></p>
+      </div>
+    </details>
+    <details class="dx-settings-fold" data-section="interface">
+      <summary><span class="dx-settings-fold-icon" aria-hidden="true">⌘</span><span>Внешний вид и управление <small>Все кнопки верхней шапки</small></span><span class="dx-settings-chevron" aria-hidden="true">⌄</span></summary>
+      <div class="dx-settings-fold-body">
+        <div class="dx-settings-toolbar-actions">
+          <button type="button" data-role="settings-action" data-action="theme">☼ Тема</button>
+          <button type="button" data-role="settings-action" data-action="fullscreen">⛶ Полный экран</button>
+          <button type="button" data-role="settings-action" data-action="spatial">◈ Spatial 3D</button>
+          <button type="button" data-role="settings-action" data-action="background">▧ Фон пространства</button>
+        </div>
+        <div class="dx-settings-language" role="group" aria-label="Язык интерфейса">
+          <span>Язык</span>
+          <button type="button" data-role="settings-language" data-lang="ru" aria-pressed="false">RU</button>
+          <button type="button" data-role="settings-language" data-lang="kz" aria-pressed="false">KZ</button>
+          <button type="button" data-role="settings-language" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+        <a class="dx-settings-github" href="https://github.com/blacknode305" target="_blank" rel="noopener noreferrer">GitHub · blacknode305</a>
+      </div>
+    </details>
+    <details class="dx-settings-fold" data-section="connections">
+      <summary><span class="dx-settings-fold-icon" aria-hidden="true">⌁</span><span>Подключения <small>Telegram и PRO-OPTIMA</small></span><span class="dx-settings-chevron" aria-hidden="true">⌄</span></summary>
+      <div class="dx-settings-fold-body">
     <div class="dx-credential" data-service="telegram">
       <label data-i18n="settings.telegram">Telegram API Token</label>
       <form class="dx-credential-form" autocomplete="off" data-service="telegram">
@@ -31,6 +66,11 @@
       </form>
       <p class="dx-credential-status" data-role="credential-status" aria-live="polite"></p>
     </div>
+      </div>
+    </details>
+    <details class="dx-settings-fold" data-section="ai">
+      <summary><span class="dx-settings-fold-icon" aria-hidden="true">✧</span><span>DashboardX AI <small>OpenAI API · свой шлюз</small></span><span class="dx-settings-chevron" aria-hidden="true">⌄</span></summary>
+      <div class="dx-settings-fold-body">
     <div class="dx-credential dx-ai-settings" data-service="openai">
       <h3>DashboardX AI — свой OpenAI API</h3>
       <p>Каждый пользователь может подключить свой OpenAI API-ключ через собственный шлюз. Ваши запросы оплачиваются с вашего OpenAI API-аккаунта, не с аккаунта автора DashboardX. Для работы требуется свой AI-сервер.</p>
@@ -61,6 +101,15 @@
       OpenAI API-ключ передаётся по HTTPS и хранится в памяти сервера до его перезапуска.
       Для постоянного хранения используйте секретную переменную OPENAI_API_KEY на вашем сервере. Не вводите ключ в незнакомый публичный шлюз.</p>
     </div>
+      </div>
+    </details>
+    <details class="dx-settings-fold dx-settings-danger" data-section="danger">
+      <summary><span class="dx-settings-fold-icon" aria-hidden="true">⚠</span><span>Сброс данных <small>Опасные действия</small></span><span class="dx-settings-chevron" aria-hidden="true">⌄</span></summary>
+      <div class="dx-settings-fold-body">
+        <p class="dx-settings-warning">Полностью очищает локальные настройки, рабочие пространства и данные DashboardX в браузере. Это дубликат кнопки «Очистить данные» из шапки.</p>
+        <button type="button" class="dx-danger" data-role="settings-action" data-action="reset">Очистить данные</button>
+      </div>
+    </details>
     <p class="dx-settings-warning" data-i18n="settings.warning">Токены сохраняются без шифрования в localStorage этого браузера. Не вводите их на чужом компьютере.</p>
   </section>
 </template></body></html>

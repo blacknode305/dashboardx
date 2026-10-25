@@ -71,6 +71,7 @@ export default class SpatialPreview {
     });
     this.isOpen = true;
     this.surface = surface;
+    this.workspaceId=window.dashboardxStore?.workspace.id || 'home';
     this.root = document.createElement('section');
     this.root.id = 'spatial-preview';
     this.root.setAttribute('aria-label', 'DashboardX Spatial Preview');
@@ -82,6 +83,11 @@ export default class SpatialPreview {
           <small>Three.js · реальный интерфейс виджетов · без AR-очков</small>
         </div>
         <div class="spatial-actions">
+          <div class="spatial-workspace-switcher" role="group" aria-label="Рабочее пространство">
+            <label for="spatial-workspace-select">Пространство</label>
+            <select data-spatial="workspace" id="spatial-workspace-select" aria-label="Выбрать рабочее пространство"></select>
+            <button type="button" data-spatial="workspace-new" title="Создать пространство" aria-label="Создать рабочее пространство">+</button>
+          </div>
           <button type="button" data-spatial="home" title="Вернуть исходную камеру">Центрировать</button>
           <button type="button" data-spatial="room" aria-pressed="true" title="Показать или скрыть виртуальную комнату">◫ Комната</button>
           <button type="button" data-spatial="exit" class="spatial-exit">← Desktop</button>
@@ -231,6 +237,12 @@ export default class SpatialPreview {
     this.render();
   }
 
+  spatialPoseId(instanceId) {
+    // Existing default-home poses are unchanged. Other workspaces receive
+    // their own 3D coordinates, even if they share the SAME widget instance.
+    return this.workspaceId==='home' ? instanceId : this.workspaceId+'__'+instanceId;
+  }
+
   attach(widget, index, desktopSize) {
     const desktopStyle = widget.getAttribute('style');
     const panel = document.createElement('div');
@@ -253,11 +265,12 @@ export default class SpatialPreview {
     widget.style.display = 'flex';
     widget.classList.add('is-spatial-widget');
 
+    const poseId=this.spatialPoseId(widget.instanceId);
     const stored = (() => {
-      try { return localStorage.getItem('dashboardx:spatial:v1:' + widget.instanceId); }
+      try { return localStorage.getItem('dashboardx:spatial:v1:' + poseId); }
       catch { return null; }
     })();
-    const pose = stored ? getSpatialLayout(widget.instanceId) : defaultSpatialPose(index);
+    const pose = stored ? getSpatialLayout(poseId) : defaultSpatialPose(index);
     // Ignore widths/heights saved by older Spatial versions. Desktop now owns size.
     pose.widthMeters = desktopSize.widthMeters;
     pose.heightMeters = desktopSize.heightMeters;
@@ -311,7 +324,7 @@ export default class SpatialPreview {
   }
 
   persist(record) {
-    saveSpatialLayout(record.widget.instanceId, record.pose);
+    saveSpatialLayout(this.spatialPoseId(record.widget.instanceId), record.pose);
     const saved = this.root.querySelector('[data-spatial="saved"]');
     if (saved) saved.textContent = 'Spatial Layout сохранён';
   }
@@ -358,6 +371,27 @@ export default class SpatialPreview {
     read('glass').addEventListener('input', event => {
       this.setGlassTransparency(event.target.value);
     });
+    const workspaceSelect=read('workspace');
+    const store=window.dashboardxStore;
+    if(store){
+      for(const workspace of store.state.workspaces){
+        const option=document.createElement('option');
+        option.value=workspace.id;option.textContent=workspace.name;
+        workspaceSelect.append(option);
+      }
+      workspaceSelect.value=store.workspace.id;
+    }
+    workspaceSelect.addEventListener('change',()=>{
+      window.dispatchEvent(new CustomEvent('dashboardx:workspace-command',{
+        detail:{action:'select',id:workspaceSelect.value}
+      }));
+    });
+    read('workspace-new').addEventListener('click',()=>{
+      const name=prompt('Название нового пространства (например: Дом, Улица, Кафе)');
+      if(name?.trim())window.dispatchEvent(new CustomEvent('dashboardx:workspace-command',{
+        detail:{action:'create',name:name.trim()}
+      }));
+    });
     read('exit').addEventListener('click',()=>this.close());
     read('home').addEventListener('click',()=>{
       this.yaw=0; this.pitch=0.15; this.distance=3.8;
@@ -372,7 +406,7 @@ export default class SpatialPreview {
     });
     read('reset').addEventListener('click',()=>{
       if (!this.selected) return;
-      deleteSpatialLayout(this.selected.widget.instanceId);
+      deleteSpatialLayout(this.spatialPoseId(this.selected.widget.instanceId));
       this.selected.pose={
         ...defaultSpatialPose(this.selected.index),
         widthMeters:this.selected.desktopSize.widthMeters,
