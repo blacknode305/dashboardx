@@ -1,0 +1,89 @@
+/*
+ * Spatial Room theme bridge. Loaded AFTER HORIZON AR so the 3D room,
+ * HUD and live HTML widgets respect Desktop's light / dark preference.
+ * Transparency alpha and Desktop window dimensions remain unchanged.
+ */
+#spatial-preview[data-room-theme="light"] {
+  color:#15364e!important;
+  background:#dfedf8!important;
+}
+#spatial-preview[data-room-theme="light"] .spatial-stage {
+  background:radial-gradient(ellipse at 30% 0%,#e9f7ff 0%,#bddff1 55%,#c9d8ef 100%)!important;
+}
+#spatial-preview[data-room-theme="light"] .spatial-topbar,
+#spatial-preview[data-room-theme="light"] .spatial-inspector,
+#spatial-preview[data-room-theme="light"] .spatial-room-status,
+#spatial-preview[data-room-theme="light"] .spatial-hint {
+  color:#24435b!important;
+  background:linear-gradient(125deg,rgba(244,251,255,.94),rgba(214,232,246,.90))!important;
+  border-color:rgba(69,127,165,.31)!important;
+  box-shadow:0 12px 35px rgba(28,66,111,.17)!important;
+}
+#spatial-preview[data-room-theme="light"] .spatial-heading strong,
+#spatial-preview[data-room-theme="light"] .spatial-heading strong span,
+#spatial-preview[data-room-theme="light"] .spatial-glass-control output {
+  color:#156f91!important;
+}
+#spatial-preview[data-room-theme="light"] .spatial-heading small,
+#spatial-preview[data-room-theme="light"] .spatial-hint,
+#spatial-preview[data-room-theme="light"] .spatial-room-status {
+  color:#3c5870!important;
+}
+#spatial-preview[data-room-theme="light"] .spatial-actions button,
+#spatial-preview[data-room-theme="light"] .spatial-inspector button {
+  color:#15344e!important;
+  background:rgba(211,232,247,.92)!important;
+  border-color:rgba(43,112,155,.40)!important;
+}
+#spatial-preview[data-room-theme="light"] .spatial-actions button:hover,
+#spatial-preview[data-room-theme="light"] .spatial-inspector button:hover {
+  color:#08324b!important;background:#b7e0f2!important;border-color:#2587b0!important;
+}
+#spatial-preview[data-room-theme="light"] .spatial-exit {
+  color:#fff!important;background:linear-gradient(117deg,#2287ad,#5b83c3)!important;
+}
+#spatial-preview[data-room-theme="light"] .spatial-inspector label {
+  color:#244b67!important;
+}
+#spatial-preview[data-room-theme="light"] .spatial-inspector input,
+#spatial-preview[data-room-theme="light"] .spatial-inspector select,
+#spatial-preview[data-room-theme="light"] .spatial-desktop-size,
+#spatial-preview[data-room-theme="light"] .spatial-glass-control {
+  background:rgba(242,249,255,.88)!important;
+  color:#173c59!important;
+  border-color:rgba(67,135,174,.37)!important;
+}
+#spatial-preview[data-room-theme="light"] [data-spatial="room"][aria-pressed="true"] {
+  background:#b0dfeb!important;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview[data-room-theme="light"] .spatial-panel {
+  border-color:rgba(53,138,180,.55)!important;
+  background:rgba(214,235,251,.1)!important;
+  box-shadow:0 22px 60px rgba(32,84,130,.21)!important;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview[data-room-theme="light"] .spatial-panel .widget--element {
+  color:#173651!important;
+  background:rgba(226,241,252,var(--dx-spatial-panel-alpha,.45))!important;
+  background-image:linear-gradient(135deg,rgba(255,255,255,.21),transparent 65%)!important;
+  border-color:rgba(58,129,170,.5)!important;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview[data-room-theme="light"] .spatial-panel .widget--element--header {
+  color:#173651!important;
+  background:rgba(192,221,241,.52)!important;
+  border-bottom-color:rgba(74,133,170,.33)!important;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview[data-room-theme="light"] .spatial-panel .widget--element--body {
+  background:transparent!important;
+  color:#173651!important;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview[data-room-theme="light"] .spatial-panel .widget--element .window-heading,
+body.dx-spatial-active #workspace-canvas #spatial-preview[data-room-theme="light"] .spatial-panel .widget--element .window-title {
+  color:#173651!important;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview[data-room-theme="light"] .spatial-panel .widget--element input,
+body.dx-spatial-active #workspace-canvas #spatial-preview[data-room-theme="light"] .spatial-panel .widget--element textarea,
+body.dx-spatial-active #workspace-canvas #spatial-preview[data-room-theme="light"] .spatial-panel .widget--element select {
+  color:#173651!important;
+  background:rgba(241,249,255,.94)!important;
+  border-color:rgba(54,124,167,.38)!important;
+}
