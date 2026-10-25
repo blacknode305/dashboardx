@@ -1,0 +1,179 @@
+/*
+ * Settings Hub: AR-friendly collapsible sections and workspace manager.
+ * Matches HORIZON AR dark/light glass, does not modify widget geometry or
+ * credentials, and keeps controls touch/VR-pointer friendly.
+ */
+#workspace-canvas .dx-settings {
+  display:grid;gap:11px;min-width:0;
+  padding:12px;color:var(--text-main);
+}
+#workspace-canvas .dx-settings-head {margin:0 0 2px}
+#workspace-canvas .dx-settings-fold {
+  display:block;min-width:0;
+  border:1px solid var(--dx-horizon-line,var(--border));
+  border-radius:12px;
+  background:var(--dx-horizon-card,var(--bg-panel-inside));
+  overflow:visible;
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+}
+#workspace-canvas .dx-settings-fold > summary {
+  display:flex;align-items:center;gap:10px;
+  list-style:none;cursor:pointer;user-select:none;
+  padding:12px;min-height:46px;box-sizing:border-box;
+  color:var(--text-main);font-size:12px;font-weight:750;
+  border-radius:11px;transition:background-color .16s;
+}
+#workspace-canvas .dx-settings-fold > summary::-webkit-details-marker {display:none}
+#workspace-canvas .dx-settings-fold > summary:hover {
+  background:var(--dx-hover-soft,var(--bg-panel-light));
+}
+#workspace-canvas .dx-settings-fold > summary:focus-visible {
+  outline:2px solid var(--dx-focus-outline,var(--blue));outline-offset:2px;
+}
+#workspace-canvas .dx-settings-fold > summary > span:nth-child(2) {
+  display:grid;gap:3px;flex:1;min-width:0;overflow-wrap:anywhere;
+}
+#workspace-canvas .dx-settings-fold summary small {
+  color:var(--text-muted);font-size:10px;font-weight:500;
+}
+#workspace-canvas .dx-settings-fold-icon {
+  display:grid;place-items:center;flex:0 0 30px;height:30px;
+  border-radius:8px;background:var(--dx-accent-soft);
+  color:var(--dx-accent);font-size:17px;
+}
+#workspace-canvas .dx-settings-chevron {
+  margin-left:auto;font-size:17px;color:var(--text-muted);
+  transition:transform .16s;
+}
+#workspace-canvas .dx-settings-fold[open] > summary .dx-settings-chevron {
+  transform:rotate(180deg);
+}
+#workspace-canvas .dx-settings-fold[open] > summary {
+  border-radius:11px 11px 0 0;
+  border-bottom:1px solid var(--dx-horizon-line,var(--border));
+}
+#workspace-canvas .dx-settings-fold-body {
+  display:grid;gap:12px;min-width:0;padding:12px;
+}
+#workspace-canvas .dx-settings-note {
+  color:var(--text-muted);font-size:11px;line-height:1.5;margin:0;
+}
+#workspace-canvas .dx-settings-workspace-list {
+  display:grid;gap:6px;min-width:0;max-height:235px;
+  overflow:auto;overscroll-behavior:contain;
+}
+#workspace-canvas .dx-settings-workspace-row {
+  display:flex;align-items:stretch;gap:5px;min-width:0;
+  border-radius:9px;padding:3px;
+  border:1px solid var(--dx-horizon-line,var(--border));
+  background:var(--bg-panel-inside);
+}
+#workspace-canvas .dx-settings-workspace-row.is-active {
+  border-color:var(--dx-horizon-cyan,var(--blue));
+  background:var(--dx-accent-soft);
+}
+#workspace-canvas .dx-settings-workspace-row button {
+  appearance:none;min-height:34px;cursor:pointer;
+  background:transparent;color:var(--text-main);
+  border:1px solid transparent;border-radius:7px;
+  font-size:12px;touch-action:manipulation;
+}
+#workspace-canvas .dx-settings-workspace-select {
+  flex:1 1 auto;min-width:0;text-align:left;padding:8px;
+  overflow-wrap:anywhere;font-weight:700;
+}
+#workspace-canvas .dx-settings-workspace-row button:not(.dx-settings-workspace-select) {
+  flex:0 0 35px;font-size:16px;
+}
+#workspace-canvas .dx-settings-workspace-row button:hover {
+  color:var(--text-main);background:var(--dx-hover-soft);
+  border-color:var(--dx-hover-border);
+}
+#workspace-canvas .dx-settings-workspace-row .dx-settings-workspace-delete {
+  color:var(--dx-bad);
+}
+#workspace-canvas .dx-settings-workspace-form {
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px;
+  min-width:0;
+}
+#workspace-canvas .dx-settings-workspace-form label {
+  display:grid;gap:6px;min-width:0;
+  color:var(--text-muted);font-size:11px;
+}
+#workspace-canvas .dx-settings-workspace-form button {
+  min-height:36px;border-radius:9px;
+  padding:8px 10px;white-space:nowrap;
+}
+#workspace-canvas .dx-settings-toolbar-actions {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+}
+#workspace-canvas .dx-settings-toolbar-actions button,
+#workspace-canvas .dx-settings-language button,
+#workspace-canvas .dx-settings-danger button {
+  appearance:none;min-height:38px;cursor:pointer;
+  padding:8px 10px;min-width:0;border-radius:9px;
+  background:var(--bg-panel-light);color:var(--text-main);
+  border:1px solid var(--dx-horizon-line,var(--border));
+  font:650 11px/1.35 var(--f-family-inter,system-ui);
+  text-align:center;transition:border-color .16s,background-color .16s;
+}
+#workspace-canvas .dx-settings-toolbar-actions button:hover,
+#workspace-canvas .dx-settings-language button:hover,
+#workspace-canvas .dx-settings-danger button:hover {
+  background:var(--dx-hover-bg);color:var(--dx-hover-text);
+  border-color:var(--dx-hover-border);
+}
+#workspace-canvas .dx-settings-language {
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+  color:var(--text-muted);font-size:11px;
+}
+#workspace-canvas .dx-settings-language button {
+  flex:0 0 40px;min-height:34px;padding:7px 5px;
+}
+#workspace-canvas .dx-settings-language button[aria-pressed="true"] {
+  border-color:var(--dx-horizon-cyan,var(--blue));
+  background:var(--dx-accent-soft);color:var(--text-main);
+}
+#workspace-canvas .dx-settings-github {
+  color:var(--blue);font-size:11px;text-decoration:none;
+  overflow-wrap:anywhere;
+}
+#workspace-canvas .dx-settings-github:hover {text-decoration:underline}
+#workspace-canvas .dx-settings-danger .dx-danger {
+  border-color:var(--dx-bad)!important;color:var(--dx-bad)!important;
+}
+#workspace-canvas .dx-settings-fold-body .dx-credential {
+  min-width:0;
+}
+#workspace-canvas .dx-settings-fold-body input {
+  width:100%;box-sizing:border-box;min-width:0;
+}
+#spatial-preview .spatial-workspace-switcher {
+  display:flex;align-items:center;gap:6px;min-width:0;
+}
+#spatial-preview .spatial-workspace-switcher label {
+  color:#c5d8e8;font:600 11px system-ui;white-space:nowrap;
+}
+#spatial-preview .spatial-workspace-switcher select {
+  width:clamp(115px,14vw,220px);min-width:0;
+  height:33px;min-height:33px;box-sizing:border-box;
+  background:rgba(20,44,81,.9);color:#eaf9ff;
+  border:1px solid rgba(132,204,239,.5);border-radius:8px;
+  padding:5px 8px;font:650 12px system-ui;
+}
+#spatial-preview .spatial-workspace-switcher button {
+  min-width:32px;padding:4px 8px;font-size:17px;font-weight:700;
+}
+#spatial-preview[data-room-theme="light"] .spatial-workspace-switcher label {
+  color:#204763;
+}
+#spatial-preview[data-room-theme="light"] .spatial-workspace-switcher select {
+  background:rgba(243,251,255,.94);color:#15354d;
+  border-color:rgba(55,125,166,.45);
+}
+@media(max-width:740px) {
+  #workspace-canvas .dx-settings-toolbar-actions {grid-template-columns:1fr}
+  #workspace-canvas .dx-settings-workspace-form {grid-template-columns:1fr}
+  #spatial-preview .spatial-workspace-switcher label {display:none}
+  #spatial-preview .spatial-workspace-switcher select {width:110px}
+}
