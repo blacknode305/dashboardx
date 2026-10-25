@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { defaultSpatialPose, resizeSpatialPose, spatialSizeFromDesktop, SPATIAL_PIXELS_PER_METER } from '../client/js/module/Spatial/SpatialMath.js';
 import { saveSpatialLayout, getSpatialLayout } from '../client/js/module/Spatial/SpatialLayout.js';
+import { GLASS_STORAGE_KEY, DEFAULT_GLASS_TRANSPARENCY, normalizeGlassTransparency,
+  glassBackgroundAlpha, readGlassTransparency, saveGlassTransparency } from '../client/js/module/Spatial/SpatialGlass.js';
 
 const source = path => readFileSync(new URL(path,import.meta.url),'utf8');
 
@@ -89,4 +91,33 @@ test('Spatial inspector inherits Desktop dimensions and cannot resize independen
   assert.match(spatial,/panel\.style\.height = desktopSize\.heightPx/);
   assert.match(spatial,/\[data-spatial="desktop-size"\]/);
   assert.doesNotMatch(spatial,/data-spatial="scale"/);
+});
+
+test('spatial glass background transparency normalizes safely and remembers value',()=>{
+  const data=new Map();
+  const storage={getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)};
+  assert.equal(DEFAULT_GLASS_TRANSPARENCY,55);
+  assert.equal(readGlassTransparency(storage),55);
+  assert.equal(glassBackgroundAlpha(55),.45);
+  assert.equal(glassBackgroundAlpha(90),.1);
+  assert.equal(glassBackgroundAlpha(0),1);
+  assert.equal(normalizeGlassTransparency(66),65);
+  assert.equal(normalizeGlassTransparency(-20),0);
+  assert.equal(normalizeGlassTransparency(200),90);
+  saveGlassTransparency(75,storage);
+  assert.equal(data.get(GLASS_STORAGE_KEY),'75');
+  assert.equal(readGlassTransparency(storage),75);
+  data.set(GLASS_STORAGE_KEY,'invalid');
+  assert.equal(readGlassTransparency(storage),55);
+});
+
+test('only Spatial widget backgrounds use glass alpha, not whole-widget opacity',()=>{
+  const spatial=source('../client/js/module/Spatial/SpatialPreview.js');
+  const css=source('../client/css/spatial-preview.css');
+  assert.match(spatial,/data-spatial="glass"/);
+  assert.match(spatial,/readGlassTransparency\(\)/);
+  assert.match(spatial,/saveGlassTransparency\(percent\)/);
+  assert.match(css,/background:rgba\(30,41,51,var\(--dx-spatial-panel-alpha/);
+  assert.match(css,/\.widget--element--body[\s\S]*?background:transparent!important/);
+  assert.doesNotMatch(css,/\.spatial-panel\s*\{[^}]*\bopacity\s*:/);
 });
