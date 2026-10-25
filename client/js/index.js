@@ -110,11 +110,17 @@ function activateWorkspace(id) {
 function updateWorkspace() {
   return activateWorkspace(store.workspace.id);
 }
+function updateWorkspacePreservingSpatial() {
+  const spatialWasOpen=Boolean(spatialPreview?.isOpen);
+  const result=updateWorkspace();
+  if(spatialWasOpen)queueMicrotask(()=>document.getElementById('spatial-toggle')?.click());
+  return result;
+}
 
 // One command path for header, Settings widget and spatial/AR controls.
 function runWorkspaceCommand({action,id,name}={}) {
-  const spatialWasOpen=Boolean(spatialPreview?.isOpen);
   const current=store.state.workspaces.find(w=>w.id===id);
+  if(action==='select' && current?.id===store.workspace.id)return true;
   let changed=false;
   switch(action) {
     case 'select':
@@ -132,11 +138,7 @@ function runWorkspaceCommand({action,id,name}={}) {
     default:break;
   }
   if(!changed)return false;
-  updateWorkspace(); // Restore existing widgets, then replace the Desktop DOM.
-  if(spatialWasOpen) {
-    // Reopen the virtual room after rendering the chosen workspace.
-    queueMicrotask(()=>document.getElementById('spatial-toggle')?.click());
-  }
+  updateWorkspacePreservingSpatial(); // Also restore the 3D mode after a switch.
   return true;
 }
 
@@ -392,7 +394,7 @@ async function boot() {
       store.save();
       setLanguage(languageSwitch.value);
       translateElement(document);
-      updateWorkspace();
+      updateWorkspacePreservingSpatial();
       syncLanguageButtons();
       window.dispatchEvent(new Event('dashboardx:ui-changed'));
     });
@@ -445,7 +447,7 @@ async function boot() {
       const raw=prompt(t('ui.backgroundPrompt',{name:deskName(store.workspace)}),store.workspace.backgroundUrl || '');
       if (raw === null) return;
       if (!store.setWorkspaceBackground(raw.trim())) {alert(t('ui.backgroundInvalid'));return;}
-      updateWorkspace();
+      updateWorkspacePreservingSpatial();
     });
     await loadTemplates();
 
