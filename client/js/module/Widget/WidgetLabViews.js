@@ -7,6 +7,7 @@ import GitHubControlController from './GitHubControl.js';
 import ServerMonitorController from './ServerMonitor.js';
 import SmartContactsController from './SmartContacts.js';
 import DashboardAIController from './DashboardAI.js';
+import { gatewayFetch, gatewayStatus, isOwnerConfigured } from '../AIGatewayAccess.js';
 
 const byRole = (widget, role) => widget.body.querySelector('[data-role="' + role + '"]');
 function line(label, value) {
@@ -132,44 +133,65 @@ export class SmartContactsWidgetView {
 export class DashboardAiWidgetView {
   constructor(widget) {
     this.widget = widget;
-    this.controller = new DashboardAIController();
-    this.input = byRole(widget,'prompt');
-    this.list = byRole(widget,'results');
-    this.button = byRole(widget,'send');
-    this.onAsk = () => { void this.ask(); };
-    this.button?.addEventListener('click',this.onAsk);
-    if (this.button) this.button.disabled = true;
-    setStatus(widget,'AI отключён до настройки защищённого API; ключ не хранится в браузере');
+    this.controller = new DashboardAIController({fetchImpl: gatewayFetch});
+    this.input = byRole(widget, 'prompt');
+    this.list = byRole(widget, 'results');
+    this.button = byRole(widget, 'send');
     this.active = true;
+    this.onAsk = () => { void this.ask(); };
+    this.onConfiguration = () => { void this.checkAvailability(); };
+    this.button?.addEventListener('click', this.onAsk);
+    window.addEventListener('dashboardx:ai-config', this.onConfiguration);
+    if (this.button) this.button.disabled = true;
+    setStatus(widget, 'AI только для владельца. Настройте сервер в виджете «Настройки DashboardX».');
     void this.checkAvailability();
   }
   async checkAvailability() {
-    // Fail closed: never POST to the legacy static-only DashboardX server.
+    if (this.button) this.button.disabled = true;
+    if (!isOwnerConfigured()) {
+      setStatus(this.widget, 'Для AI укажите адрес сервера и токен владельца в настройках.');
+      return;
+    }
     try {
-      const response = await fetch('/api/ai/status', {credentials:'same-origin',cache:'no-store'});
-      if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) return;
-      const state = await response.json();
-      if (this.active && state.enabled === true && state.authenticated === true) {
-        if (this.button) this.button.disabled = false;
-        setStatus(this.widget,'AI подключён через защищённый сервер');
+      const state = await gatewayStatus();
+      if (!this.active) return;
+      if (state.enabled === true && state.authenticated === true) {
+        this.button.disabled = false;
+        setStatus(this.widget, 'AI готов · ' + (state.model || 'OpenAI') +
+          ' · осталось запросов: ' + (state.requestsRemaining ?? '—'));
+      } else {
+        setStatus(this.widget, 'Сервер подключён, но OpenAI API-ключ ещё не настроен.');
       }
-    } catch { /* integration not configured; remain disabled */ }
+    } catch {
+      if (this.active) setStatus(this.widget, 'Нет подключения или неверный токен владельца.', true);
+    }
   }
   async ask() {
-    if (this.button?.disabled) return;
-    if (!this.input?.value.trim()) return;
+    if (!this.active || this.button?.disabled || !this.input?.value.trim()) return;
     this.button.disabled = true;
-    setStatus(this.widget,'Ожидание ответа…');
+    setStatus(this.widget, 'Ожидание ответа OpenAI…');
+    const message = this.input.value;
     try {
-      const reply = await this.controller.ask(this.input.value);
-      const row = document.createElement('p');
-      row.textContent = reply;
-      this.list.prepend(row);
+      const reply = await this.controller.ask(message);
+      if (!this.active) return;
+      const userRow = document.createElement('p');
+      userRow.textContent = 'Вы: ' + message;
+      const answerRow = document.createElement('p');
+      answerRow.textContent = 'AI: ' + reply;
+      this.list.append(userRow, answerRow);
       this.input.value = '';
-      setStatus(this.widget,'Ответ получен');
-    } catch(error) {
-      setStatus(this.widget, 'AI не подключён: ' + String(error.message || error), true);
-    } finally { this.button.disabled = false; }
+      setStatus(this.widget, 'Ответ получен');
+    } catch (error) {
+      if (this.active) setStatus(this.widget, 'Не удалось получить ответ: ' +
+        String(error.message || error), true);
+    } finally {
+      if (this.active) void this.checkAvailability();
+    }
   }
-  destroy() { this.active = false; this.button?.removeEventListener('click',this.onAsk); this.controller.destroy(); }
+  destroy() {
+    this.active = false;
+    this.button?.removeEventListener('click', this.onAsk);
+    window.removeEventListener('dashboardx:ai-config', this.onConfiguration);
+    this.controller.destroy();
+  }
 }

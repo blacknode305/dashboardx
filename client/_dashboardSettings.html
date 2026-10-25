@@ -31,6 +31,36 @@
       </form>
       <p class="dx-credential-status" data-role="credential-status" aria-live="polite"></p>
     </div>
+    <div class="dx-credential dx-ai-settings" data-service="openai">
+      <h3>DashboardX AI — личный доступ владельца</h3>
+      <p>AI подключается через отдельный защищённый сервер. Ключ OpenAI в браузере не сохраняется.</p>
+      <form class="dx-credential-form" data-role="ai-owner-form" autocomplete="off">
+        <label>Адрес AI-сервера HTTPS
+          <input type="url" data-role="ai-gateway-url" placeholder="https://your-ai-gateway.up.railway.app" spellcheck="false" autocomplete="off">
+        </label>
+        <label>Токен владельца (создаётся в настройках сервера)
+          <input type="password" data-role="ai-owner-token" placeholder="Личный токен, минимум 32 символа" autocomplete="off" spellcheck="false">
+        </label>
+        <div class="dx-credential-actions">
+          <button type="submit" class="dx-primary">Подключить владельца</button>
+          <button type="button" data-role="ai-disconnect">Отключить сессию</button>
+          <button type="button" data-role="ai-test">Проверить сервер</button>
+        </div>
+      </form>
+      <form class="dx-credential-form" data-role="ai-key-form" autocomplete="off">
+        <label>Личный OpenAI API-ключ
+          <input type="password" data-role="ai-api-key" placeholder="sk-..." autocomplete="off" spellcheck="false">
+        </label>
+        <div class="dx-credential-actions">
+          <button type="submit" class="dx-primary">Сохранить ключ на сервере</button>
+          <button type="button" class="dx-danger" data-role="ai-key-delete">Удалить с сервера</button>
+        </div>
+      </form>
+      <p class="dx-credential-status" data-role="ai-status" aria-live="polite">Ключ не введён.</p>
+      <p class="dx-settings-warning">Адрес сервера сохраняется в браузере. Токен владельца — только до перезагрузки страницы.
+      OpenAI API-ключ передаётся по HTTPS и хранится в памяти сервера до его перезапуска.
+      Для постоянной настройки можно использовать переменную OPENAI_API_KEY в Railway.</p>
+    </div>
     <p class="dx-settings-warning" data-i18n="settings.warning">Токены сохраняются без шифрования в localStorage этого браузера. Не вводите их на чужом компьютере.</p>
   </section>
 </template></body></html>
