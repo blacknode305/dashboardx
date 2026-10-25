@@ -3,9 +3,13 @@ on:
   pull_request:
     paths:
       - 'client/js/module/WidgetRegistry.js'
+      - 'client/js/module/WidgetElement.js'
+      - 'client/js/module/WidgetLogic.js'
       - 'client/js/module/Spatial/**'
-      - 'client/js/module/Widget/GitHubControl.js'
-      - 'client/js/module/Widget/ServerMonitor.js'
+      - 'client/js/module/Widget/**'
+      - 'client/js/widget-lab.js'
+      - 'client/widget-lab.html'
+      - 'client/js/integrations-preview.js'
       - 'tests/**'
       - '.github/workflows/widget-tests.yml'
   workflow_dispatch:
@@ -17,10 +21,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Run dependency-free widget tests
+      - name: Run widget tests
         run: node --test tests/*.test.js
-      - name: Syntax check preview
+      - name: Syntax check all new UI and controllers
         run: |
+          node --check client/js/widget-lab.js
           node --check client/js/integrations-preview.js
+          node --check client/js/module/Widget/WidgetLabViews.js
+          node --check client/js/module/WidgetElement.js
+          node --check client/js/module/WidgetLogic.js
           node --check client/js/module/Widget/GitHubControl.js
           node --check client/js/module/Widget/ServerMonitor.js
+          node --check client/js/module/Widget/SmartContacts.js
+          node --check client/js/module/Widget/DashboardAI.js
