@@ -69,10 +69,8 @@ export default class SpatialPreview {
           <label>Y, м <input data-spatial="y" type="number" step="0.1"></label>
           <label>Z, м <input data-spatial="z" type="number" step="0.1"></label>
           <label>Поворот Y, ° <input data-spatial="rotate" type="number" step="5"></label>
-          </div>
-        <div class="spatial-desktop-size" data-spatial="desktop-size" aria-live="polite"></div>
-        <div class="spatial-fields-placeholder" hidden>
         </div>
+        <div class="spatial-desktop-size" data-spatial="desktop-size" aria-live="polite"></div>
         <div class="spatial-actions"><button type="button" data-spatial="focus">К виджету</button><button type="button" data-spatial="reset">Сбросить позицию</button>
           <span data-spatial="saved" role="status">Отдельный Spatial Layout</span></div>
       </div>
