@@ -25,3 +25,11 @@ jobs:
           trap 'kill $PID 2>/dev/null || true' EXIT
           sleep 2
           CHROME_BIN=/usr/bin/google-chrome node tests/browser-spatial.mjs
+      - name: Upload Horizon AR visual QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboardx-horizon-ar-visual-preview
+          path: artifacts/*.png
+          if-no-files-found: ignore
+          retention-days: 14
