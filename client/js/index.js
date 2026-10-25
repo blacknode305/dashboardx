@@ -29,6 +29,10 @@ const WIDGET_CATALOG = Object.freeze({
   optimaCompare:{category:'optima',file:'_optimaCompare.html'},
   optimaStocks:{category:'optima',file:'_optimaStocks.html'},
   optimaOrders:{category:'optima',file:'_optimaOrders.html'},
+  githubControl:{category:'developer',file:'_githubControl.html'},
+  serverMonitor:{category:'developer',file:'_serverMonitor.html'},
+  smartContacts:{category:'tools',file:'_smartContacts.html'},
+  dashboardAi:{category:'tools',file:'_dashboardAi.html'},
   torrentTracker: {category:'tools',    file:'_torrentTracker.html'},
   nesEmulator:    {category:'games',    file:'_nesEmulator.html'}
 });
