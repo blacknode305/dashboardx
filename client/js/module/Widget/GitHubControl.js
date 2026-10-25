@@ -18,9 +18,15 @@ export default class GitHubControlWidget {
   getState() { return { ...this.state }; }
   async refresh() {
     this.state = { ...this.state, status: 'loading', error: null };
-    const response = await this.fetchImpl(`https://api.github.com/repos/${this.repository}`, {
-      headers: { Accept: 'application/vnd.github+json' }
-    }).catch(error => { throw new Error(`GitHub network error: ${error.message}`); });
+    let response;
+    try {
+      response = await this.fetchImpl(`https://api.github.com/repos/${this.repository}`, {
+        headers: { Accept: 'application/vnd.github+json' }
+      });
+    } catch (error) {
+      this.state = { ...this.state, status: 'error', error: `GitHub network error: ${error.message}` };
+      return this.getState();
+    }
     if (!response.ok) {
       this.state = { ...this.state, status: 'error', error: `GitHub HTTP ${response.status}` };
       return this.getState();
