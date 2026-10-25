@@ -24,3 +24,24 @@ export function resizeSpatialPose(pose, widthMeters) {
     widthMeters
   };
 }
+
+/**
+ * Desktop is the ONLY source of truth for widget width and height.
+ * A single pixels-per-meter ratio preserves each window's aspect ratio in 3D,
+ * including its header, controls and scrolling body.
+ */
+export const SPATIAL_PIXELS_PER_METER = 400;
+export function spatialSizeFromDesktop(widthPx, heightPx) {
+  if (!Number.isFinite(widthPx) || !Number.isFinite(heightPx) ||
+      widthPx <= 0 || heightPx <= 0) {
+    throw new TypeError('Desktop widget must have a measurable size');
+  }
+  const width = Math.round(widthPx);
+  const height = Math.round(heightPx);
+  return {
+    widthPx: Math.max(1, width),
+    heightPx: Math.max(1, height),
+    widthMeters: Math.max(1, width) / SPATIAL_PIXELS_PER_METER,
+    heightMeters: Math.max(1, height) / SPATIAL_PIXELS_PER_METER
+  };
+}

@@ -37,9 +37,25 @@ try {
     await page.waitForSelector('#workspace-surface > widget-element[data-widget-type="'+type+'"]');
   }
   assert.equal(await page.locator('#workspace-surface > widget-element').count(),3);
+  // Configure two deliberately different Desktop sizes: Spatial must inherit both.
+  await page.evaluate(()=>{
+    const datetime=document.querySelector('#workspace-surface widget-element[data-widget-type="datetime"]');
+    const github=document.querySelector('#workspace-surface widget-element[data-widget-type="githubControl"]');
+    datetime.style.width='520px'; datetime.style.height='280px'; datetime.saveWidget();
+    github.style.width='400px'; github.style.height='320px'; github.saveWidget();
+    // Simulate an obsolete oversized 3D pose; its SIZE must not override Desktop.
+    localStorage.setItem('dashboardx:spatial:v1:'+datetime.id,JSON.stringify({
+      position:[0.5,1.7,-2],rotation:[0,0,0],
+      widthMeters:2.9,heightMeters:2.2,anchorId:null
+    }));
+  });
   const desktopReferences=await page.evaluate(()=>{
     window.__spatialSmokeWidgets=[...document.querySelectorAll('#workspace-surface > widget-element')];
-    return window.__spatialSmokeWidgets.map(w=>({id:w.id,style:w.getAttribute('style')}));
+    return window.__spatialSmokeWidgets.map(w=>{
+      const rect=w.getBoundingClientRect();
+      return {id:w.id,style:w.getAttribute('style'),
+        width:Math.round(rect.width),height:Math.round(rect.height)};
+    });
   });
 
   const desktopInfo=await page.evaluate(()=>{
@@ -70,6 +86,28 @@ try {
   assert.equal(spatialInfo.allLive,true);
   assert.equal(spatialInfo.hasGitHub,true);
   assert.equal(spatialInfo.hasDateTime,true);
+  const spatialSizes=await page.evaluate(()=>window.__spatialSmokeWidgets.map(w=>({
+    id:w.id,width:parseInt(w.parentElement.style.width,10),
+    height:parseInt(w.parentElement.style.height,10),
+    poseWidth:window.localStorage.getItem('dashboardx:spatial:v1:'+w.id)
+  })));
+  assert.ok(spatialSizes.every((record,i)=>record.width===desktopReferences[i].width &&
+    record.height===desktopReferences[i].height),
+    'Every Three.js widget must keep Desktop width AND height');
+  assert.equal(
+    await page.locator('#spatial-preview input[data-spatial="scale"]').count(),0,
+    '3D must not have a second resize control');
+  assert.ok((await page.locator('#spatial-preview [data-spatial="desktop-size"]').innerText())
+    .includes(desktopReferences[0].width+' × '+desktopReferences[0].height+' px'));
+  const datetimePose=await page.evaluate(()=>{
+    const id=document.querySelector('#spatial-preview widget-element[data-widget-type="datetime"]').id;
+    const object=[...window.document.querySelectorAll('#spatial-preview .spatial-panel')]
+      .find(panel=>panel.dataset.spatialId===id);
+    return {pose:id,actualWidth:parseInt(object.style.width,10),
+      actualHeight:parseInt(object.style.height,10)};
+  });
+  assert.equal(datetimePose.actualWidth,520);
+  assert.equal(datetimePose.actualHeight,280);
 
   await page.locator('#spatial-preview [data-spatial="x"]').fill('1.7');
   await page.locator('#spatial-preview [data-spatial="x"]').dispatchEvent('change');
@@ -94,6 +132,26 @@ try {
   assert.equal(restored.body,true);
   assert.equal(restored.spatialMode,false);
   assert.equal(restored.spatialMoving,false);
+
+  // Resizing Desktop after a first 3D visit must change next 3D visit size,
+  // keeping separately saved position/rotation but ignoring old size.
+  const secondDesktop=await page.evaluate(()=>{
+    const widget=document.querySelector('#workspace-surface widget-element[data-widget-type="datetime"]');
+    widget.style.width='590px'; widget.style.height='330px';
+    widget.saveWidget();
+    const rect=widget.getBoundingClientRect();
+    return {width:Math.round(rect.width),height:Math.round(rect.height)};
+  });
+  await page.locator('#spatial-toggle').click();
+  await page.waitForSelector('#spatial-preview .spatial-panel widget-element',{timeout:18000});
+  const secondSpatial=await page.evaluate(()=>{
+    const widget=document.querySelector('#spatial-preview widget-element[data-widget-type="datetime"]');
+    return {width:parseInt(widget.parentElement.style.width,10),
+      height:parseInt(widget.parentElement.style.height,10)};
+  });
+  assert.deepEqual(secondSpatial,secondDesktop,'3D size must refresh on every entry');
+  await page.locator('#spatial-preview [data-spatial="exit"]').click();
+  await page.waitForFunction(()=>!document.getElementById('spatial-preview'));
   assert.equal(errors.length,0,'No page errors: '+errors.join('; '));
   console.log('Browser Spatial smoke OK: 28 templates, same widget live, saved XYZ, Desktop restored');
 } catch(error) {
