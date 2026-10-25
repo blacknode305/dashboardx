@@ -117,6 +117,10 @@ try {
   assert.ok(['webgl','css3d'].includes(room.mode),'Room renderer must be chosen');
   assert.ok(room.parts>=5,'The virtual room must contain floor, ceiling and walls');
   assert.equal(room.roomToggle,'true','Virtual room is enabled by default');
+  assert.equal(await page.locator('#spatial-preview').getAttribute('data-room-theme'),'dark');
+  assert.equal(await page.locator('#spatial-preview [data-spatial="stage"]').getAttribute('data-room-theme'),'dark');
+  assert.equal(await page.locator('#spatial-preview [data-spatial="rotate-x"]').count(),1);
+  assert.equal(await page.locator('#spatial-preview [data-spatial="rotate"]').count(),1);
   assert.match(room.status,/комнат/i,'Room status should be visible');
   if(room.mode==='webgl') {
     assert.ok(room.triangles>=12,'Room must render real 3D mesh triangles');
@@ -202,10 +206,17 @@ try {
   assert.equal(datetimePose.actualWidth,520);
   assert.equal(datetimePose.actualHeight,280);
 
+  // Rotation X and Y must remain separate and survive Spatial/desktop switches.
+  await page.locator('#spatial-preview [data-spatial="rotate-x"]').fill('35');
+  await page.locator('#spatial-preview [data-spatial="rotate-x"]').dispatchEvent('change');
+  await page.locator('#spatial-preview [data-spatial="rotate"]').fill('-15');
+  await page.locator('#spatial-preview [data-spatial="rotate"]').dispatchEvent('change');
   await page.locator('#spatial-preview [data-spatial="x"]').fill('1.7');
   await page.locator('#spatial-preview [data-spatial="x"]').dispatchEvent('change');
   const savedPose=await page.evaluate(id=>localStorage.getItem('dashboardx:spatial:v1:'+id),desktopInfo.id);
   assert.equal(JSON.parse(savedPose).position[0],1.7,'Spatial coordinates should be saved');
+  assert.ok(Math.abs(JSON.parse(savedPose).rotation[0]-35*Math.PI/180)<.001,'X rotation persisted');
+  assert.ok(Math.abs(JSON.parse(savedPose).rotation[1]+15*Math.PI/180)<.001,'Y rotation persisted');
   await page.locator('#spatial-preview [data-spatial="exit"]').click();
   await page.waitForFunction(()=>!document.getElementById('spatial-preview'));
   const restored=await page.evaluate(()=>{
@@ -271,6 +282,36 @@ try {
   assert.match(horizonLight.panel,/rgba\(/);
   assert.equal(horizonLight.sameWidgets,true);
   await page.screenshot({path:'artifacts/horizon-ar-desktop-light.png'});
+  // Opening from Light Desktop must render the light ROOM, not only a light HUD.
+  await page.locator('#spatial-toggle').click();
+  await page.waitForSelector('#spatial-preview .spatial-panel widget-element');
+  const dayRoom=await page.evaluate(()=>{
+    const root=document.querySelector('#spatial-preview');
+    const stage=root.querySelector('[data-spatial="stage"]');
+    return {
+      rootTheme:root.dataset.roomTheme,
+      stageTheme:stage.dataset.roomTheme,
+      stageColor:getComputedStyle(stage).backgroundImage,
+      inspectorBg:getComputedStyle(root.querySelector('.spatial-inspector')).backgroundImage,
+      windowCount:document.querySelectorAll('.spatial-css-room[data-room-part="css-room-back-window"]').length,
+      widgets:root.querySelectorAll('.spatial-panel widget-element').length
+    };
+  });
+  assert.equal(dayRoom.rootTheme,'light');
+  assert.equal(dayRoom.stageTheme,'light');
+  assert.match(dayRoom.stageColor,/radial-gradient/);
+  assert.equal(dayRoom.widgets,3);
+
+  // If Desktop theme changes while Spatial mode is open (via app settings
+  // or future theme controller), the scene must change without remounting widgets.
+  await page.evaluate(()=>{document.documentElement.dataset.theme='dark'});
+  await page.waitForFunction(()=>document.querySelector('#spatial-preview')?.dataset.roomTheme==='dark');
+  await page.evaluate(()=>{document.documentElement.dataset.theme='light'});
+  await page.waitForFunction(()=>document.querySelector('#spatial-preview')?.dataset.roomTheme==='light');
+  assert.equal(await page.locator('#spatial-preview .spatial-panel widget-element').count(),3);
+  await page.screenshot({path:'artifacts/horizon-ar-spatial-light-room.png'});
+  await page.locator('#spatial-preview [data-spatial="exit"]').click();
+  await page.waitForFunction(()=>!document.querySelector('#spatial-preview'));
   await page.locator('#theme-toggle').click();
   await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
   assert.equal(errors.length,0,'No page errors: '+errors.join('; '));
