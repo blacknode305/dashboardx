@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DashboardX — Integration Preview</title>
+<style>
+:root{color-scheme:dark;font:14px/1.5 system-ui,sans-serif;background:#121619;color:#e4e7e8}
+*{box-sizing:border-box}body{margin:0 auto;padding:28px;max-width:1100px}header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:30px}
+h1{font-size:22px;margin:0}p{color:#aab1b3;margin:8px 0}.tag{font-size:11px;color:#9bb8bc;border:1px solid #455055;padding:5px 9px;border-radius:20px}
+main{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.widget{border:1px solid #394347;border-radius:14px;padding:18px;background:#1a2024;min-height:250px;box-shadow:0 16px 45px #0002}
+.widget h2{font-size:16px;margin:0}.head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+button{background:#2c383d;border:1px solid #546064;border-radius:8px;color:#e4e7e8;padding:7px 12px;cursor:pointer}button:hover{background:#435157}
+input{background:#101619;border:1px solid #46545a;border-radius:7px;color:inherit;padding:9px;min-width:0;width:100%}
+.controls{display:flex;gap:8px;margin:18px 0 12px}.controls button{flex-shrink:0}
+.status{margin:10px 0;color:#a7c3c4}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:15px 0}
+.stat{background:#222c30;padding:12px 6px;text-align:center;border-radius:8px}.num{font-size:24px;font-weight:700}
+.small{font-size:12px;color:#aab1b3}.error{color:#ffaaaa}.online{color:#96e2b0}
+a{color:#a6cddb}footer{margin-top:22px;font-size:12px;color:#9ca7aa}
+</style>
+</head>
+<body>
+<header><div><h1>DashboardX <span style="color:#a6cddb">/ Integration Preview</span></h1><p>Изолированная проверка новых виджетов. Основная рабочая область не изменяется.</p></div><span class="tag">EXPERIMENTAL • READ ONLY</span></header>
+<main>
+<section class="widget" aria-labelledby="github-title">
+<div class="head"><h2 id="github-title">GitHub Control</h2><span class="tag">Public API</span></div>
+<div class="controls"><input id="repo" aria-label="Репозиторий" value="blacknode305/dashboardx"><button id="github-refresh">Обновить</button></div>
+<div id="github-state" class="status" role="status">Ожидание</div>
+<div id="github-data"></div>
+</section>
+<section class="widget" aria-labelledby="monitor-title">
+<div class="head"><h2 id="monitor-title">Server Monitor</h2><span class="tag">HTTP</span></div>
+<div class="controls"><input id="endpoint" aria-label="Путь проверки" value="/"><button id="monitor-refresh">Проверить</button></div>
+<div id="monitor-state" class="status" role="status">Ожидание</div>
+<div id="monitor-data"></div>
+</section>
+<section class="widget" aria-labelledby="contacts-title">
+<div class="head"><h2 id="contacts-title">Smart Contacts</h2><span class="tag">Local VCF</span></div>
+<p>Контакты загружаются только в память браузера, без отправки на сервер.</p>
+<div class="controls"><input id="vcf-file" aria-label="Файл контактов VCF" type="file" accept=".vcf,text/vcard"></div>
+<div class="controls"><input id="contact-query" placeholder="Поиск контактов" aria-label="Поиск контактов"></div>
+<div id="contact-status" class="status" role="status">Выберите VCF файл</div>
+<div id="contacts-list"></div>
+</section>
+<section class="widget" aria-labelledby="ai-title">
+<div class="head"><h2 id="ai-title">DashboardX AI</h2><span class="tag">Backend required</span></div>
+<p>Клиентский модуль подготовлен. Для работы необходим защищённый <code>/api/ai/chat</code>, который ещё не реализован.</p>
+<p>API-ключи должны храниться на сервере. AI в предпросмотре отключён.</p>
+</section>
+</main>
+<footer>Публичный GitHub API без токена имеет лимиты запросов. Монитор проверяет доступность из текущего браузера, а не из внешнего дата-центра. Для приватных репозиториев и фоновых проверок потребуется серверный API.</footer>
+<script type="module" src="./js/integrations-preview.js"></script>
+</body></html>

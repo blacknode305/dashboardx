@@ -1,5 +1,10 @@
 const dictionaries = {
   ru: {
+    'nav.developer':'Разработка',
+    'widget.githubControl':'GitHub Control',
+    'widget.serverMonitor':'Server Monitor',
+    'widget.smartContacts':'Умные контакты',
+    'widget.dashboardAi':'DashboardX AI',
     'ui.clear':'Очистить данные','ui.theme':'Тема','ui.background':'Фон','ui.fullscreen':'Полный экран','ui.exitFullscreen':'Выйти из полноэкранного режима','ui.templateUnavailable':'Шаблон этого виджета пока недоступен.','ui.serverOnly':'Для этого виджета требуется сервер; локальная версия показывает только заглушку.','ui.language':'Язык',
     'ui.workspaces':'Рабочие столы','ui.categories':'Категории','ui.canvas':'Рабочая область',
     'ui.createWorkspace':'Создать рабочий стол','ui.deleteWorkspace':'Удалить рабочий стол',
@@ -214,6 +219,11 @@ const dictionaries = {
     'game.start':'Старт','game.select':'Выбор',
   },
   kz: {
+    'nav.developer':'Әзірлеу',
+    'widget.githubControl':'GitHub Control',
+    'widget.serverMonitor':'Server Monitor',
+    'widget.smartContacts':'Ақылды контактілер',
+    'widget.dashboardAi':'DashboardX AI',
     'ui.clear':'Деректерді тазалау','ui.theme':'Тақырып','ui.background':'Фон','ui.fullscreen':'Толық экран','ui.exitFullscreen':'Толық экраннан шығу','ui.templateUnavailable':'Бұл виджеттің үлгісі қолжетімсіз.','ui.serverOnly':'Бұл виджетке сервер қажет; жергілікті нұсқада тек хабарлама көрсетіледі.','ui.language':'Тіл',
     'ui.workspaces':'Жұмыс үстелдері','ui.categories':'Санаттар','ui.canvas':'Жұмыс аймағы',
     'ui.createWorkspace':'Жұмыс үстелін жасау','ui.deleteWorkspace':'Жұмыс үстелін жою',
@@ -428,6 +438,11 @@ const dictionaries = {
     'game.start':'Бастау','game.select':'Таңдау',
   },
   en: {
+    'nav.developer':'Developer',
+    'widget.githubControl':'GitHub Control',
+    'widget.serverMonitor':'Server Monitor',
+    'widget.smartContacts':'Smart Contacts',
+    'widget.dashboardAi':'DashboardX AI',
     'ui.clear':'Clear data','ui.theme':'Theme','ui.background':'Background','ui.fullscreen':'Fullscreen','ui.exitFullscreen':'Exit fullscreen','ui.templateUnavailable':'This widget template is unavailable.','ui.serverOnly':'This widget requires a server and is a placeholder in local mode.','ui.language':'Language',
     'ui.workspaces':'Workspaces','ui.categories':'Categories','ui.canvas':'Workspace',
     'ui.createWorkspace':'Create workspace','ui.deleteWorkspace':'Delete workspace',

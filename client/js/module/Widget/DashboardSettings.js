@@ -1,5 +1,9 @@
 import { t } from '../i18n.js';
 import { getCredential, hasCredential, setCredential, clearCredential } from '../CredentialStore.js';
+import {
+  getGatewayUrl, configureGatewayAccess, disconnectGateway, gatewayStatus,
+  installOpenAIKey, removeOpenAIKey
+} from '../AIGatewayAccess.js';
 
 const OPTIMA_BASE='https://pro-optima-production.up.railway.app';
 export default class DashboardSettingsWidget {
@@ -64,6 +68,74 @@ export default class DashboardSettingsWidget {
         this.unbind.push(()=>button.removeEventListener('click',test));
       }
       update();
+    }
+    // Per-installation BYOK: never write OpenAI or gateway tokens to localStorage.
+    const ownerForm = widget.querySelector('[data-role="ai-owner-form"]');
+    if (ownerForm) {
+      const gatewayInput = widget.querySelector('[data-role="ai-gateway-url"]');
+      const ownerInput = widget.querySelector('[data-role="ai-owner-token"]');
+      const apiKeyInput = widget.querySelector('[data-role="ai-api-key"]');
+      const keyForm = widget.querySelector('[data-role="ai-key-form"]');
+      const status = widget.querySelector('[data-role="ai-status"]');
+      const disconnectButton = widget.querySelector('[data-role="ai-disconnect"]');
+      const testButton = widget.querySelector('[data-role="ai-test"]');
+      const deleteButton = widget.querySelector('[data-role="ai-key-delete"]');
+      gatewayInput.value = getGatewayUrl();
+      const report = (message) => { if (!this.destroyed) status.textContent = message; };
+      const testConnection = async () => {
+        try {
+          const state = await gatewayStatus();
+          report(state.enabled
+            ? 'AI готов: ' + state.model + ' · остаток запросов в час: ' + state.requestsRemaining
+            : 'Сервер доступен, но ключ OpenAI ещё не установлен.');
+        } catch(error) {
+          report('Нет подключения: ' + String(error.message || error));
+        }
+      };
+      const onConnect = event => {
+        event.preventDefault();
+        try {
+          configureGatewayAccess({ url: gatewayInput.value.trim(), token: ownerInput.value });
+          ownerInput.value = '';
+          report('Адрес сохранён, токен шлюза действует только в этой вкладке. Проверка сервера…');
+          void testConnection();
+        } catch(error) { report('Ошибка: ' + String(error.message || error)); }
+      };
+      const onKey = async event => {
+        event.preventDefault();
+        const value = apiKeyInput.value;
+        apiKeyInput.value = '';
+        if (!value) return report('Вставьте OpenAI API-ключ.');
+        try {
+          report('Передача ключа на сервер…');
+          const result = await installOpenAIKey(value);
+          report(result.enabled ? 'Ключ установлен в памяти сервера до перезапуска.' : 'Ключ не установлен.');
+        } catch(error) { report('Не удалось установить ключ: ' + String(error.message || error)); }
+      };
+      const onDelete = async () => {
+        if (!confirm('Удалить API-ключ из памяти AI-сервера?')) return;
+        try {
+          await removeOpenAIKey(); report('Ключ удалён из памяти сервера.');
+        } catch(error) { report(String(error.message || error)); }
+      };
+      const onDisconnect = () => {
+        disconnectGateway();
+        ownerInput.value = ''; apiKeyInput.value = '';
+        report('Сессия AI-шлюза отключена в браузере. Ключ на сервере не изменён.');
+      };
+      ownerForm.addEventListener('submit', onConnect);
+      keyForm.addEventListener('submit', onKey);
+      deleteButton.addEventListener('click', onDelete);
+      disconnectButton.addEventListener('click', onDisconnect);
+      testButton.addEventListener('click', testConnection);
+      this.unbind.push(()=>{
+        ownerForm.removeEventListener('submit', onConnect);
+        keyForm.removeEventListener('submit', onKey);
+        deleteButton.removeEventListener('click', onDelete);
+        disconnectButton.removeEventListener('click', onDisconnect);
+        testButton.removeEventListener('click', testConnection);
+        ownerInput.value = ''; apiKeyInput.value = '';
+      });
     }
     this.credentialChanged=event=>{
       if(this.destroyed)return;
