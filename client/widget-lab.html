@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DashboardX Widget Lab</title>
+<link rel="stylesheet" href="./css/style.css">
+<style>
+html,body {min-height:100%;height:auto;background:#14191b!important;background-image:none!important;color:#e7eced!important;font:13px system-ui,sans-serif!important}
+body{min-height:1100px;margin:0;overflow:auto}
+.widget-lab-head{position:relative;z-index:2;padding:22px 26px;min-height:96px;background:#1c2326;border-bottom:1px solid #364246}
+.widget-lab-head h1{font-size:22px;font-weight:700;margin:0 0 6px}.widget-lab-head p{color:#a3b1b7;margin:0 0 6px}
+.widget-lab-head a{color:#b0d4d3}.lab-registry{font-size:12px;color:#9dabb0}
+widget-element.widget--element{background:#21292c!important;border:1px solid #435158;border-radius:12px;box-shadow:0 10px 30px #0004;box-sizing:border-box;min-width:250px}
+widget-element .widget--element--header{cursor:grab;background:#2a3438;padding:4px 10px;box-sizing:border-box}
+widget-element .widget--element--header .title{color:#d5e1e1;font:600 13px system-ui,sans-serif;margin:0}
+widget-element .widget--element--body{box-sizing:border-box;padding:12px;overflow:auto;background:#1a2023;border:1px solid #364247;border-radius:8px;font:13px system-ui,sans-serif}
+widget-element .widget--element--footer{padding:5px 8px;box-sizing:border-box}
+widget-element .widget--element--footer-button{min-width:24px;min-height:24px;cursor:pointer;color:#dce6e6}
+widget-element .widget--element--footer-button svg{width:15px;height:15px;stroke:currentColor}
+.widget-lab-content{display:flex;flex-direction:column;gap:10px}
+.widget-lab-content p{line-height:1.45;margin:6px 0}
+.widget-lab-content a{color:#a6cccb;word-break:break-all}
+.widget-lab-content input,.widget-lab-content textarea{background:#11191b;color:#e7eced;border:1px solid #44565b;border-radius:6px;box-sizing:border-box;padding:7px;font:inherit;min-width:0;width:100%}
+.widget-lab-content button{background:#344347;border:1px solid #526569;color:#e7eced;border-radius:6px;padding:7px;cursor:pointer}
+.widget-lab-content button:hover{background:#475b60}
+.widget-lab-content .line{display:flex;gap:6px}
+.widget-lab-content .line input{flex:1}
+.widget-lab-content [data-role=status]{color:#a7c4c2;font-size:11px;min-height:22px}
+.widget-lab-content [data-role=status][data-level=error]{color:#eda3a3}
+.widget-lab-content [data-role=results]{max-height:190px;overflow:auto;overflow-wrap:anywhere}
+@media(max-width:800px){body{min-height:1500px}widget-element.widget--element{max-width:calc(100vw - 30px)}}
+</style>
+</head>
+<body>
+<header class="widget-lab-head">
+<h1>DashboardX / Widget Lab</h1>
+<p>Новые модули внутри существующего WidgetElement. Перемещай виджеты за заголовок; сохраняй положение кнопкой внизу.</p>
+<p>Включены GitHub Control, Server Monitor, Smart Contacts, DashboardX AI и старые часы для проверки совместимости.</p>
+<div id="registry-summary" class="lab-registry" role="status">Загрузка виджетов…</div>
+</header>
+<script type="module" src="./js/widget-lab.js"></script>
+</body>
+</html>
