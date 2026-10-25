@@ -1796,3 +1796,26 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas .widget--element .window-resize-handle {
   flex: 0 0 auto;
 }
+
+
+/* Independent API widget bodies — retained Urban palette and window chrome. */
+#workspace-canvas .dx-integration {display:flex;flex-direction:column;gap:10px;min-width:0;width:100%;font-size:12px;line-height:1.5}
+#workspace-canvas .dx-integration-row {display:flex;align-items:stretch;gap:6px;min-width:0}
+#workspace-canvas .dx-integration input,
+#workspace-canvas .dx-integration textarea {
+  box-sizing:border-box;display:block;width:100%;min-width:0;
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:8px;background:var(--bg-panel-inside);color:var(--text-main);font:inherit;
+}
+#workspace-canvas .dx-integration input[type="file"] {cursor:pointer;max-width:100%}
+#workspace-canvas .dx-integration button {
+  border:1px solid var(--border);background:var(--bg-panel-light);
+  color:var(--text-main);border-radius:var(--radius-sm);padding:8px;cursor:pointer;
+}
+#workspace-canvas .dx-integration button:hover:not(:disabled) {filter:brightness(1.18)}
+#workspace-canvas .dx-integration button:disabled {cursor:not-allowed;opacity:.48}
+#workspace-canvas .dx-integration [data-role="status"] {margin:0;color:var(--text-muted);overflow-wrap:anywhere}
+#workspace-canvas .dx-integration [data-role="status"][data-level="error"] {color:var(--red)}
+#workspace-canvas .dx-integration [data-role="results"] {overflow-wrap:anywhere;min-width:0}
+#workspace-canvas .dx-integration [data-role="results"] p {margin:7px 0}
+#workspace-canvas .dx-integration a {color:var(--blue)}
