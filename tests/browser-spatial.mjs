@@ -9,7 +9,10 @@ let failed=false;
 try {
   const page=await browser.newPage({viewport:{width:1440,height:900}});
   const errors=[];
-  page.on('pageerror',e=>errors.push(e.message));
+  page.on('pageerror',e=>{errors.push(e.message);console.error('PAGEERROR:',e.message);});
+  page.on('console',m=>{if(m.type()==='error')console.error('CONSOLE:',m.text());});
+  page.on('requestfailed',r=>console.error('REQUEST FAILED:',r.url(),r.failure()?.errorText));
+  page.on('dialog',async d=>{console.error('DIALOG:',d.message());await d.dismiss();});
   await page.goto('http://127.0.0.1:8787/',{waitUntil:'domcontentloaded'});
   await page.waitForSelector('#workspace-surface > widget-element',{timeout:30000});
   await page.waitForFunction(()=>Array.isArray(window.dashboardxTemplates) &&
@@ -24,7 +27,7 @@ try {
   });
 
   await page.locator('#spatial-toggle').click();
-  await page.waitForSelector('#spatial-preview .spatial-panel widget-element',{timeout:60000});
+  await page.waitForSelector('#spatial-preview .spatial-panel widget-element',{timeout:18000});
   const spatialInfo=await page.evaluate(()=>{
     const widget=document.querySelector('#spatial-preview .spatial-panel widget-element');
     return {sameWidget:widget===window.__dashboardxSmokeWidget,
@@ -62,6 +65,16 @@ try {
 } catch(error) {
   failed=true;
   console.error('Browser Spatial smoke failed:',error);
+  try {
+    console.error('SPATIAL STATE:', await page.evaluate(()=>({
+      hasRoot:!!document.getElementById('spatial-preview'),
+      panels:document.querySelectorAll('#spatial-preview .spatial-panel').length,
+      button:document.querySelector('#spatial-toggle')?.textContent,
+      pressed:document.querySelector('#spatial-toggle')?.getAttribute('aria-pressed'),
+      canvas:document.querySelector('#workspace-canvas')?.getBoundingClientRect().toJSON(),
+      spatialRoot:document.querySelector('#spatial-preview')?.outerHTML.slice(0,750)
+    })));
+  } catch(e) { console.error('Diagnostics unavailable:',e.message); }
 } finally {
   await browser.close();
 }
