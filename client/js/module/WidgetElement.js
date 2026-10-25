@@ -2,6 +2,7 @@
 import WidgetBase from './WidgetBase.js';
 // Импортируем объект/неймспейс с классами логики виджетов
 import WidgetLogic from './WidgetLogic.js';
+import widgetRegistry from './WidgetRegistry.js';
 // TODO: Добавить слушатель переключение Navigation или Workplace, 
 // TODO: который эмитит EventBus в Navigation и Workplace, на кнопки из footer.
 // TODO: Решить где он будет находится, в WidgetElement || WidgetBase || WidgetLogic.
@@ -13,6 +14,7 @@ export default class WidgetElement extends WidgetBase {
     const template = document.querySelector(`template[data-widget][data-id="${this.templateId}"]`);
     // Строим DOM-структуру виджета на основе найденного template метод определён в WidgetBase
     this.buildFromTemplate(template);
+    widgetRegistry.register(this);
     // Формируем имя класса логики, по this.id
     const LogicClass = WidgetLogic[this.id[0].toUpperCase() + this.id.slice(1)];
     //console.log(LogicClass);
@@ -24,6 +26,7 @@ export default class WidgetElement extends WidgetBase {
   }
   // lifecycle-хук Web Components вызывается автоматически, когда элемент удаляется из DOM
   disconnectedCallback() {
+    widgetRegistry.unregister(this);
     // Если логика существует и у неё есть метод destroy вызываем его (без ошибки, если чего-то нет)
     this.logic?.destroy?.();
   }
