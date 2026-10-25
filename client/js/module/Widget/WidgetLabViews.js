@@ -138,9 +138,25 @@ export class DashboardAiWidgetView {
     this.button = byRole(widget,'send');
     this.onAsk = () => { void this.ask(); };
     this.button?.addEventListener('click',this.onAsk);
-    setStatus(widget,'Для работы необходим защищённый серверный /api/ai/chat; ключ не хранится в браузере');
+    if (this.button) this.button.disabled = true;
+    setStatus(widget,'AI отключён до настройки защищённого API; ключ не хранится в браузере');
+    this.active = true;
+    void this.checkAvailability();
+  }
+  async checkAvailability() {
+    // Fail closed: never POST to the legacy static-only DashboardX server.
+    try {
+      const response = await fetch('/api/ai/status', {credentials:'same-origin',cache:'no-store'});
+      if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) return;
+      const state = await response.json();
+      if (this.active && state.enabled === true && state.authenticated === true) {
+        if (this.button) this.button.disabled = false;
+        setStatus(this.widget,'AI подключён через защищённый сервер');
+      }
+    } catch { /* integration not configured; remain disabled */ }
   }
   async ask() {
+    if (this.button?.disabled) return;
     if (!this.input?.value.trim()) return;
     this.button.disabled = true;
     setStatus(this.widget,'Ожидание ответа…');
@@ -155,5 +171,5 @@ export class DashboardAiWidgetView {
       setStatus(this.widget, 'AI не подключён: ' + String(error.message || error), true);
     } finally { this.button.disabled = false; }
   }
-  destroy() { this.button?.removeEventListener('click',this.onAsk); this.controller.destroy(); }
+  destroy() { this.active = false; this.button?.removeEventListener('click',this.onAsk); this.controller.destroy(); }
 }
