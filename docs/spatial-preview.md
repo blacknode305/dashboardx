@@ -26,7 +26,9 @@ When GitHub Pages is configured for `main` and `/(root)`, you can open:
    We use `CSS3DRenderer` to keep native inputs, buttons, forms and live
    widget JavaScript, plus `WebGLRenderer` for a subtle ground grid.
 4. Drag the **empty background** to orbit; use the **mouse wheel** on the
-   empty background to zoom. Drag a **widget header** to move it in X/Y.
+   empty background to zoom. **W/A/S/D** (or arrow keys) move the camera
+   through the room within the wall boundaries. Use **◫ Комната** to hide
+   the walls/floor without hiding any widgets. Drag a **widget header** to move it in X/Y.
    Select any widget in the right-hand panel and edit X/Y/Z or Y rotation.
    **Widget width and height are always inherited from Desktop** (the
    inspector shows their actual pixel sizes, read-only). Resize the window
@@ -48,8 +50,14 @@ When GitHub Pages is configured for `main` and `/(root)`, you can open:
   when the 3D button is clicked. No 3D network dependency on Desktop boot.
 - Pinned Three.js `0.186.1` loaded via a browser import map from jsDelivr;
   internet required for initial Three.js load, including on localhost.
-- Uses WebGLRenderer (background grid) + CSS3DRenderer (native live DOM).
-  If WebGL initialization fails, live CSS3D panels can still render.
+- Uses WebGLRenderer (real procedural room) + CSS3DRenderer (native live DOM).
+  If WebGL initialization fails or its context is lost, the room falls back
+  to CSS3D room planes (with perspective). The status label identifies the
+  active rendering mode. Browser graphics acceleration is recommended.
+- The room contains generated architectural geometry and a simple CanvasTexture
+  sign, created at runtime. It does **not** fetch photorealistic textures, models
+  or other assets. The room is visible by default; hide/show it with the
+  toolbar toggle.
 - All currently mounted widgets use the existing `WidgetElement` and
   `WidgetLogic`. There are **no alternate demo widget implementations**.
 - `_spatialMoving` suppresses Web Component destruction when the **same
@@ -66,7 +74,8 @@ When GitHub Pages is configured for `main` and `/(root)`, you can open:
 
 ## Current limitations
 
-- This is **not actual WebXR hand tracking, optical transparency, depth
+- The room is a **virtual scene**, not a scan of the user's real room.
+  It is **not actual WebXR hand tracking, optical transparency, depth
   sensing, room anchors, or a native AR glasses runtime**.
 - Only **currently present widgets** on the selected desktop are shown.
   To test another type, create an instance with the existing manager.

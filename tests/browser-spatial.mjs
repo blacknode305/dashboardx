@@ -70,6 +70,34 @@ try {
   await page.locator('#spatial-toggle').click();
   await page.waitForSelector('#spatial-preview .spatial-panel widget-element',{timeout:18000});
   assert.equal(await page.locator('#spatial-preview .spatial-panel widget-element').count(),3);
+
+  // Ensure this is an actual furnished 3D environment, not a flat empty
+  // colored background with widgets. Validate WebGL geometry or CSS3D fallback.
+  const room=await page.evaluate(()=>{
+    const stage=document.querySelector('#spatial-preview [data-spatial="stage"]');
+    return {
+      mode:stage.dataset.roomRenderer,
+      parts:Number(stage.dataset.roomParts),
+      triangles:Number(stage.dataset.roomTriangles||0),
+      status:document.querySelector('[data-spatial="room-status"]')?.textContent,
+      roomToggle:document.querySelector('[data-spatial="room"]')?.getAttribute('aria-pressed'),
+      fallbackWalls:document.querySelectorAll('.spatial-css-room').length
+    };
+  });
+  assert.ok(['webgl','css3d'].includes(room.mode),'Room renderer must be chosen');
+  assert.ok(room.parts>=5,'The virtual room must contain floor, ceiling and walls');
+  assert.equal(room.roomToggle,'true','Virtual room is enabled by default');
+  assert.match(room.status,/комнат/i,'Room status should be visible');
+  if(room.mode==='webgl') {
+    assert.ok(room.triangles>=12,'Room must render real 3D mesh triangles');
+  } else {
+    assert.ok(room.fallbackWalls>=5,'CSS3D room must have wall/floor/ceiling planes');
+  }
+  await page.locator('[data-spatial="room"]').click();
+  assert.equal(await page.locator('[data-spatial="room"]').getAttribute('aria-pressed'),'false');
+  await page.locator('[data-spatial="room"]').click();
+  assert.equal(await page.locator('[data-spatial="room"]').getAttribute('aria-pressed'),'true');
+
   const spatialInfo=await page.evaluate(()=>{
     const widget=document.querySelector('#spatial-preview .spatial-panel widget-element');
     return {sameWidget:widget===window.__dashboardxSmokeWidget,

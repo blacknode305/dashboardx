@@ -9,6 +9,7 @@ import { CSS3DObject, CSS3DRenderer } from 'three/addons/renderers/CSS3DRenderer
 import { getSpatialLayout, saveSpatialLayout, deleteSpatialLayout } from './SpatialLayout.js';
 import { defaultSpatialPose, spatialSizeFromDesktop, SPATIAL_PIXELS_PER_METER } from './SpatialMath.js';
 import { readGlassTransparency, saveGlassTransparency, glassBackgroundAlpha } from './SpatialGlass.js';
+import { makeSpatialRoom, makeFallbackSpatialRoom, ROOM_BOUNDS } from './SpatialRoom.js';
 
 const clamp = (number, min, max) => Math.min(max, Math.max(min, number));
 const round = number => Math.round(number * 100) / 100;
@@ -22,15 +23,35 @@ export default class SpatialPreview {
     this.records = [];
     this.selected = null;
     this.yaw = 0;
-    this.pitch = 0.04;
+    this.pitch = 0.15;
     this.distance = 3.8;
+    this.roomVisible = true;
     this.target = new THREE.Vector3(0, 1.47, -1.8);
     this.handleResize = () => this.resize();
     this.handleKey = event => {
-      if (event.key === 'Escape' && this.isOpen) {
+      if (!this.isOpen) return;
+      if (event.key === 'Escape') {
         event.preventDefault();
         this.close();
+        return;
       }
+      // Navigate the architectural volume, without stealing keys from inputs.
+      if (event.altKey || event.ctrlKey || event.metaKey || event.isComposing ||
+          event.target?.closest?.('input,textarea,select,[contenteditable="true"]')) return;
+      const key = event.key.toLowerCase();
+      if (!['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) return;
+      const forward = key==='w'||key==='arrowup' ? 1 : key==='s'||key==='arrowdown' ? -1 : 0;
+      const sideways = key==='d'||key==='arrowright' ? 1 : key==='a'||key==='arrowleft' ? -1 : 0;
+      const step=.22;
+      // Keep camera a safe distance from walls, and preserve the orbit angle.
+      this.target.x = clamp(this.target.x +
+        (Math.cos(this.yaw)*sideways - Math.sin(this.yaw)*forward)*step,
+        ROOM_BOUNDS.minX, ROOM_BOUNDS.maxX);
+      this.target.z = clamp(this.target.z -
+        (Math.cos(this.yaw)*forward + Math.sin(this.yaw)*sideways)*step,
+        ROOM_BOUNDS.minZ, ROOM_BOUNDS.maxZ);
+      event.preventDefault();
+      this.render();
     };
   }
 
@@ -59,6 +80,7 @@ export default class SpatialPreview {
         </div>
         <div class="spatial-actions">
           <button type="button" data-spatial="home" title="Вернуть исходную камеру">Центрировать</button>
+          <button type="button" data-spatial="room" aria-pressed="true" title="Показать или скрыть виртуальную комнату">◫ Комната</button>
           <button type="button" data-spatial="exit" class="spatial-exit">← Desktop</button>
         </div>
       </div>
@@ -79,7 +101,8 @@ export default class SpatialPreview {
         <div class="spatial-actions"><button type="button" data-spatial="focus">К виджету</button><button type="button" data-spatial="reset">Сбросить позицию</button>
           <span data-spatial="saved" role="status">Отдельный Spatial Layout</span></div>
       </div>
-      <div class="spatial-hint">Размер каждого виджета берётся из Desktop · ЛКМ по пустому месту — вращать сцену · колесо — приблизить ·
+      <div class="spatial-room-status" data-spatial="room-status" role="status" aria-live="polite">Инициализация комнаты…</div>
+      <div class="spatial-hint">WASD/стрелки — двигаться по комнате · Размер каждого виджета берётся из Desktop · ЛКМ по пустому месту — вращать сцену · колесо — приблизить ·
         за заголовок — переместить виджет · все поля и кнопки внутри виджетов остаются рабочими.
         Чтобы добавить виджеты, используй обычный менеджер: после добавления вернись сюда.</div>
     `;
@@ -99,22 +122,27 @@ export default class SpatialPreview {
       this.cssRenderer.domElement.classList.add('spatial-css-layer');
       this.stage.append(this.cssRenderer.domElement);
       try {
-        this.glRenderer = new THREE.WebGLRenderer({ alpha: false, antialias: true, powerPreference:'low-power' });
+        this.glRenderer = new THREE.WebGLRenderer({
+          alpha:false, antialias:true, powerPreference:'default'
+        });
         this.glRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         this.glRenderer.domElement.classList.add('spatial-gl-layer');
         this.stage.prepend(this.glRenderer.domElement);
-        const grid = new THREE.GridHelper(28, 28, 0x5c7785, 0x283c45);
-        grid.position.y = -0.03;
-        this.scene.add(grid);
-        const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30),
-          new THREE.MeshBasicMaterial({ color: 0x142129, side: THREE.DoubleSide }));
-        floor.rotation.x = -Math.PI/2;
-        floor.position.y = -0.045;
-        this.scene.add(floor);
+        this.room3d = makeSpatialRoom(THREE, document);
+        this.scene.add(this.room3d.group);
+        this.stage.dataset.roomRenderer='webgl';
+        this.stage.dataset.roomParts=String(this.room3d.getParts());
+        this.setRoomStatus('3D-комната активна · Three.js WebGL');
+        this.glRenderer.domElement.addEventListener('webglcontextlost', event => {
+          event.preventDefault();
+          this.installCssRoomFallback('WebGL отключился — показана CSS3D-комната');
+        });
       } catch (error) {
-        console.warn('WebGL grid unavailable; CSS3D widgets remain usable', error);
+        console.warn('WebGL is unavailable; using CSS3D room fallback', error);
         this.glRenderer?.dispose();
-        this.glRenderer = null;
+        this.glRenderer?.domElement.remove();
+        this.glRenderer=null;
+        this.installCssRoomFallback('WebGL недоступен · CSS3D-комната');
       }
 
       widgets.forEach((widget, index) => this.attach(widget, index, desktopSizes[index]));
@@ -128,6 +156,39 @@ export default class SpatialPreview {
       this.close();
       throw error;
     }
+  }
+
+  setRoomStatus(label) {
+    const el = this.root?.querySelector('[data-spatial="room-status"]');
+    if (el) el.textContent = label;
+  }
+
+  installCssRoomFallback(message) {
+    if (!this.isOpen || this.roomFallback?.length) return;
+    this.room3d?.group && (this.room3d.group.visible=false);
+    this.roomFallback=makeFallbackSpatialRoom(CSS3DObject,document);
+    this.roomFallback.forEach(obj=>this.cssScene.add(obj));
+    this.stage.dataset.roomRenderer='css3d';
+    this.stage.dataset.roomParts=String(this.roomFallback.length);
+    this.setRoomStatus(message);
+    this.setRoomVisibility(this.roomVisible);
+    this.render();
+  }
+
+  setRoomVisibility(visible) {
+    this.roomVisible=Boolean(visible);
+    if (this.room3d?.group) this.room3d.group.visible=this.roomVisible &&
+      this.stage?.dataset.roomRenderer==='webgl';
+    for (const object of this.roomFallback||[]) {
+      object.visible=this.roomVisible;
+      object.element.style.display=this.roomVisible?'':'none';
+    }
+    const button=this.root?.querySelector('[data-spatial="room"]');
+    if (button) {
+      button.setAttribute('aria-pressed',String(this.roomVisible));
+      button.textContent=this.roomVisible?'◫ Комната':'◫ Показать комнату';
+    }
+    this.render();
   }
 
   attach(widget, index, desktopSize) {
@@ -258,9 +319,10 @@ export default class SpatialPreview {
     });
     read('exit').addEventListener('click',()=>this.close());
     read('home').addEventListener('click',()=>{
-      this.yaw=0; this.pitch=0.04; this.distance=3.8;
+      this.yaw=0; this.pitch=0.15; this.distance=3.8;
       this.target.set(0,1.47,-1.8); this.render();
     });
+    read('room').addEventListener('click',()=>this.setRoomVisibility(!this.roomVisible));
     read('focus').addEventListener('click',()=>{
       if (!this.selected) return;
       this.target.set(...this.selected.pose.position);
@@ -345,7 +407,10 @@ export default class SpatialPreview {
       this.target.z+Math.cos(this.yaw)*cp*this.distance
     );
     this.camera.lookAt(this.target);
-    this.glRenderer?.render(this.scene,this.camera);
+    if (this.glRenderer) {
+      this.glRenderer.render(this.scene,this.camera);
+      this.stage.dataset.roomTriangles=String(this.glRenderer.info.render.triangles);
+    }
     this.cssRenderer?.render(this.cssScene,this.camera);
   }
 
@@ -373,6 +438,14 @@ export default class SpatialPreview {
       this.cssScene?.remove(record.object);
     }
     this.records=[];
+    this.roomFallback?.forEach(obj=>{
+      this.cssScene?.remove(obj);
+      obj.element?.remove();
+    });
+    this.roomFallback=[];
+    this.room3d?.dispose();
+    if(this.room3d?.group) this.scene?.remove(this.room3d.group);
+    this.room3d=null;
     this.glRenderer?.dispose();
     this.glRenderer?.domElement.remove();
     this.glRenderer=null;
