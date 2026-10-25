@@ -416,11 +416,12 @@ async function boot() {
         // Import only when requested: a CDN outage never blocks Desktop startup.
         const { default: SpatialPreview } = await import('./module/Spatial/SpatialPreview.js');
         if (!spatialPreview) spatialPreview=new SpatialPreview({
-          onClose:()=>{spatialButton.setAttribute('aria-pressed','false');spatialButton.textContent='◈ Spatial 3D';}
+          onClose:()=>{spatialButton.setAttribute('aria-pressed','false');spatialButton.textContent='◈ Spatial 3D';window.dispatchEvent(new Event('dashboardx:ui-changed'));}
         });
         spatialPreview.open();
         spatialButton.setAttribute('aria-pressed','true');
         spatialButton.textContent='◈ Закрыть 3D';
+        window.dispatchEvent(new Event('dashboardx:ui-changed'));
       } catch(error) {
         console.error('Spatial Preview could not start',error);
         alert('Не удалось запустить Spatial Preview. Нужен интернет для Three.js и поддержка CSS 3D.\n'+String(error.message||error));
