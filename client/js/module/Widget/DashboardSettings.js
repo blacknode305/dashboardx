@@ -137,6 +137,123 @@ export default class DashboardSettingsWidget {
         ownerInput.value = ''; apiKeyInput.value = '';
       });
     }
+    // Mirror the REAL toolbar actions, rather than maintaining a second
+    // implementation of theme, fullscreen, 3D, wallpaper, reset or languages.
+    // Works inside the live CSS3D widget as well as on the ordinary Desktop.
+    const list=widget.querySelector('[data-role="settings-workspace-list"]');
+    const createForm=widget.querySelector('[data-role="settings-workspace-form"]');
+    const createName=widget.querySelector('[data-role="settings-workspace-name"]');
+    const workspaceStatus=widget.querySelector('[data-role="settings-workspace-status"]');
+    const dispatchWorkspace=(action,options={})=>{
+      window.dispatchEvent(new CustomEvent('dashboardx:workspace-command',{
+        detail:{action,...options}
+      }));
+    };
+    const renderWorkspaces=()=>{
+      if(this.destroyed || !list)return;
+      const store=window.dashboardxStore;
+      if(!store)return;
+      list.replaceChildren();
+      for(const workspace of store.state.workspaces){
+        const row=document.createElement('div');
+        row.className='dx-settings-workspace-row'+
+          (workspace.id===store.workspace.id?' is-active':'');
+        const choose=document.createElement('button');
+        choose.type='button';choose.dataset.action='select';
+        choose.dataset.workspaceId=workspace.id;
+        choose.dataset.role='settings-workspace';
+        choose.className='dx-settings-workspace-select';
+        choose.textContent=workspace.name;
+        choose.title='Перейти: '+workspace.name;
+        choose.setAttribute('aria-pressed',String(workspace.id===store.workspace.id));
+        const edit=document.createElement('button');
+        edit.type='button';edit.dataset.action='rename';
+        edit.dataset.workspaceId=workspace.id;
+        edit.dataset.role='settings-workspace';
+        edit.title='Переименовать '+workspace.name;
+        edit.setAttribute('aria-label',edit.title);
+        edit.textContent='✎';
+        const remove=document.createElement('button');
+        remove.type='button';remove.dataset.action='delete';
+        remove.dataset.workspaceId=workspace.id;
+        remove.dataset.role='settings-workspace';
+        remove.className='dx-settings-workspace-delete';
+        remove.title='Удалить '+workspace.name;
+        remove.setAttribute('aria-label',remove.title);
+        remove.textContent='×';
+        row.append(choose,edit,remove);list.append(row);
+      }
+      if(workspaceStatus){
+        workspaceStatus.textContent='Текущее: '+store.workspace.name+
+          ' · пространств: '+store.state.workspaces.length;
+      }
+    };
+    const syncToolbar=()=>{
+      if(this.destroyed)return;
+      const uiLanguage=window.dashboardxStore?.state.system.language;
+      widget.querySelectorAll('[data-role="settings-language"]').forEach(button=>{
+        button.setAttribute('aria-pressed',String(button.dataset.lang===uiLanguage));
+      });
+      const themeButton=widget.querySelector('[data-role="settings-action"][data-action="theme"]');
+      if(themeButton)themeButton.textContent=
+        document.documentElement.dataset.theme==='light'?'☾ Тёмная тема':'☼ Светлая тема';
+      const fullscreen=widget.querySelector('[data-role="settings-action"][data-action="fullscreen"]');
+      if(fullscreen)fullscreen.textContent=document.fullscreenElement?
+        '⛶ Выйти из полного экрана':'⛶ Полный экран';
+      const spatial=widget.querySelector('[data-role="settings-action"][data-action="spatial"]');
+      if(spatial)spatial.textContent=document.body.classList.contains('dx-spatial-active')?
+        '◈ Вернуться в Desktop':'◈ Spatial 3D';
+    };
+    const handleMirrorClick=event=>{
+      const button=event.target.closest?.('button[data-role]');
+      if(!button || !widget.contains(button))return;
+      const role=button.dataset.role;
+      if(role==='settings-action'){
+        const control={
+          theme:'theme-toggle',fullscreen:'fullscreen-toggle',
+          spatial:'spatial-toggle',background:'background-button',
+          reset:'clear-storage'
+        }[button.dataset.action];
+        if(control)document.getElementById(control)?.click();
+        syncToolbar();
+      }else if(role==='settings-language'){
+        document.querySelector('.language-pills button[data-lang="'+button.dataset.lang+'"]')?.click();
+      }else if(role==='settings-workspace'){
+        const id=button.dataset.workspaceId;
+        const workspace=window.dashboardxStore?.state.workspaces.find(w=>w.id===id);
+        if(!workspace)return;
+        if(button.dataset.action==='select')dispatchWorkspace('select',{id});
+        if(button.dataset.action==='delete')dispatchWorkspace('delete',{id});
+        if(button.dataset.action==='rename'){
+          const name=prompt('Новое название пространства',workspace.name);
+          if(name!==null)dispatchWorkspace('rename',{id,name});
+        }
+      }
+    };
+    const submitWorkspace=event=>{
+      event.preventDefault();
+      const name=createName.value.trim();
+      if(!name){if(workspaceStatus)workspaceStatus.textContent='Введите название';return;}
+      createName.value='';
+      dispatchWorkspace('create',{name});
+    };
+    widget.addEventListener('click',handleMirrorClick);
+    createForm?.addEventListener('submit',submitWorkspace);
+    window.addEventListener('dashboardx:workspaces-changed',renderWorkspaces);
+    window.addEventListener('dashboardx:ui-changed',syncToolbar);
+    document.addEventListener('fullscreenchange',syncToolbar);
+    const themeObserver=new MutationObserver(syncToolbar);
+    themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+    renderWorkspaces();syncToolbar();
+    this.unbind.push(()=>{
+      widget.removeEventListener('click',handleMirrorClick);
+      createForm?.removeEventListener('submit',submitWorkspace);
+      window.removeEventListener('dashboardx:workspaces-changed',renderWorkspaces);
+      window.removeEventListener('dashboardx:ui-changed',syncToolbar);
+      document.removeEventListener('fullscreenchange',syncToolbar);
+      themeObserver.disconnect();
+    });
+
     this.credentialChanged=event=>{
       if(this.destroyed)return;
       const section=widget.querySelector('.dx-credential[data-service="'+event.detail?.service+'"]');
