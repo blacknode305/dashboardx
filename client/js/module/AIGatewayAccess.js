@@ -1,16 +1,16 @@
 /**
- * Owner-only DashboardX AI session. Secrets are NEVER saved in localStorage.
- * Only the public gateway URL is persisted. Owner token lives in JS memory
+ * Self-hosted BYOK DashboardX AI session. Secrets are NEVER saved in localStorage.
+ * Only the public gateway URL is persisted. Gateway access token lives in JS memory
  * until the page reloads; OpenAI API key goes directly to the server.
  */
 const ADDRESS_KEY = 'dashboardx.ai.gateway-url';
 let gatewayUrl = '';
-let ownerToken = '';
+let gatewayToken = '';
 try { gatewayUrl = localStorage.getItem(ADDRESS_KEY) || ''; } catch {}
 
 export function getGatewayUrl() { return gatewayUrl; }
-export function isOwnerConfigured() { return Boolean(gatewayUrl && ownerToken); }
-export function configureOwnerAccess({ url, token }) {
+export function isGatewayConfigured() { return Boolean(gatewayUrl && gatewayToken); }
+export function configureGatewayAccess({ url, token }) {
   if (typeof url !== 'string') throw new TypeError('Gateway URL required');
   const target = new URL(url);
   const local = target.hostname === 'localhost' || target.hostname === '127.0.0.1';
@@ -21,19 +21,19 @@ export function configureOwnerAccess({ url, token }) {
     throw new TypeError('Enter the server origin only, without a path or credentials');
   }
   if (typeof token !== 'string' || token.length < 32) {
-    throw new TypeError('Owner token must be at least 32 characters');
+    throw new TypeError('Gateway access token must be at least 32 characters');
   }
   gatewayUrl = target.origin;
-  ownerToken = token;
+  gatewayToken = token;
   try { localStorage.setItem(ADDRESS_KEY, gatewayUrl); } catch {}
   window.dispatchEvent(new Event('dashboardx:ai-config'));
 }
-export function disconnectOwner() {
-  ownerToken = '';
+export function disconnectGateway() {
+  gatewayToken = '';
   window.dispatchEvent(new Event('dashboardx:ai-config'));
 }
 export function gatewayFetch(path, options = {}) {
-  if (!isOwnerConfigured()) return Promise.reject(new Error('Configure owner access in DashboardX Settings'));
+  if (!isGatewayConfigured()) return Promise.reject(new Error('Configure your own AI gateway in DashboardX Settings'));
   if (!['/api/ai/status','/api/ai/chat','/api/ai/key'].includes(path)) {
     return Promise.reject(new Error('Unsupported gateway route'));
   }
@@ -43,7 +43,7 @@ export function gatewayFetch(path, options = {}) {
     credentials: 'omit',
     cache: 'no-store',
     referrerPolicy: 'no-referrer',
-    headers: { ...options.headers, Authorization: 'Bearer ' + ownerToken }
+    headers: { ...options.headers, Authorization: 'Bearer ' + gatewayToken }
   });
 }
 export async function gatewayStatus() {

@@ -1,4 +1,4 @@
-name: Owner-only AI gateway and license
+name: Open-source BYOK AI gateway checks
 on:
   pull_request:
     paths:
@@ -8,6 +8,8 @@ on:
       - 'client/js/module/Widget/WidgetLabViews.js'
       - 'client/_dashboardSettings.html'
       - 'tests/**'
+      - 'LICENSE'
+      - 'README.md'
       - '.github/workflows/owner-ai-tests.yml'
   workflow_dispatch:
 jobs:

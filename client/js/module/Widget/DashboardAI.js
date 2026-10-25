@@ -1,6 +1,6 @@
 /**
  * Client-only AI controller. Credentials must live exclusively on the server.
- * It requires a same-origin authenticated endpoint implemented separately.
+ * It requires an authenticated gateway; the gatewayFetch adapter handles origin and credentials.
  */
 export default class DashboardAIWidget {
   constructor({endpoint='/api/ai/chat',fetchImpl=fetch}={}) {
@@ -18,7 +18,7 @@ export default class DashboardAIWidget {
       const response=await this.fetchImpl(this.endpoint,{
         method:'POST',credentials:'same-origin',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({message:message.trim()})
+        body:JSON.stringify({message:message.trim(),messages:[...this.history.slice(-19).map(item=>({role:item.role,content:item.text})),{role:'user',content:message.trim()}]})
       });
       if(!response.ok)throw new Error('AI endpoint unavailable: HTTP '+response.status);
       const data=await response.json();

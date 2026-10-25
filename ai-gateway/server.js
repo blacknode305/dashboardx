@@ -1,5 +1,5 @@
 /**
- * DashboardX owner-only AI gateway. Standalone Node 22+ service.
+ * Self-hosted, single-installation DashboardX AI gateway. Node 22+.
  * No dependency on the public static DashboardX site or its localStorage.
  * OpenAI API key is held ONLY in server process memory, unless provisioned
  * separately through the server's secret environment variable.
@@ -30,7 +30,7 @@ function extractText(payload) {
 }
 export function createAiGateway({ env = process.env, fetchImpl = fetch } = {}) {
   let apiKey = (env.OPENAI_API_KEY || '').trim();
-  const ownerToken = env.DASHBOARDX_OWNER_TOKEN || '';
+  const gatewayToken = env.DASHBOARDX_GATEWAY_TOKEN || env.DASHBOARDX_OWNER_TOKEN || '';
   const allowedOrigin = (env.DASHBOARDX_SITE_ORIGIN || '').trim().replace(/\/$/, '');
   const model = env.OPENAI_MODEL || 'gpt-4.1-mini';
   const maxPerHour = Math.max(1, Math.min(120, Number(env.AI_REQUESTS_PER_HOUR) || 20));
@@ -56,10 +56,10 @@ export function createAiGateway({ env = process.env, fetchImpl = fetch } = {}) {
     }
     if (pathname === '/health' && req.method === 'GET') return json(200, { ok: true });
     if (!pathname.startsWith('/api/ai/')) return json(404, { error: 'Not found' });
-    if (ownerToken.length < 32) return json(503, { error: 'Owner credentials not configured' });
+    if (gatewayToken.length < 32) return json(503, { error: 'Gateway access token not configured' });
     const authorization = req.headers.authorization || '';
     const supplied = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
-    if (!tokenMatches(supplied, ownerToken)) return json(401, { error: 'Unauthorized' });
+    if (!tokenMatches(supplied, gatewayToken)) return json(401, { error: 'Unauthorized' });
 
     if (pathname === '/api/ai/status' && req.method === 'GET') {
       return json(200, { authenticated: true, enabled: Boolean(apiKey), model,
@@ -102,8 +102,21 @@ export function createAiGateway({ env = process.env, fetchImpl = fetch } = {}) {
     }
 
     if (!apiKey) return json(503, { error: 'OpenAI key not configured' });
-    if (typeof body.message !== 'string' || !body.message.trim() || body.message.length > 4000)
+    if (body.messages === undefined && (typeof body.message !== 'string' || !body.message.trim() || body.message.length > 4000))
       return json(400, { error: 'Message must be 1–4000 characters' });
+    // History is provided by the current client only: no central user database.
+    // Each downloaded DashboardX should be paired with its OWN gateway.
+    let inputMessages;
+    if (body.messages !== undefined) {
+      if (!Array.isArray(body.messages) || body.messages.length < 1 || body.messages.length > 20 ||
+          body.messages.some(item => !item || !['user','assistant'].includes(item.role) ||
+            typeof item.content !== 'string' || !item.content.trim() || item.content.length > 4000) ||
+          body.messages.at(-1).role !== 'user') {
+        return json(400, { error: 'Invalid chat history' });
+      }
+      inputMessages = body.messages.map(item => ({role:item.role,content:item.content}));
+    } else inputMessages = [{role:'user',content:body.message.trim()}];
+
     if (Date.now() - windowStart >= 3600000) { windowStart = Date.now(); used = 0; }
     if (used >= maxPerHour) return json(429, { error: 'AI hourly request limit reached' });
     if (busy) return json(429, { error: 'One request at a time' });
@@ -112,7 +125,7 @@ export function createAiGateway({ env = process.env, fetchImpl = fetch } = {}) {
       const upstream = await fetchImpl('https://api.openai.com/v1/responses', {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, input: body.message.trim(), max_output_tokens: 600, store: false }),
+        body: JSON.stringify({ model, input: inputMessages, max_output_tokens: 1200, store: false }),
         signal: AbortSignal.timeout(30000)
       });
       if (!upstream.ok) return json(502, { error: 'OpenAI request failed', upstreamStatus: upstream.status });
@@ -129,5 +142,5 @@ export function createAiGateway({ env = process.env, fetchImpl = fetch } = {}) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   const port = Number(process.env.PORT || 3001);
   createAiGateway().listen(port, process.env.HOST || '0.0.0.0',
-    () => console.info('DashboardX owner-only AI Gateway listening on port ' + port));
+    () => console.info('DashboardX personal AI gateway listening on port ' + port));
 }
