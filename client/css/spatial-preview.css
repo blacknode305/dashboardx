@@ -117,3 +117,48 @@ body.dx-spatial-active #workspace-canvas .spatial-panel .widget--element[data-wi
   background:#202f38;border:1px solid #445e6c;border-radius:7px;
   padding:8px;overflow-wrap:anywhere;
 }
+
+/* Glass panels in Three.js. Alpha is applied to backgrounds ONLY; never to
+   the entire widget, so labels, text, inputs, and controls stay fully legible. */
+#spatial-preview .spatial-glass-control {
+  display:grid;gap:8px;padding:10px;border:1px solid #465c6a;border-radius:8px;
+  background:rgba(34,48,58,.50);color:#e4edf2;
+}
+#spatial-preview .spatial-glass-control > span {
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-size:11px;font-weight:600;
+}
+#spatial-preview .spatial-glass-control output {
+  font-variant-numeric:tabular-nums;color:#c5dde8;
+}
+#spatial-preview .spatial-glass-control input[type="range"] {
+  width:100%;padding:0;background:transparent!important;
+  height:18px;cursor:pointer;accent-color:#98b9ca;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel {
+  background:rgba(18,28,35,.06)!important;
+  -webkit-backdrop-filter:blur(5px);
+  backdrop-filter:blur(5px);
+  border:1px solid rgba(152,186,203,.46);
+  box-shadow:0 20px 60px rgba(0,0,0,.24);
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel .widget--element {
+  background:rgba(30,41,51,var(--dx-spatial-panel-alpha,.45))!important;
+  background-image:none!important;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel .widget--element--header {
+  background:rgba(33,46,57,.28)!important;
+  background-image:none!important;
+  border-bottom:1px solid rgba(155,186,199,.35)!important;
+}
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel .widget--element--body,
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel .widget-manager {
+  background:transparent!important;background-image:none!important;
+}
+/* Preserve opaque control surfaces so their text stays readable. */
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel button,
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel input,
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel textarea,
+body.dx-spatial-active #workspace-canvas #spatial-preview .spatial-panel select {
+  opacity:1;
+}
