@@ -64,6 +64,9 @@ try {
     return {id:widget.id,style:widget.getAttribute('style')};
   });
 
+  const desktopAppearance=await page.evaluate(()=>getComputedStyle(
+    document.querySelector('#workspace-surface widget-element[data-widget-type="datetime"]')
+  ).backgroundColor);
   await page.locator('#spatial-toggle').click();
   await page.waitForSelector('#spatial-preview .spatial-panel widget-element',{timeout:18000});
   assert.equal(await page.locator('#spatial-preview .spatial-panel widget-element').count(),3);
@@ -86,6 +89,37 @@ try {
   assert.equal(spatialInfo.allLive,true);
   assert.equal(spatialInfo.hasGitHub,true);
   assert.equal(spatialInfo.hasDateTime,true);
+  const defaultGlass=await page.evaluate(()=>{
+    const widget=document.querySelector('#spatial-preview widget-element[data-widget-type="datetime"]');
+    return {
+      color:getComputedStyle(widget).backgroundColor,
+      slider:document.querySelector('#spatial-preview [data-spatial="glass"]').value,
+      panelAlpha:document.querySelector('#spatial-preview').style.getPropertyValue('--dx-spatial-panel-alpha')
+    };
+  });
+  assert.equal(defaultGlass.slider,'55','Spatial transparency defaults to 55%');
+  assert.equal(defaultGlass.panelAlpha,'0.45','Default panel background must be translucent');
+  assert.match(defaultGlass.color,/rgba\(30, 41, 51, 0\.45\)/);
+  await page.locator('#spatial-preview [data-spatial="glass"]').evaluate(input=>{
+    input.value='80';input.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  const newGlass=await page.evaluate(()=>{
+    const widget=document.querySelector('#spatial-preview widget-element[data-widget-type="datetime"]');
+    return {
+      alpha:document.querySelector('#spatial-preview').style.getPropertyValue('--dx-spatial-panel-alpha'),
+      background:getComputedStyle(widget).backgroundColor,
+      contentOpacity:getComputedStyle(widget.querySelector('.widget--element--body')).opacity,
+      widgetOpacity:getComputedStyle(widget).opacity,
+      label:document.querySelector('#spatial-preview [data-spatial="glass-value"]').textContent,
+      saved:localStorage.getItem('dashboardx:spatial:glass-transparency:v1')
+    };
+  });
+  assert.equal(newGlass.alpha,'0.2');
+  assert.match(newGlass.background,/rgba\(30, 41, 51, 0\.2\)/);
+  assert.equal(newGlass.contentOpacity,'1');
+  assert.equal(newGlass.widgetOpacity,'1');
+  assert.equal(newGlass.label,'80%');
+  assert.equal(newGlass.saved,'80');
   const spatialSizes=await page.evaluate(()=>window.__spatialSmokeWidgets.map(w=>({
     id:w.id,width:parseInt(w.parentElement.style.width,10),
     height:parseInt(w.parentElement.style.height,10),
@@ -132,6 +166,10 @@ try {
   assert.equal(restored.body,true);
   assert.equal(restored.spatialMode,false);
   assert.equal(restored.spatialMoving,false);
+  const restoredAppearance=await page.evaluate(()=>getComputedStyle(
+    document.querySelector('#workspace-surface widget-element[data-widget-type="datetime"]')
+  ).backgroundColor);
+  assert.equal(restoredAppearance,desktopAppearance,'Desktop window background must be unchanged');
 
   // Resizing Desktop after a first 3D visit must change next 3D visit size,
   // keeping separately saved position/rotation but ignoring old size.
@@ -144,6 +182,11 @@ try {
   });
   await page.locator('#spatial-toggle').click();
   await page.waitForSelector('#spatial-preview .spatial-panel widget-element',{timeout:18000});
+  const persistedGlass=await page.evaluate(()=>({
+    value:document.querySelector('#spatial-preview [data-spatial="glass"]').value,
+    alpha:document.querySelector('#spatial-preview').style.getPropertyValue('--dx-spatial-panel-alpha')
+  }));
+  assert.deepEqual(persistedGlass,{value:'80',alpha:'0.2'},'Glass setting should persist across 3D sessions');
   const secondSpatial=await page.evaluate(()=>{
     const widget=document.querySelector('#spatial-preview widget-element[data-widget-type="datetime"]');
     return {width:parseInt(widget.parentElement.style.width,10),
