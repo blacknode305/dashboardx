@@ -1,7 +1,7 @@
 import { t } from '../i18n.js';
 import { getCredential, hasCredential, setCredential, clearCredential } from '../CredentialStore.js';
 import {
-  getGatewayUrl, configureOwnerAccess, disconnectOwner, gatewayStatus,
+  getGatewayUrl, configureGatewayAccess, disconnectGateway, gatewayStatus,
   installOpenAIKey, removeOpenAIKey
 } from '../AIGatewayAccess.js';
 
@@ -69,7 +69,7 @@ export default class DashboardSettingsWidget {
       }
       update();
     }
-    // Owner-only OpenAI: never write either secret to localStorage.
+    // Per-installation BYOK: never write OpenAI or gateway tokens to localStorage.
     const ownerForm = widget.querySelector('[data-role="ai-owner-form"]');
     if (ownerForm) {
       const gatewayInput = widget.querySelector('[data-role="ai-gateway-url"]');
@@ -95,9 +95,9 @@ export default class DashboardSettingsWidget {
       const onConnect = event => {
         event.preventDefault();
         try {
-          configureOwnerAccess({ url: gatewayInput.value.trim(), token: ownerInput.value });
+          configureGatewayAccess({ url: gatewayInput.value.trim(), token: ownerInput.value });
           ownerInput.value = '';
-          report('Данные подключения заданы только для текущей вкладки. Проверка сервера…');
+          report('Адрес сохранён, токен шлюза действует только в этой вкладке. Проверка сервера…');
           void testConnection();
         } catch(error) { report('Ошибка: ' + String(error.message || error)); }
       };
@@ -119,9 +119,9 @@ export default class DashboardSettingsWidget {
         } catch(error) { report(String(error.message || error)); }
       };
       const onDisconnect = () => {
-        disconnectOwner();
+        disconnectGateway();
         ownerInput.value = ''; apiKeyInput.value = '';
-        report('Сессия владельца отключена в браузере. Ключ на сервере не изменён.');
+        report('Сессия AI-шлюза отключена в браузере. Ключ на сервере не изменён.');
       };
       ownerForm.addEventListener('submit', onConnect);
       keyForm.addEventListener('submit', onKey);
