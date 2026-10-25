@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DashboardX by blacknode305</title>
+<meta name="theme-color" content="#222b33">
+<link rel="icon" href="./favicon.ico?v=dx-full-20261024" sizes="any" type="image/x-icon">
+<link rel="icon" href="./favicon-64.png?v=dx-full-20261024" sizes="64x64" type="image/png">
+<link rel="icon" href="./icon-192.png?v=dx-full-20261024" sizes="192x192" type="image/png">
+<link rel="icon" href="./icon-512.png?v=dx-full-20261024" sizes="512x512" type="image/png">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png?v=dx-full-20261024" sizes="180x180">
+<link rel="manifest" href="./manifest.webmanifest?v=dx-full-20261024">
+<meta name="apple-mobile-web-app-title" content="DashboardX">
+<link rel="stylesheet" href="./client/css/style.css?v=all-widgets-viewport-height-20261025">
+</head>
+<body>
+<header id="app-toolbar">
+  <div class="dashboard-brand">
+    <strong class="app-brand">Dashboard<span>X</span></strong>
+    <span class="brand-by">by</span>
+    <a class="brand-profile" href="https://github.com/blacknode305" target="_blank" rel="noopener noreferrer" aria-label="GitHub profile blacknode305">blacknode305</a>
+  </div>
+  <div class="toolbar-controls" role="group" aria-label="DashboardX controls">
+    <button type="button" id="theme-toggle" class="toolbar-theme" data-i18n-title="ui.theme" title="Тема">☼</button>
+    <button type="button" id="fullscreen-toggle" class="toolbar-fullscreen" data-i18n="ui.fullscreen" data-i18n-title="ui.fullscreen">Полный экран</button>
+    <button type="button" id="background-button" class="toolbar-background" data-i18n="ui.background" data-i18n-title="ui.background">Фон</button>
+    <button type="button" id="clear-storage" class="reset-storage" data-i18n="ui.clear" data-i18n-title="ui.clear">Очистить данные</button>
+    <div class="toolbar-language" role="group" aria-label="Язык" data-i18n-aria="ui.language">
+      <span data-i18n="ui.language">Язык</span>
+      <div class="language-pills">
+        <button type="button" data-lang="ru" aria-pressed="true">RU</button>
+        <button type="button" data-lang="kz" aria-pressed="false">KZ</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <select id="language-switch" aria-label="Language" data-i18n-aria="ui.language" hidden>
+        <option value="ru">RU</option><option value="kz">KZ</option><option value="en">EN</option>
+      </select>
+    </div>
+  </div>
+  <div id="workspace-tabs" role="group" aria-label="Рабочие столы" data-i18n-aria="ui.workspaces"></div>
+</header>
+<nav id="widget-navigation" aria-label="Категории" data-i18n-aria="ui.categories"></nav>
+<main id="workspace-canvas" aria-label="Рабочая область" data-i18n-aria="ui.canvas"></main>
+<div id="app-loader" role="status"><div class="loader-content"><div class="spinner"></div><div id="loader-text" data-i18n="ui.loading">Загрузка DashboardX…</div></div></div>
+<noscript>Для DashboardX необходим JavaScript.</noscript>
+  <template id="iconSize" data-ui="icon" data-action="size">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 10V4h6"/>
+      <path d="M20 14v6h-6"/>
+    </svg>
+  </template>
+  <template id="iconSave" data-ui="icon" data-action="save">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 4h14l2 2v14H4z"/>
+      <path d="M16 4v6H8V4"/>
+      <rect x="8" y="14" width="8" height="4" rx="1"/>
+    </svg>
+  </template>
+  <template id="iconPin" data-ui="icon" data-action="pin">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 4l6 6"/>
+      <path d="M8 10l6 6"/>
+      <path d="M9 15l-5 5"/>
+      <path d="M15 9l5-5"/>
+    </svg>
+  </template>
+  <template id="iconHide" data-ui="icon" data-action="hide">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M3 3l18 18"/>
+    </svg>
+  </template>
+  <template id="iconFavorite" data-ui="icon" data-action="favorite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.8 6.1 21l1.2-6.5L2.5 9.9l6.6-.9z"/>
+    </svg>
+  </template>
+  <template id="iconWorkplace" data-ui="icon" data-action="workplace">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+  </template>
+
+
+<!-- Core system widget is always present, even when template fetches fail. -->
+<template data-widget data-id="add" data-category="system" data-title="Add widget">
+<section class="widget-manager">
+  <div class="manager-section">
+    <h3 class="manager-heading" data-i18n="manager.new">Новый экземпляр</h3>
+    <div class="manager-actions">
+      <details class="dx-picker" data-role="type-picker">
+        <summary data-i18n-aria="manager.chooseType"><span data-role="type-label" data-i18n="manager.chooseType">Выбрать тип виджета</span><span class="dx-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="dx-picker-options" data-role="type-options"></div>
+      </details>
+      <button type="button" class="dx-primary" data-action="create-instance" data-i18n="manager.create" disabled>Добавить</button>
+    </div>
+    <p class="manager-hint" data-i18n="manager.createHint"></p>
+  </div>
+  <div class="manager-section">
+    <h3 class="manager-heading" data-i18n="manager.existing">Существующий экземпляр</h3>
+    <div class="manager-actions">
+      <details class="dx-picker" data-role="existing-picker">
+        <summary data-i18n-aria="manager.chooseId"><span data-role="existing-label" data-i18n="manager.chooseId">Выбрать по ID</span><span class="dx-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="dx-picker-options" data-role="existing-options"></div>
+      </details>
+      <button type="button" data-action="link-instance" data-i18n="manager.show" disabled>Показать</button>
+    </div>
+    <p class="manager-hint" data-i18n="manager.existingHint"></p>
+  </div>
+  <div class="manager-section manager-section-last">
+    <h3 class="manager-heading"><span data-i18n="manager.onDesk">На этом рабочем столе</span> <span data-role="instance-count" class="manager-count">0</span></h3>
+    <div class="manager-instances" data-role="instances-list"></div>
+  </div>
+</section>
+</template>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsnes/1.2.1/jsnes.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="module" src="./client/js/index.js?v=optima-order-plan-20261025"></script>
+</body>
+</html>

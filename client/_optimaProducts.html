@@ -1,0 +1,20 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Товары</title></head><body>
+<template data-widget data-id="optimaProducts" data-category="optima" data-title="Товары">
+<section class="optima-data" data-optima-module="optimaProducts">
+  <header class="optima-toolbar">
+    <strong data-i18n="widget.optimaProducts">Товары</strong>
+    <button type="button" data-role="data-refresh" data-i18n="optima.refresh">Обновить</button>
+  </header>
+  <div class="optima-data-filters">
+    <input type="search" data-role="data-search" data-i18n-placeholder="optima.searchSimple" placeholder="Поиск…">
+    <select data-role="data-branch" data-i18n-aria="optima.branch" aria-label="Филиал"></select>
+    <select data-role="data-status" data-i18n-aria="optima.status" aria-label="Статус"></select>
+    <select data-role="data-extra" data-i18n-aria="optima.supplier" aria-label="Поставщик"></select>
+    <input type="date" data-role="data-date" data-i18n-aria="optima.date" aria-label="Дата">
+    <select data-role="data-mode" data-i18n-aria="optima.mode" aria-label="Режим"></select>
+  </div>
+  <p class="optima-status" data-role="data-status-text" aria-live="polite"></p>
+  <p class="optima-summary" data-role="data-summary"></p>
+  <div class="optima-table-scroll" data-role="data-results"></div>
+</section>
+</template></body></html>

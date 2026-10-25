@@ -1,26 +1,17 @@
-// Импорт базового класса виджета (пока не используется напрямую)
-import WidgetBase from '../WidgetBase.js';
-// Импорт класса для работы с DOM-элементами виджета
-import WidgetElement from '../WidgetElement.js';
-// Импорт глобальной шины событий (EventBus)
-import eventBus from '../EventBus.js';
+import { locale } from '../i18n.js';
 
 export default class DatetimeWidget {
   constructor(widget) {
-    this.widget = widget;
-    this.updateDatetime();
-    this.timer = setInterval(() => this.updateDatetime(), 1000);
+    this.widget=widget;
+    this.update();
+    this.timer=setInterval(()=>this.update(),1000);
   }
-  getDatetime(type) {
-    const date = new Date();
-    if (type === 'date') return date.toLocaleDateString('ru-RU');
-    if (type === 'time') return date.toLocaleTimeString('ru-RU');
+  update() {
+    const now=new Date();
+    const date=now.toLocaleDateString(locale(),{year:'numeric',month:'long',day:'numeric'});
+    const time=now.toLocaleTimeString(locale());
+    this.widget.querySelectorAll('[data-role="date"]').forEach(el=>el.textContent=date);
+    this.widget.querySelectorAll('[data-role="time"]').forEach(el=>el.textContent=time);
   }
-  updateDatetime() {
-    this.widget.querySelectorAll('[data-role=date]').forEach(el => el.textContent = this.getDatetime('date'));
-    this.widget.querySelectorAll('[data-role=time]').forEach(el => el.textContent = this.getDatetime('time'));
-  }
-  destroy() {
-    clearInterval(this.timer);
-  }
+  destroy() { clearInterval(this.timer); }
 }

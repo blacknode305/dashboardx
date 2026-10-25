@@ -1,0 +1,41 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>OPTIMA — Заявки</title></head><body>
+<template data-widget data-id="optimaOrders" data-category="optima" data-title="Заявки">
+ <section class="optima-order-widget">
+  <header class="optima-toolbar">
+   <strong data-i18n="widget.optimaOrders">Заявки</strong>
+   <button type="button" data-role="orders-refresh" data-i18n="optima.refresh">Обновить</button>
+  </header>
+  <div class="optima-order-filters">
+   <select data-role="orders-mode" aria-label="Режим" data-i18n-aria="optima.mode"></select>
+   <select data-role="orders-branch" aria-label="Филиал" data-i18n-aria="optima.branch"></select>
+   <select data-role="orders-day" aria-label="День недели" data-i18n-aria="orders.day"></select>
+   <input data-role="orders-date" type="date" aria-label="Дата заявки" data-i18n-aria="orders.requestDate">
+   <select data-role="orders-status" aria-label="Статус" data-i18n-aria="optima.status"></select>
+   <input data-role="orders-search" type="search" autocomplete="off" placeholder="Поиск по поставщикам и товарам…" data-i18n-placeholder="orders.search">
+  </div>
+  <p class="optima-status" data-role="orders-status-text" aria-live="polite"></p>
+  <p class="optima-summary" data-role="orders-count"></p>
+  <div class="optima-order-list" data-role="orders-list"></div>
+  <section class="optima-order-panel" data-role="orders-panel" hidden>
+   <div class="optima-order-panel-title">
+    <strong data-role="orders-panel-title"></strong>
+    <button type="button" data-role="orders-close" data-i18n="optima.cancel">Закрыть</button>
+   </div>
+   <p data-role="orders-panel-status" class="optima-hint"></p>
+   <div class="optima-order-items" data-role="orders-items"></div>
+   <form data-role="orders-form" autocomplete="off">
+    <label class="optima-order-pin">
+     <span data-i18n="orders.pin">PIN производства (не сохраняется)</span>
+     <input type="password" inputmode="numeric" data-role="orders-pin" autocomplete="off" required>
+    </label>
+    <p class="optima-hint" data-i18n="orders.stockDashWarning">Знак «-» в остатке означает, что товар не используется на этом производстве, и исключает его из будущих заявок. Не ставьте его случайно.</p>
+    <p class="optima-hint" data-i18n="orders.pinInfo">PIN нужен для отправки через операторский API и не сохраняется.</p>
+    <p data-role="orders-error" class="optima-order-error" aria-live="polite"></p>
+    <div class="optima-order-panel-buttons">
+     <button type="submit" data-role="orders-submit" data-i18n="orders.submit">Подать заявку</button>
+     <button type="button" data-role="orders-abort" data-i18n="optima.cancel">Отмена</button>
+    </div>
+   </form>
+  </section>
+ </section>
+</template></body></html>

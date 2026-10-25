@@ -1,83 +1,41 @@
-// Импорт базового класса виджета (пока не используется напрямую)
-import WidgetBase from '../WidgetBase.js';
-// Импорт класса для работы с DOM-элементами виджета
-import WidgetElement from '../WidgetElement.js';
-// Импорт глобальной шины событий (EventBus)
 import eventBus from '../EventBus.js';
 
 export default class DayBalanceWidget {
   constructor(widget) {
     this.widget = widget;
-    this.initEventBus();
-    this.attachEventListeners();
-    // Загружаем данные
-    this.loadData();
+    this.buttons = [];
+    this.attach();
   }
-  // Подписка на события
-  initEventBus() {
-    // Слушаем событие добавления финансов
-    eventBus.on('finance:dayBalanceWidget:update', (args) => {
-      // Загружаем данные
-      this.loadData();
-      // Обновляем данные
-      this.updateFinance({ type: args.detail.type, value: args.detail.value });
-      // Запуск события завершенного обновления без аргументов
-      eventBus.emit('finance:dayBalanceWidget:updated');
-    });
-  }
-  // Навешивание обработчиков
-  attachEventListeners() {
-    // Кнопка дохода
-    this.widget.querySelector('[data-action="submit-income"]')?.addEventListener('click', () => {
-        const value = this.widget.querySelector('[data-input=income]').valueAsNumber;
-        const amount = Number.isNaN(value) ? 0 : value;
-        this.widget.querySelector('[data-input=income]').value = '';
-        eventBus.emit('finance:dayBalanceWidget:update', { type: 'income', value: amount });
-      });
-    // Кнопка расхода
-    this.widget.querySelector('[data-action="submit-expense"]')?.addEventListener('click', () => {
-        const value = this.widget.querySelector('[data-input=expense]').valueAsNumber;
-        const amount = Number.isNaN(value) ? 0 : value;
-        this.widget.querySelector('[data-input=expense]').value = '';
-        eventBus.emit('finance:dayBalanceWidget:update', { type: 'expense', value: amount });
-      });
-  }
-  // Обновление финансов
-  updateFinance({ type, value }) {
-    // Текущая дата
-    const date = new Date().toLocaleDateString('ru-RU');
-    // Поиск строки по дате
-    let row = window.db.finance.table.find(r => r.date === date);
-    // Если строки нет — создаём
-    if (!row) {
-      row = { date, income: 0, expense: 0, result: 0 };
-      window.db.finance.table.push(row);
-    }
-    // Обработка дохода
-    if (type === 'income') {
-      row.income += value;
-      row.result += value;
-    }
-    // Обработка расхода
-    if (type === 'expense') {
-      row.expense += value;
-      row.result -= value;
-    }
-    // Сохраняем данные
-    this.saveData();
-  }
-  // Загрузка из localStorage
-  loadData() {
-    const saved = localStorage.getItem(`finance_${window.db.userId}`);
-    if (saved) {
-      window.db.finance = JSON.parse(saved);
+
+  attach() {
+    for (const type of ['income', 'expense']) {
+      const button = this.widget.querySelector('[data-action="submit-' + type + '"]');
+      const input = this.widget.querySelector('[data-input="' + type + '"]');
+      if (!button || !input) continue;
+      const click = () => {
+        const amount = input.valueAsNumber;
+        if (!Number.isFinite(amount) || amount <= 0) return;
+        input.value = '';
+        const date = new Date().toLocaleDateString('ru-RU');
+        const finance = window.db.finance;
+        if (!Array.isArray(finance.table)) finance.table = [];
+        let row = finance.table.find(item => item.date === date);
+        if (!row) {
+          row = { date, income: 0, expense: 0, result: 0 };
+          finance.table.push(row);
+        }
+        row[type] = Number(row[type] || 0) + amount;
+        row.result = Number(row.income || 0) - Number(row.expense || 0);
+        // Only the clicked widget updates the database, even with many instances on the same screen.
+        window.dashboardxStore.save();
+        eventBus.emit('finance:dayBalanceWidget:updated');
+      };
+      button.addEventListener('click', click);
+      this.buttons.push([button, click]);
     }
   }
-  // Сохранение в localStorage
-  saveData() {
-    localStorage.setItem(
-      `finance_${window.db.userId}`,
-      JSON.stringify(window.db.finance)
-    );
+
+  destroy() {
+    for (const [button, handler] of this.buttons) button.removeEventListener('click', handler);
   }
 }

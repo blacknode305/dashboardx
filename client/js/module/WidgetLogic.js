@@ -1,9 +1,6 @@
 // Импорт базового класса виджета (пока не используется напрямую)
-import WidgetBase from './WidgetBase.js';
 // Импорт класса для работы с DOM-элементами виджета
-import WidgetElement from './WidgetElement.js';
 // Импорт глобальной шины событий (EventBus)
-import eventBus from './EventBus.js';
 // Импорт виджетов
 import AddWidget from './Widget/Add.js';
 import BinanceApiWidget from './Widget/BinanceApi.js';
@@ -19,8 +16,19 @@ import AudioPlayerWidget from './Widget/AudioPlayer.js';
 import VideoPlayerWidget from './Widget/VideoPlayer.js';
 import ServerConsoleWidget from './Widget/ServerConsole.js';
 import TelegramBotWidget from './Widget/TelegramBot.js';
+import DashboardSettingsWidget from './Widget/DashboardSettings.js';
+import OptimaSuppliersWidget from './Widget/OptimaSuppliers.js';
+import OptimaDataWidget from './Widget/OptimaData.js';
+import OptimaOrdersWidget from './Widget/OptimaOrders.js';
 import TorrentTrackerWidget from './Widget/TorrentTracker.js';
 import NesEmulatorWidget from './Widget/NesEmulator.js';
+import {
+  GithubControlWidgetView,
+  ServerMonitorWidgetView,
+  SmartContactsWidgetView,
+  DashboardAiWidgetView
+} from './Widget/WidgetLabViews.js';
+
 // TODO: Добавить слушатель переключение Navigation или Workplace, 
 // TODO: который эмитит EventBus в Navigation и Workplace, на кнопки из footer.
 // TODO: Решить где он будет находится, в WidgetElement || WidgetBase || WidgetLogic.
@@ -41,8 +49,20 @@ const WidgetLogic = {
   WishlistGamesWidget,
   ServerConsoleWidget,
   TelegramBotWidget,
+  DashboardSettingsWidget,
+  OptimaSuppliersWidget,
+  OptimaProductsWidget: OptimaDataWidget,
+  OptimaProposalsWidget: OptimaDataWidget,
+  OptimaOffersWidget: OptimaDataWidget,
+  OptimaCompareWidget: OptimaDataWidget,
+  OptimaStocksWidget: OptimaDataWidget,
+  OptimaOrdersWidget,
   TorrentTrackerWidget,
   NesEmulatorWidget,
+  GithubControlWidget: GithubControlWidgetView,
+  ServerMonitorWidget: ServerMonitorWidgetView,
+  SmartContactsWidget: SmartContactsWidgetView,
+  DashboardAiWidget: DashboardAiWidgetView,
 };
 // Экспорт реестра
 export default WidgetLogic;

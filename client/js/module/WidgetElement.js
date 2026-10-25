@@ -1,41 +1,33 @@
-// Импортируем базовый класс виджета (общая логика, шаблоны, стили и т.п.)
+import widgetRegistry from './WidgetRegistry.js';
 import WidgetBase from './WidgetBase.js';
-// Импортируем объект/неймспейс с классами логики виджетов
 import WidgetLogic from './WidgetLogic.js';
-// TODO: Добавить слушатель переключение Navigation или Workplace, 
-// TODO: который эмитит EventBus в Navigation и Workplace, на кнопки из footer.
-// TODO: Решить где он будет находится, в WidgetElement || WidgetBase || WidgetLogic.
-// Объявляем кастомный Web Component, который наследуется от WidgetBase
+import { translateElement, translateWidgetBody, t } from './i18n.js';
+
 export default class WidgetElement extends WidgetBase {
-  // lifecycle-хук Web Components вызывается автоматически браузером, когда элемент <widget-element> добавлен в DOM
   connectedCallback() {
-    // Ищем в документе <template> у которого есть атрибут data-widget и data-id равный this.templateId (ID текущего виджета)
-    const template = document.querySelector(`template[data-widget][data-id="${this.templateId}"]`);
-    // Строим DOM-структуру виджета на основе найденного template метод определён в WidgetBase
+    if (this._built || !this._initialized) return;
+    this._built = true;
+    const template = document.querySelector('template[data-widget][data-id="' + this.templateId + '"]');
     this.buildFromTemplate(template);
-    // Формируем имя класса логики, по this.id
-    const LogicClass = WidgetLogic[this.id[0].toUpperCase() + this.id.slice(1)];
-    //console.log(LogicClass);
-    // Проверяем, существует ли такой класс логики
-    if (LogicClass) {
-      // Создаём экземпляр логики виджета передаём текущий элемент (this) внутрь логики сохраняем ссылку, чтобы позже можно было уничтожить
-      this.logic = new WidgetLogic[this.id[0].toUpperCase() + this.id.slice(1)](this);
+    widgetRegistry.register(this);
+    if (template?.dataset.unavailable === 'true' || window.dashboardxCatalog?.[this.templateId]?.serverOnly) {
+      this.body.textContent = t(template?.dataset.unavailable === 'true' ? 'ui.templateUnavailable' : 'ui.serverOnly');
+      return;
+    }
+    translateElement(this.body);
+    translateWidgetBody(this.body,this.templateId);
+    const key = this.templateId[0].toUpperCase() + this.templateId.slice(1) + 'Widget';
+    const Logic = WidgetLogic[key];
+    if (!Logic) return;
+    try { this.logic = new Logic(this); }
+    catch (error) {
+      console.error('Widget failed:',this.templateId,error);
+      this.body.textContent = error?.message || String(error);
     }
   }
-  // lifecycle-хук Web Components вызывается автоматически, когда элемент удаляется из DOM
   disconnectedCallback() {
-    // Если логика существует и у неё есть метод destroy вызываем его (без ошибки, если чего-то нет)
+    widgetRegistry.unregister(this);
     this.logic?.destroy?.();
   }
-  // Хук, который вызывается вручную из WidgetBase после того, как template уже вставлен в body виджета
-  afterBuild() {
-    // Устанавливаем ширину body виджета
-    this.body.style.width = this.styleData.width;
-    // Устанавливаем высоту body виджета
-    this.body.style.height = this.styleData.height;
-    // Можно сохранить категорию виджета в data-атрибут чтобы использовать её для CSS-стилей или логики 
-    // this.body.dataset.category = this.category;
-  }
 }
-// Регистрируем кастомный HTML-элемент в браузере после этого можно использовать <widget-element></widget-element> в HTML
-window.customElements.define('widget-element', WidgetElement);
+customElements.define('widget-element',WidgetElement);

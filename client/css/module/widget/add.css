@@ -1,4 +1,1 @@
-.add-widget {
-  width: 100%;
-  background: red;
-}
+.add-widget { color:inherit;background:transparent;width:100%; }
