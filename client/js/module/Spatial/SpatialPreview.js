@@ -82,6 +82,11 @@ export default class SpatialPreview {
           <small>Three.js · реальный интерфейс виджетов · без AR-очков</small>
         </div>
         <div class="spatial-actions">
+          <div class="spatial-workspace-switcher" role="group" aria-label="Рабочее пространство">
+            <label for="spatial-workspace-select">Пространство</label>
+            <select data-spatial="workspace" id="spatial-workspace-select" aria-label="Выбрать рабочее пространство"></select>
+            <button type="button" data-spatial="workspace-new" title="Создать пространство" aria-label="Создать рабочее пространство">+</button>
+          </div>
           <button type="button" data-spatial="home" title="Вернуть исходную камеру">Центрировать</button>
           <button type="button" data-spatial="room" aria-pressed="true" title="Показать или скрыть виртуальную комнату">◫ Комната</button>
           <button type="button" data-spatial="exit" class="spatial-exit">← Desktop</button>
@@ -357,6 +362,27 @@ export default class SpatialPreview {
     const read = name => this.root.querySelector('[data-spatial="'+name+'"]');
     read('glass').addEventListener('input', event => {
       this.setGlassTransparency(event.target.value);
+    });
+    const workspaceSelect=read('workspace');
+    const store=window.dashboardxStore;
+    if(store){
+      for(const workspace of store.state.workspaces){
+        const option=document.createElement('option');
+        option.value=workspace.id;option.textContent=workspace.name;
+        workspaceSelect.append(option);
+      }
+      workspaceSelect.value=store.workspace.id;
+    }
+    workspaceSelect.addEventListener('change',()=>{
+      window.dispatchEvent(new CustomEvent('dashboardx:workspace-command',{
+        detail:{action:'select',id:workspaceSelect.value}
+      }));
+    });
+    read('workspace-new').addEventListener('click',()=>{
+      const name=prompt('Название нового пространства (например: Дом, Улица, Кафе)');
+      if(name?.trim())window.dispatchEvent(new CustomEvent('dashboardx:workspace-command',{
+        detail:{action:'create',name:name.trim()}
+      }));
     });
     read('exit').addEventListener('click',()=>this.close());
     read('home').addEventListener('click',()=>{
