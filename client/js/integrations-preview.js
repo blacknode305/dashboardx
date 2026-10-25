@@ -1,3 +1,4 @@
+import SmartContactsWidget from './module/Widget/SmartContacts.js';
 import GitHubControlWidget from './module/Widget/GitHubControl.js';
 import ServerMonitorWidget from './module/Widget/ServerMonitor.js';
 
@@ -71,3 +72,29 @@ $('github-refresh').addEventListener('click',refreshGitHub);
 $('monitor-refresh').addEventListener('click',refreshMonitor);
 void refreshGitHub();
 void refreshMonitor();
+
+const contacts = new SmartContactsWidget();
+function renderContacts() {
+  const list = $('contacts-list');
+  const results = contacts.search($('contact-query').value);
+  list.replaceChildren();
+  for (const item of results.slice(0,50)) {
+    const entry=document.createElement('p');
+    entry.textContent=[item.name,item.phone,item.email].filter(Boolean).join(' · ');
+    list.append(entry);
+  }
+  $('contact-status').textContent=`${results.length} найдено, ${contacts.getState().count} всего`;
+}
+$('vcf-file').addEventListener('change',async event=>{
+  const file=event.target.files?.[0];
+  if(!file)return;
+  try {
+    if(file.size>5_000_000)throw new Error('Файл слишком большой (максимум 5 МБ)');
+    const result=contacts.importVCF(await file.text());
+    $('contact-status').textContent=`Импортировано: ${result.imported}`;
+    renderContacts();
+  } catch(error) {
+    $('contact-status').textContent=String(error.message||error);
+  }
+});
+$('contact-query').addEventListener('input',renderContacts);
