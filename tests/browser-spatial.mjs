@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
+import { mkdir } from 'node:fs/promises';
 
 const browser=await chromium.launch({
   executablePath:process.env.CHROME_BIN || '/usr/bin/google-chrome',
@@ -85,6 +86,8 @@ try {
     });
   });
 
+  await mkdir('artifacts',{recursive:true});
+  await page.screenshot({path:'artifacts/horizon-ar-desktop-dark.png'});
   const desktopInfo=await page.evaluate(()=>{
     const widget=document.querySelector('#workspace-surface > widget-element');
     window.__dashboardxSmokeWidget=widget;
@@ -144,6 +147,7 @@ try {
   assert.equal(spatialInfo.allLive,true);
   assert.equal(spatialInfo.hasGitHub,true);
   assert.equal(spatialInfo.hasDateTime,true);
+  await page.screenshot({path:'artifacts/horizon-ar-spatial.png'});
   const defaultGlass=await page.evaluate(()=>{
     const widget=document.querySelector('#spatial-preview widget-element[data-widget-type="datetime"]');
     return {
@@ -266,6 +270,7 @@ try {
   assert.match(horizonLight.body,/repeating-linear-gradient/);
   assert.match(horizonLight.panel,/rgba\(/);
   assert.equal(horizonLight.sameWidgets,true);
+  await page.screenshot({path:'artifacts/horizon-ar-desktop-light.png'});
   await page.locator('#theme-toggle').click();
   await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
   assert.equal(errors.length,0,'No page errors: '+errors.join('; '));
