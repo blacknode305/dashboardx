@@ -6,8 +6,9 @@ const browser=await chromium.launch({
   headless:true,args:['--no-sandbox','--disable-dev-shm-usage']
 });
 let failed=false;
+let page;
 try {
-  const page=await browser.newPage({viewport:{width:1440,height:900}});
+  page=await browser.newPage({viewport:{width:1440,height:900}});
   const errors=[];
   page.on('pageerror',e=>{errors.push(e.message);console.error('PAGEERROR:',e.message);});
   page.on('console',m=>{if(m.type()==='error')console.error('CONSOLE:',m.text());});
