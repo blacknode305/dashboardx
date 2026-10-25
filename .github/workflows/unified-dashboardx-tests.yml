@@ -1,0 +1,31 @@
+name: DashboardX combined branch checks
+on:
+  pull_request:
+    paths:
+      - 'client/**'
+      - 'index.html'
+      - 'tests/**'
+      - '.github/workflows/unified-dashboardx-tests.yml'
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test all modules
+        run: node --test tests/*.test.js
+      - name: Syntax check integration and main application
+        run: |
+          node --check client/js/index.js
+          node --check client/js/module/WidgetElement.js
+          node --check client/js/module/WidgetLogic.js
+          node --check client/js/module/Widget/WidgetLabViews.js
+          node --check client/js/module/Widget/GitHubControl.js
+          node --check client/js/module/Widget/ServerMonitor.js
+          node --check client/js/module/Widget/SmartContacts.js
+          node --check client/js/module/Widget/DashboardAI.js
+          node --check client/js/module/Spatial/SpatialLayout.js
+          node --check client/js/integrations-preview.js
