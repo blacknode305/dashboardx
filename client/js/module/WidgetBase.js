@@ -57,6 +57,7 @@ export default class WidgetBase extends HTMLElement {
   }
 
   saveWidget() {
+    if (this._spatialMode) return; // Never overwrite desktop coordinates from Spatial Preview.
     const data = {
       top: this.style.top,
       left: this.style.left,
@@ -199,6 +200,7 @@ export default class WidgetBase extends HTMLElement {
   }
 
   startDrag(event) {
+    if (this._spatialMode) return; // Spatial drag owns XYZ and saves separate poses.
     if (event.target.closest('button,input,select,a,summary')) return;
     if (this.classList.contains('is-pinned') || this.classList.contains('is-maximized')) return;
     const viewport=document.getElementById('workspace-canvas');
@@ -230,6 +232,7 @@ export default class WidgetBase extends HTMLElement {
 
 
   startResize(event) {
+    if (this._spatialMode) return;
     if (this.classList.contains('is-pinned') || this.classList.contains('is-maximized')) return;
     const rect = this.getBoundingClientRect();
     const startX = event.clientX, startY = event.clientY;

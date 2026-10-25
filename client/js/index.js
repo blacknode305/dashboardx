@@ -43,6 +43,8 @@ window.dashboardxTemplates = CATALOG_ENTRIES.map(([id,entry])=>({
 }));
 const store = new ClientDB();
 let navBar=null;
+let spatialPreview = null;
+let spatialOpening = false;
 // Focus is ephemeral, per workspace, and never written to localStorage.
 const activeWidgetByWorkspace = new Map();
 const deskName = w => w.name === 'Главная' ? t('ui.defaultWorkspace') : w.name;
@@ -210,6 +212,7 @@ function measureHeader() {
 
 
 function renderCanvas() {
+  if (spatialPreview?.isOpen) spatialPreview.close();
   const canvas = document.getElementById('workspace-canvas');
   const surface=document.createElement('div');
   surface.id='workspace-surface';
@@ -372,6 +375,32 @@ async function boot() {
       languageSwitch.dispatchEvent(new Event('change', { bubbles: true }));
     }));
     syncLanguageButtons();
+    const spatialButton=document.getElementById('spatial-toggle');
+    spatialButton.addEventListener('click',async()=>{
+      if (spatialPreview?.isOpen) { spatialPreview.close(); return; }
+      if (spatialOpening) return;
+      spatialOpening=true;
+      spatialButton.disabled=true;
+      const oldText=spatialButton.textContent;
+      spatialButton.textContent='Загрузка 3D…';
+      try {
+        // Import only when requested: a CDN outage never blocks Desktop startup.
+        const { default: SpatialPreview } = await import('./module/Spatial/SpatialPreview.js');
+        if (!spatialPreview) spatialPreview=new SpatialPreview({
+          onClose:()=>{spatialButton.setAttribute('aria-pressed','false');spatialButton.textContent='◈ Spatial 3D';}
+        });
+        spatialPreview.open();
+        spatialButton.setAttribute('aria-pressed','true');
+        spatialButton.textContent='◈ Закрыть 3D';
+      } catch(error) {
+        console.error('Spatial Preview could not start',error);
+        alert('Не удалось запустить Spatial Preview. Нужен интернет для Three.js и поддержка CSS 3D.\n'+String(error.message||error));
+        spatialButton.textContent=oldText;
+      } finally {
+        spatialOpening=false;
+        spatialButton.disabled=false;
+      }
+    });
     const fullscreenButton=document.getElementById('fullscreen-toggle');
     const updateFullscreenLabel=()=>{
       fullscreenButton.textContent=t(document.fullscreenElement?'ui.exitFullscreen':'ui.fullscreen');

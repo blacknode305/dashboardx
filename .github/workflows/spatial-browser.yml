@@ -1,0 +1,27 @@
+name: Spatial Preview browser smoke
+on:
+  pull_request:
+    paths:
+      - 'client/**'
+      - 'index.html'
+      - 'tests/browser-spatial.mjs'
+      - '.github/workflows/spatial-browser.yml'
+  workflow_dispatch:
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install headless browser driver
+        run: npm install --no-save --package-lock=false playwright-core@1.58.0
+      - name: Start static DashboardX and run browser smoke
+        run: |
+          python3 -m http.server 8787 --bind 127.0.0.1 &
+          PID=$!
+          trap 'kill $PID 2>/dev/null || true' EXIT
+          sleep 2
+          CHROME_BIN=/usr/bin/google-chrome node tests/browser-spatial.mjs

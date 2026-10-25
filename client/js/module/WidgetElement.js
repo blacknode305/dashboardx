@@ -26,6 +26,7 @@ export default class WidgetElement extends WidgetBase {
     }
   }
   disconnectedCallback() {
+    if (this._spatialMoving) return; // Live DOM reparent: preserve controllers/state.
     widgetRegistry.unregister(this);
     this.logic?.destroy?.();
   }

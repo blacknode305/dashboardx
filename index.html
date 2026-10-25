@@ -12,6 +12,15 @@
 <link rel="manifest" href="./manifest.webmanifest?v=dx-full-20261024">
 <meta name="apple-mobile-web-app-title" content="DashboardX">
 <link rel="stylesheet" href="./client/css/style.css?v=all-widgets-viewport-height-20261025">
+<link rel="stylesheet" href="./client/css/spatial-preview.css?v=three-preview-20261025">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+  }
+}
+</script>
 </head>
 <body>
 <header id="app-toolbar">
@@ -23,6 +32,7 @@
   <div class="toolbar-controls" role="group" aria-label="DashboardX controls">
     <button type="button" id="theme-toggle" class="toolbar-theme" data-i18n-title="ui.theme" title="Тема">☼</button>
     <button type="button" id="fullscreen-toggle" class="toolbar-fullscreen" data-i18n="ui.fullscreen" data-i18n-title="ui.fullscreen">Полный экран</button>
+    <button type="button" id="spatial-toggle" class="toolbar-fullscreen toolbar-spatial" aria-pressed="false" title="Открыть Three.js Spatial Preview">◈ Spatial 3D</button>
     <button type="button" id="background-button" class="toolbar-background" data-i18n="ui.background" data-i18n-title="ui.background">Фон</button>
     <button type="button" id="clear-storage" class="reset-storage" data-i18n="ui.clear" data-i18n-title="ui.clear">Очистить данные</button>
     <div class="toolbar-language" role="group" aria-label="Язык" data-i18n-aria="ui.language">
