@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { CSS3DObject, CSS3DRenderer } from 'three/addons/renderers/CSS3DRenderer.js';
 import { getSpatialLayout, saveSpatialLayout, deleteSpatialLayout } from './SpatialLayout.js';
 import { defaultSpatialPose, spatialSizeFromDesktop, SPATIAL_PIXELS_PER_METER } from './SpatialMath.js';
+import { readGlassTransparency, saveGlassTransparency, glassBackgroundAlpha } from './SpatialGlass.js';
 
 const clamp = (number, min, max) => Math.min(max, Math.max(min, number));
 const round = number => Math.round(number * 100) / 100;
@@ -71,6 +72,10 @@ export default class SpatialPreview {
           <label>Поворот Y, ° <input data-spatial="rotate" type="number" step="5"></label>
         </div>
         <div class="spatial-desktop-size" data-spatial="desktop-size" aria-live="polite"></div>
+        <label class="spatial-glass-control">
+          <span>Прозрачность панелей <output data-spatial="glass-value">55%</output></span>
+          <input type="range" min="0" max="90" step="5" value="55" data-spatial="glass" aria-label="Прозрачность фона виджетов">
+        </label>
         <div class="spatial-actions"><button type="button" data-spatial="focus">К виджету</button><button type="button" data-spatial="reset">Сбросить позицию</button>
           <span data-spatial="saved" role="status">Отдельный Spatial Layout</span></div>
       </div>
@@ -81,6 +86,7 @@ export default class SpatialPreview {
     // The overlay deliberately stays INSIDE #workspace-canvas: this preserves
     // the user's existing CSS styling for all original widgets and forms.
     this.canvas.append(this.root);
+    this.setGlassTransparency(readGlassTransparency(), false);
     document.body.classList.add('dx-spatial-active');
     try {
       this.stage = this.root.querySelector('[data-spatial="stage"]');
@@ -236,8 +242,20 @@ export default class SpatialPreview {
       : 'Размер задаётся в Desktop';
   }
 
+  setGlassTransparency(percent, persist = true) {
+    const value = persist ? saveGlassTransparency(percent) : percent;
+    this.root.style.setProperty('--dx-spatial-panel-alpha', String(glassBackgroundAlpha(value)));
+    const input = this.root.querySelector('[data-spatial="glass"]');
+    const output = this.root.querySelector('[data-spatial="glass-value"]');
+    if (input) input.value = String(value);
+    if (output) output.textContent = value + '%';
+  }
+
   bindControls() {
     const read = name => this.root.querySelector('[data-spatial="'+name+'"]');
+    read('glass').addEventListener('input', event => {
+      this.setGlassTransparency(event.target.value);
+    });
     read('exit').addEventListener('click',()=>this.close());
     read('home').addEventListener('click',()=>{
       this.yaw=0; this.pitch=0.04; this.distance=3.8;
