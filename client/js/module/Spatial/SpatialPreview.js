@@ -407,7 +407,10 @@ export default class SpatialPreview {
       this.target.z+Math.cos(this.yaw)*cp*this.distance
     );
     this.camera.lookAt(this.target);
-    this.glRenderer?.render(this.scene,this.camera);
+    if (this.glRenderer) {
+      this.glRenderer.render(this.scene,this.camera);
+      this.stage.dataset.roomTriangles=String(this.glRenderer.info.render.triangles);
+    }
     this.cssRenderer?.render(this.cssScene,this.camera);
   }
 
