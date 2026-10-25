@@ -82,8 +82,8 @@ test('walk boundaries prevent camera from passing through walls',()=>{
   assert.ok(ROOM_BOUNDS.minX<ROOM_BOUNDS.maxX);
   assert.ok(ROOM_BOUNDS.minZ<ROOM_BOUNDS.maxZ);
   const preview=readFileSync(new URL('../client/js/module/Spatial/SpatialPreview.js',import.meta.url),'utf8');
-  assert.match(preview,/makeSpatialRoom\(THREE, document\)/);
-  assert.match(preview,/makeFallbackSpatialRoom\(CSS3DObject,document\)/);
+  assert.match(preview,/makeSpatialRoom\(THREE, document, this\.roomTheme\)/);
+  assert.match(preview,/makeFallbackSpatialRoom\(CSS3DObject,document,this\.roomTheme\)/);
   assert.match(preview,/ROOM_BOUNDS\.minX/);
   assert.match(preview,/data-spatial="room"/);
   assert.match(preview,/data-spatial="room-status"/);
