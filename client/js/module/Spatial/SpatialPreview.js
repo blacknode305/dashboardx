@@ -7,20 +7,8 @@
 import * as THREE from 'three';
 import { CSS3DObject, CSS3DRenderer } from 'three/addons/renderers/CSS3DRenderer.js';
 import { getSpatialLayout, saveSpatialLayout, deleteSpatialLayout } from './SpatialLayout.js';
+import { defaultSpatialPose, resizeSpatialPose } from './SpatialMath.js';
 
-export function defaultSpatialPose(index = 0) {
-  const column = index % 3;
-  const row = Math.floor(index / 3);
-  const x = (column - 1) * 1.18;
-  const y = 1.62 - row * 0.77;
-  return {
-    position: [x, y, -2 - (row % 2) * 0.16],
-    rotation: [0, (1-column) * 0.08, 0],
-    widthMeters: 1.08,
-    heightMeters: 0.84,
-    anchorId: null
-  };
-}
 const clamp = (number, min, max) => Math.min(max, Math.max(min, number));
 const round = number => Math.round(number * 100) / 100;
 
@@ -244,6 +232,12 @@ export default class SpatialPreview {
       this.yaw=0; this.pitch=0.04; this.distance=3.8;
       this.target.set(0,1.47,-1.8); this.render();
     });
+    read('focus').addEventListener('click',()=>{
+      if (!this.selected) return;
+      this.target.set(...this.selected.pose.position);
+      this.distance=2.8;
+      this.render();
+    });
     read('reset').addEventListener('click',()=>{
       if (!this.selected) return;
       deleteSpatialLayout(this.selected.widget.instanceId);
@@ -269,9 +263,7 @@ export default class SpatialPreview {
         if (index!==null) record.pose.position[index]=clamp(value,-20,20);
         else if (field==='rotate') record.pose.rotation[1]=THREE.MathUtils.degToRad(clamp(value,-180,180));
         else {
-          const size=clamp(value,.35,2.8);
-          record.pose.heightMeters *= size / record.pose.widthMeters;
-          record.pose.widthMeters = size;
+          record.pose = resizeSpatialPose(record.pose,clamp(value,.35,2.8));
         }
         this.applyPose(record);this.syncInspector();this.persist(record);this.render();
       });
