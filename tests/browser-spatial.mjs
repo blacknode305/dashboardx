@@ -20,6 +20,33 @@ try {
     window.dashboardxTemplates.length===28,{timeout:30000});
   const count=await page.locator('template[data-widget]').count();
   assert.equal(count,28,'All 28 templates must be loaded');
+  // Horizon AR design must load LAST and expose accessible dark + light
+  // palettes across the whole Desktop without mutating window geometry.
+  const horizonDark=await page.evaluate(()=>{
+    const root=getComputedStyle(document.documentElement);
+    const body=getComputedStyle(document.body);
+    const top=getComputedStyle(document.querySelector('#app-toolbar'));
+    const panel=getComputedStyle(document.querySelector('#workspace-surface > widget-element'));
+    const hasHorizon=[...document.styleSheets].some(sheet=>
+      sheet.href?.includes('ar-horizon.css'));
+    return {
+      hasHorizon,theme:document.documentElement.dataset.theme,
+      accent:root.getPropertyValue('--dx-horizon-cyan').trim(),
+      bgImage:body.backgroundImage,
+      panelBg:panel.backgroundColor,
+      panelBlur:panel.backdropFilter,
+      topBg:top.backgroundColor,
+      topBlur:top.backdropFilter
+    };
+  });
+  assert.ok(horizonDark.hasHorizon,'AR stylesheet must be loaded');
+  assert.equal(horizonDark.theme,'dark');
+  assert.equal(horizonDark.accent,'#80e6f1');
+  assert.match(horizonDark.bgImage,/repeating-linear-gradient/);
+  assert.match(horizonDark.panelBg,/rgba\(/,'Desktop widgets should use translucent glass backgrounds');
+  assert.notEqual(horizonDark.panelBlur,'none','Desktop should blur through glass');
+  assert.notEqual(horizonDark.topBlur,'none','Header should blur through glass');
+
 
   // Create a classic widget and a newly added Developer widget through
   // the real built-in manager. This also verifies the Developer category.
@@ -127,7 +154,7 @@ try {
   });
   assert.equal(defaultGlass.slider,'55','Spatial transparency defaults to 55%');
   assert.equal(defaultGlass.panelAlpha,'0.45','Default panel background must be translucent');
-  assert.match(defaultGlass.color,/rgba\(30, 41, 51, 0\.45\)/);
+  assert.match(defaultGlass.color,/rgba\(18, 43, 83, 0\.45\)/);
   await page.locator('#spatial-preview [data-spatial="glass"]').evaluate(input=>{
     input.value='80';input.dispatchEvent(new Event('input',{bubbles:true}));
   });
@@ -143,7 +170,7 @@ try {
     };
   });
   assert.equal(newGlass.alpha,'0.2');
-  assert.match(newGlass.background,/rgba\(30, 41, 51, 0\.2\)/);
+  assert.match(newGlass.background,/rgba\(18, 43, 83, 0\.2\)/);
   assert.equal(newGlass.contentOpacity,'1');
   assert.equal(newGlass.widgetOpacity,'1');
   assert.equal(newGlass.label,'80%');
@@ -223,6 +250,24 @@ try {
   assert.deepEqual(secondSpatial,secondDesktop,'3D size must refresh on every entry');
   await page.locator('#spatial-preview [data-spatial="exit"]').click();
   await page.waitForFunction(()=>!document.getElementById('spatial-preview'));
+  // Verify that the existing theme toggle produces a legible light
+  // atmosphere and never discards the actual widget instances/data.
+  await page.locator('#theme-toggle').click();
+  await page.waitForFunction(()=>document.documentElement.dataset.theme==='light');
+  const horizonLight=await page.evaluate(()=>({
+    theme:document.documentElement.dataset.theme,
+    main:getComputedStyle(document.documentElement).getPropertyValue('--text-main').trim(),
+    body:getComputedStyle(document.body).backgroundImage,
+    panel:getComputedStyle(document.querySelector('#workspace-surface widget-element[data-widget-type="datetime"]')).backgroundColor,
+    sameWidgets:window.__spatialSmokeWidgets.every(widget=>widget.isConnected)
+  }));
+  assert.equal(horizonLight.theme,'light');
+  assert.equal(horizonLight.main,'#142a47');
+  assert.match(horizonLight.body,/repeating-linear-gradient/);
+  assert.match(horizonLight.panel,/rgba\(/);
+  assert.equal(horizonLight.sameWidgets,true);
+  await page.locator('#theme-toggle').click();
+  await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
   assert.equal(errors.length,0,'No page errors: '+errors.join('; '));
   console.log('Browser Spatial smoke OK: 28 templates, same widget live, saved XYZ, Desktop restored');
 } catch(error) {
