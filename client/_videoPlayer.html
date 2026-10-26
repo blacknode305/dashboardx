@@ -1,68 +1,19 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=1280, initial-scale=1.0">
-  <link rel="stylesheet" href="./css/style.css">
-  <title>DashboardX</title>
-</head>
-<body>
-  <template
-    data-widget
-    data-id="videoPlayer"
-    data-category="media"
-    data-title="Video Player"
-  >
-    <video data-role="video" controls></video>
-    <div class="video-controls">
-      <button data-action="toggle">⏯</button>
-      <button data-action="fullscreen">⛶</button>
-    </div>
-  </template>
-  
-  <template id="iconSize" data-ui="icon" data-action="size">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 10V4h6"/>
-      <path d="M20 14v6h-6"/>
-    </svg>
-  </template>
-  <template id="iconSave" data-ui="icon" data-action="save">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 4h14l2 2v14H4z"/>
-      <path d="M16 4v6H8V4"/>
-      <rect x="8" y="14" width="8" height="4" rx="1"/>
-    </svg>
-  </template>
-  <template id="iconPin" data-ui="icon" data-action="pin">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M14 4l6 6"/>
-      <path d="M8 10l6 6"/>
-      <path d="M9 15l-5 5"/>
-      <path d="M15 9l5-5"/>
-    </svg>
-  </template>
-  <template id="iconHide" data-ui="icon" data-action="hide">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M3 3l18 18"/>
-    </svg>
-  </template>
-  <template id="iconFavorite" data-ui="icon" data-action="favorite">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 3l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.8 6.1 21l1.2-6.5L2.5 9.9l6.6-.9z"/>
-    </svg>
-  </template>
-  <template id="iconWorkplace" data-ui="icon" data-action="workplace">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="3" width="7" height="7" rx="1"/>
-      <rect x="14" y="3" width="7" height="7" rx="1"/>
-      <rect x="3" y="14" width="7" height="7" rx="1"/>
-      <rect x="14" y="14" width="7" height="7" rx="1"/>
-    </svg>
-  </template>
-
-  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
-  <script type="module" src="./js/index.js"></script>
-</body>
-</html>
+<!doctype html><html lang="ru"><body><template data-widget data-id="videoPlayer" data-category="media" data-title="videoPlayer"><section class="dx-experience dx-media" data-kind="video">
+ <header class="dx-experience-head"><strong>Видеоплеер</strong><span class="dx-chip" data-role="state">Видео не выбрано</span></header>
+ <video controls playsinline preload="metadata" data-role="player"></video>
+ <div class="dx-experience-toolbar">
+  <label class="dx-file-button">Загрузить видео<input data-role="files" type="file" accept="video/*,.mp4,.webm,.mov,.m4v"></label>
+  <input type="url" data-role="url" placeholder="HTTPS-ссылка на видео" aria-label="URL видео">
+  <button type="button" data-action="add-url">Открыть URL</button>
+ </div>
+ <div class="dx-experience-toolbar">
+  <button type="button" data-action="play">▶ Пуск / пауза</button>
+  <button type="button" data-action="back">−10с</button>
+  <button type="button" data-action="forward">+10с</button>
+  <button type="button" data-action="pip">В отдельном окне</button>
+  <button type="button" data-action="fullscreen">⛶ Весь экран</button>
+  <label>Скорость <select data-role="speed"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+ </div>
+ <p class="dx-muted" data-role="now">Локальный файл или прямая HTTPS-ссылка на медиа (не ссылка на страницу видеохостинга).</p>
+ <p class="dx-muted">Пробел — пуск/пауза · ← / → — 10 секунд · F — полноэкранный режим, когда активно окно видео.</p>
+ </section></template></body></html>

@@ -1,7 +1,15 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Telegram Bot</title></head><body>
-<template data-widget data-id="telegramBot" data-category="telegram" data-title="Telegram Bot">
-  <section class="telegram-server-placeholder">
-    <p data-i18n="ui.serverOnly">Этот виджет требует защищённого сервера.</p>
-  </section>
-</template>
-</body></html>
+<!doctype html><html lang="ru"><body>
+<template data-widget data-id="telegramBot" data-category="telegram" data-title="Telegram">
+<section class="dx-experience dx-telegram">
+ <header class="dx-experience-head"><strong>Telegram · сообщения</strong><span class="dx-chip" data-role="status">Черновик</span></header>
+ <p class="dx-muted">Работает без сервера как редактор сообщения: скопируйте текст или откройте системное окно «Поделиться в Telegram».</p>
+ <label>Текст сообщения<textarea data-role="message" rows="6" maxlength="4000" placeholder="Сообщение…"></textarea></label>
+ <label>Ссылка к сообщению (необязательно)<input data-role="url" type="url" placeholder="https://example.com"></label>
+ <div class="dx-experience-toolbar">
+  <button type="button" data-action="copy">Копировать</button>
+  <button type="button" data-action="share">Поделиться в Telegram</button>
+  <button type="button" data-action="clear">Очистить</button>
+ </div>
+ <p class="dx-muted">Автоматическая отправка от имени бота, чтение чатов и приём уведомлений требуют защищённого шлюза и постоянно работающего процесса. Токен из общих настроек здесь не раскрывается.</p>
+</section>
+</template></body></html>

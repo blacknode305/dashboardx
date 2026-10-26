@@ -12,7 +12,7 @@
 @import "./module/widget/money-convert-api.css";
 @import "./module/widget/audio-player.css";
 @import "./module/widget/video-player.css";
-@import "./module/widget/nes-emulator.css";
+@import "./module/widget/nes-emulator.css?v=widget-experiences-20261026";
 
 /* DashboardX local — compact, neutral UI with readable text and fluid widths */
 :root, :root[data-theme="dark"] {

@@ -1,165 +1,280 @@
-import WidgetBase from '../WidgetBase.js';
-import WidgetElement from '../WidgetElement.js';
-import eventBus from '../EventBus.js';
-
+const BUTTONS={ArrowUp:4,ArrowDown:5,ArrowLeft:6,ArrowRight:7,KeyW:4,KeyS:5,KeyA:6,KeyD:7,KeyZ:0,KeyJ:0,KeyX:1,KeyK:1,Enter:3,ShiftLeft:2,ShiftRight:2};
+const now=()=>performance.now();
+const isTyping=el=>!!el?.closest?.('input,textarea,select,[contenteditable="true"]');
+const romId=bytes=>{
+ let hash=2166136261;
+ for(let i=0;i<bytes.length;i++)hash=Math.imul(hash^bytes[i],16777619)>>>0;
+ return bytes.length.toString(16)+'-'+hash.toString(16);
+};
+function toBinary(bytes){
+ let result='';
+ for(let i=0;i<bytes.length;i+=16384)result+=String.fromCharCode(...bytes.subarray(i,i+16384));
+ return result;
+}
 export default class NesEmulatorWidget {
-  constructor(widget) {
-    this.widget = widget;
-    this.canvas = widget.querySelector("canvas");
-    this.ctx = this.canvas.getContext("2d");
-    this.romInput = widget.querySelector('[data-role="romLoader"]');
-
-    // NES canvas
-    this.imageData = this.ctx.createImageData(256, 240);
-
-    // ===== АУДИО (исправленная версия) =====
-    this.audioCtx = new (window.AudioContext || window.webkitAudioContext)({
-      sampleRate: 44100
-    });
-
-    this.bufferSize = 2048;
-    this.audioQueue = [];
-
-    this.scriptNode = this.audioCtx.createScriptProcessor(this.bufferSize, 0, 2);
-    this.scriptNode.connect(this.audioCtx.destination);
-
-    this.scriptNode.onaudioprocess = (e) => {
-      const left = e.outputBuffer.getChannelData(0);
-      const right = e.outputBuffer.getChannelData(1);
-
-      for (let i = 0; i < left.length; i++) {
-        if (this.audioQueue.length > 0) {
-          const sample = this.audioQueue.shift();
-          left[i] = sample[0];
-          right[i] = sample[1];
-        } else {
-          left[i] = 0;
-          right[i] = 0;
-        }
-      }
-    };
-
-    // ===== NES =====
-    this.nes = new jsnes.NES({
-      onFrame: (frame) => this.onFrame(frame),
-      onAudioSample: (l, r) => this.pushAudio(l, r)
-    });
-
-    this.bindEvents();
+ constructor(widget){
+  this.widget=widget;this.scope=widget.querySelector('.dx-nes');
+  this.screen=widget.querySelector('[data-role="screen"]');
+  this.canvas=widget.querySelector('canvas');this.ctx=this.canvas?.getContext('2d');
+  this.status=widget.querySelector('[data-role="game-status"]');
+  this.name=widget.querySelector('[data-role="game-name"]');
+  this.input=widget.querySelector('[data-role="romLoader"]');
+  this.saveInput=widget.querySelector('[data-role="saveLoader"]');
+  this.buttons={};for(const a of ['pause','reset','mute','fullscreen','save','load','export'])
+   this.buttons[a]=widget.querySelector('[data-action="'+a+'"]');
+  this.active=false;this.loaded=false;this.paused=true;this.muted=false;
+  this.pressed=new Set();this.audioQueue=[];this.audioIndex=0;
+  this.lastTime=0;this.raf=0;this.fps=60;this.clock=0;this.unbind=[];
+  this.gamepadButtons=new Set();this.romKey='';
+  this.audioCtx=null;this.audioNode=null;this.nes=null;
+  this.image=this.ctx?.createImageData(256,240);
+  if(!this.ctx||!window.jsnes?.NES){
+   this.setStatus('Не удалось загрузить jsnes. Проверьте соединение.');return;
   }
-  bindEvents() {
-    // Разблокировка AudioContext
-    const resumeAudio = async () => {
-      if (this.audioCtx.state === 'suspended') {
-        await this.audioCtx.resume();
-      }
-      window.removeEventListener('click', resumeAudio);
-      window.removeEventListener('touchstart', resumeAudio);
-    };
-
-    window.addEventListener('click', resumeAudio);
-    window.addEventListener('touchstart', resumeAudio);
-
-    // ROM loader
-    this.romInput.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        this.nes.loadROM(ev.target.result);
-        await this.audioCtx.resume();
-        this.start();
-      };
-
-      reader.readAsBinaryString(file);
-    });
-
-    // Клавиатура
-    window.addEventListener("keydown", (e) => this.handleKey(e.code, true));
-    window.addEventListener("keyup", (e) => this.handleKey(e.code, false));
-    
-    // ===== Overlay кнопки =====
-    this.overlayButtons = this.widget.querySelectorAll(".overlay button");
-
-    this.overlayButtons.forEach(btn => {
-      const key = btn.dataset.key;
-    
-      const press = (e) => {
-        e.preventDefault();
-        this.handleKey(key, true);
-        btn.classList.add("pressed");
-      };
-    
-      const release = (e) => {
-        e.preventDefault();
-        this.handleKey(key, false);
-        btn.classList.remove("pressed");
-      };
-    
-      // ПК
-      btn.addEventListener("mousedown", press);
-      btn.addEventListener("mouseup", release);
-      btn.addEventListener("mouseleave", release);
-    
-      // Телефон (multitouch)
-      btn.addEventListener("touchstart", press, { passive: false });
-      btn.addEventListener("touchend", release);
-      btn.addEventListener("touchcancel", release);
-    });
+  this.nes=new window.jsnes.NES({
+   onFrame:frame=>this.draw(frame),
+   onAudioSample:(l,r)=>this.pushAudio(l,r),
+   sampleRate:44100
+  });
+  const on=(node,type,cb,opts)=>{
+   node?.addEventListener(type,cb,opts);
+   this.unbind.push(()=>node?.removeEventListener(type,cb,opts));
+  };
+  on(this.input,'change',async()=>{
+   const file=this.input.files?.[0];if(!file)return;
+   try {await this.openRom(file);}catch(e){this.setStatus('Ошибка ROM: '+(e.message||e));}
+   this.input.value='';
+  });
+  on(this.saveInput,'change',async()=>{
+   const file=this.saveInput.files?.[0];if(!file)return;
+   try{
+    if(file.size>8_000_000)throw Error('Файл сохранения слишком большой');
+    const entry=JSON.parse(await file.text());this.applyState(entry);
+   }catch(e){this.setStatus('Не удалось загрузить save: '+(e.message||e));}
+   this.saveInput.value='';
+  });
+  on(this.buttons.pause,'click',()=>this.togglePause());
+  on(this.buttons.reset,'click',()=>this.reset());
+  on(this.buttons.mute,'click',()=>this.toggleMute());
+  on(this.buttons.fullscreen,'click',()=>this.toggleFullscreen());
+  on(this.buttons.save,'click',()=>this.saveLocal());
+  on(this.buttons.load,'click',()=>this.loadLocal());
+  on(this.buttons.export,'click',()=>this.exportState());
+  on(this.screen,'pointerdown',()=>{this.active=true;widget.activate?.();this.unlockAudio();});
+  on(widget,'focusin',()=>{this.active=true;});
+  on(document,'visibilitychange',()=>{if(document.hidden){this.releaseAll();this.pause('Пауза: вкладка скрыта');}});
+  on(window,'blur',()=>{this.releaseAll();this.pause('Пауза: окно неактивно');});
+  on(window,'keydown',e=>this.onKey(e,true));
+  on(window,'keyup',e=>this.onKey(e,false));
+  on(widget,'pointerdown',()=>{this.active=true;this.unlockAudio();});
+  for(const button of widget.querySelectorAll('[data-nes]')){
+   const code=button.dataset.nes;
+   on(button,'pointerdown',event=>{
+    event.preventDefault();this.active=true;widget.activate?.();
+    button.setPointerCapture?.(event.pointerId);
+    this.button(code,true);button.classList.add('pressed');this.unlockAudio();
+   });
+   const off=e=>{e.preventDefault();this.button(code,false);button.classList.remove('pressed');};
+   on(button,'pointerup',off);on(button,'pointercancel',off);on(button,'lostpointercapture',off);
   }
-  handleKey(code, pressed) {
-    const map = {
-      ArrowUp: 4,
-      ArrowDown: 5,
-      ArrowLeft: 6,
-      ArrowRight: 7,
-      KeyZ: 0,
-      KeyX: 1,
-      Enter: 3,
-      ShiftRight: 2
-    };
-
-    const button = map[code];
-    if (button === undefined) return;
-
-    if (pressed) {
-      this.nes.buttonDown(1, button);
-    } else {
-      this.nes.buttonUp(1, button);
+  this.setStatus('Загрузите игру в формате .nes');
+ }
+ setStatus(value){if(this.status)this.status.textContent=value;}
+ canCapture(e){
+  if(!this.loaded||!this.active||document.hidden||isTyping(e.target)||e.altKey||e.metaKey||e.ctrlKey)return false;
+  if(!this.widget.isConnected || this.widget.style?.display==='none')return false;
+  // WidgetBase marks the active window. Do not hijack shortcuts from other widgets.
+  return this.widget.classList.contains('is-focus') ||
+   this.widget.contains(document.activeElement);
+ }
+ onKey(e,down){
+  if(!this.canCapture(e))return;
+  const code=e.code;
+  if(BUTTONS[code]!==undefined){
+   e.preventDefault();if(down&&e.repeat)return;
+   this.button(code,down);return;
+  }
+  if(!down||e.repeat)return;
+  const action={KeyP:()=>this.togglePause(),KeyR:()=>this.reset(),
+    KeyM:()=>this.toggleMute(),F5:()=>this.saveLocal(),F9:()=>this.loadLocal()}[code];
+  if(action){e.preventDefault();action();}
+ }
+ button(code,down){
+  const number=BUTTONS[code];
+  if(number===undefined||!this.loaded)return;
+  if(down&&!this.pressed.has(code)){this.pressed.add(code);this.nes.buttonDown(1,number);}
+  if(!down&&this.pressed.has(code)){
+   this.pressed.delete(code);
+   if(![...this.pressed].some(key=>BUTTONS[key]===number))this.nes.buttonUp(1,number);
+  }
+ }
+ releaseAll(){
+  for(const code of [...this.pressed])this.button(code,false);
+  for(const code of [...this.gamepadButtons]){
+   if(![...this.pressed].some(k=>BUTTONS[k]===BUTTONS[code]))this.nes?.buttonUp(1,BUTTONS[code]);
+  }
+  this.gamepadButtons.clear();
+ }
+ pollGamepad(){
+  if(!navigator.getGamepads||!this.active||!this.widget.classList.contains('is-focus')){
+   if(this.gamepadButtons.size){
+    for(const code of this.gamepadButtons){
+     if(![...this.pressed].some(key=>BUTTONS[key]===BUTTONS[code]))this.nes.buttonUp(1,BUTTONS[code]);
     }
+    this.gamepadButtons.clear();
+   }
+   return;
   }
-  onFrame(frameBuffer) {
-    for (let i = 0; i < frameBuffer.length; i++) {
-      const pixel = frameBuffer[i];
-      const j = i * 4;
-
-      this.imageData.data[j] = pixel & 0xff;
-      this.imageData.data[j + 1] = (pixel >> 8) & 0xff;
-      this.imageData.data[j + 2] = (pixel >> 16) & 0xff;
-      this.imageData.data[j + 3] = 255;
-    }
-
-    this.ctx.putImageData(this.imageData, 0, 0);
+  const pad=Array.from(navigator.getGamepads()||[]).find(x=>x?.connected);
+  const keys=pad?[
+   ['KeyZ',!!pad.buttons[0]?.pressed],['KeyX',!!pad.buttons[1]?.pressed],
+   ['ShiftRight',!!pad.buttons[8]?.pressed],['Enter',!!pad.buttons[9]?.pressed],
+   ['ArrowUp',!!pad.buttons[12]?.pressed||pad.axes[1]<-.45],
+   ['ArrowDown',!!pad.buttons[13]?.pressed||pad.axes[1]>.45],
+   ['ArrowLeft',!!pad.buttons[14]?.pressed||pad.axes[0]<-.45],
+   ['ArrowRight',!!pad.buttons[15]?.pressed||pad.axes[0]>.45]
+  ]:[];
+  const next=new Set(keys.filter(([,v])=>v).map(([k])=>k));
+  for(const code of this.gamepadButtons)if(!next.has(code))this.nes.buttonUp(1,BUTTONS[code]);
+  for(const code of next)if(!this.gamepadButtons.has(code))this.nes.buttonDown(1,BUTTONS[code]);
+  this.gamepadButtons=next;
+ }
+ async openRom(file){
+  if(file.size<16||file.size>5_000_000||!file.name.toLowerCase().endsWith('.nes'))throw Error('Нужен ROM .nes размером до 5 МБ');
+  const bytes=new Uint8Array(await file.arrayBuffer());
+  if(String.fromCharCode(...bytes.subarray(0,4))!=='NES\x1a')throw Error('Некорректный заголовок iNES');
+  this.pause();this.releaseAll();
+  this.nes.loadROM(toBinary(bytes));
+  this.romKey=romId(bytes);this.name.textContent=file.name.slice(0,100);
+  this.loaded=true;this.paused=false;this.active=true;
+  for(const name of ['pause','reset','save','load','export'])this.buttons[name].disabled=false;
+  this.buttons.pause.textContent='⏸ Пауза · P';
+  this.setStatus('Игра запущена · окно активно');
+  this.unlockAudio();
+  this.clock=0;this.lastTime=0;this.loop();
+ }
+ draw(frame){
+  if(!this.image||!this.ctx)return;
+  const arr=this.image.data;
+  for(let i=0,j=0;i<frame.length;i++,j+=4){
+   const c=frame[i];arr[j]=c&255;arr[j+1]=(c>>8)&255;arr[j+2]=(c>>16)&255;arr[j+3]=255;
   }
-  pushAudio(left, right) {
-    this.audioQueue.push([left * 0.5, right * 0.5]);
-
-    // защита от переполнения
-    if (this.audioQueue.length > 44100) {
-      this.audioQueue.splice(0, 2048);
-    }
-  }
-  start() {
-    const frame = () => {
-      this.nes.frame();
-      this.animationFrame = requestAnimationFrame(frame);
+  this.ctx.putImageData(this.image,0,0);
+ }
+ pushAudio(l,r){
+  if(this.muted||!this.audioCtx)return;
+  if(this.audioQueue.length-this.audioIndex>8192)return;
+  this.audioQueue.push([l*.35,r*.35]);
+ }
+ unlockAudio(){
+  if(!this.nes)return;
+  try{
+   if(!this.audioCtx){
+    const Audio=window.AudioContext||window.webkitAudioContext;
+    if(!Audio)return;
+    this.audioCtx=new Audio({sampleRate:44100});
+    this.audioNode=this.audioCtx.createScriptProcessor(2048,0,2);
+    this.audioNode.onaudioprocess=e=>{
+     const l=e.outputBuffer.getChannelData(0),r=e.outputBuffer.getChannelData(1);
+     for(let i=0;i<l.length;i++){
+      const sample=!this.muted&&this.audioIndex<this.audioQueue.length?
+       this.audioQueue[this.audioIndex++]:null;
+      l[i]=sample?.[0]||0;r[i]=sample?.[1]||0;
+     }
+     if(this.audioIndex>4096){this.audioQueue=this.audioQueue.slice(this.audioIndex);this.audioIndex=0;}
     };
-    frame();
-  }
-  destroy() {
-    cancelAnimationFrame(this.animationFrame);
-    this.scriptNode.disconnect();
-    this.audioCtx.close();
-  }
+    this.audioNode.connect(this.audioCtx.destination);
+   }
+   if(this.audioCtx.state==='suspended')void this.audioCtx.resume().catch(()=>{});
+  }catch{this.setStatus('Игра работает без звука');}
+ }
+ loop(){
+  cancelAnimationFrame(this.raf);
+  const step=time=>{
+   if(this.destroyed||this.paused)return;
+   this.raf=requestAnimationFrame(step);
+   if(!this.widget.isConnected)return;
+   if(document.hidden||this.widget.style?.display==='none')return;
+   const dt=this.lastTime?Math.min(100,time-this.lastTime):16.667;
+   this.lastTime=time;this.clock+=dt;
+   this.pollGamepad();
+   let steps=0;
+   while(this.clock>=1000/this.fps&&steps++<3){
+    try{this.nes.frame();}catch(e){this.pause('Ошибка эмулятора: '+(e.message||e));break;}
+    this.clock-=1000/this.fps;
+   }
+   if(steps>3)this.clock=0;
+  };
+  this.raf=requestAnimationFrame(step);
+ }
+ pause(label){
+  if(!this.loaded)return;
+  this.paused=true;cancelAnimationFrame(this.raf);this.raf=0;
+  this.releaseAll();this.audioQueue=[];this.audioIndex=0;
+  this.buttons.pause.textContent='▶ Продолжить · P';
+  this.setStatus(label||'Пауза');
+ }
+ togglePause(){
+  if(!this.loaded)return;
+  if(!this.paused){this.pause();return;}
+  this.paused=false;this.active=true;
+  this.clock=0;this.lastTime=0;this.unlockAudio();this.loop();
+  this.buttons.pause.textContent='⏸ Пауза · P';this.setStatus('Игра запущена');
+ }
+ reset(){
+  if(!this.loaded)return;
+  this.nes.reset();this.releaseAll();this.setStatus('Консоль сброшена');
+  if(this.paused)this.togglePause();
+ }
+ toggleMute(){this.muted=!this.muted;this.buttons.mute.textContent=this.muted?'🔇 Без звука · M':'🔊 Звук · M';}
+ async toggleFullscreen(){
+  try{
+   if(document.fullscreenElement===this.screen)await document.exitFullscreen();
+   else await this.screen.requestFullscreen();
+  }catch{this.setStatus('Полный экран недоступен');}
+ }
+ saveObject(){
+  if(!this.loaded)throw Error('Сначала загрузите ROM');
+  return {format:'dashboardx-nes-save-v1',romKey:this.romKey,
+   romName:this.name.textContent,createdAt:new Date().toISOString(),state:this.nes.toJSON()};
+ }
+ localKey(){return 'dashboardx.nes.save.'+this.widget.instanceId+'.'+this.romKey;}
+ saveLocal(){
+  try{
+   const data=JSON.stringify(this.saveObject());
+   localStorage.setItem(this.localKey(),data);
+   this.setStatus('Сохранено в браузере · F9 загрузить');
+  }catch(e){this.setStatus('Нет места для save. Используйте «Экспорт save».');}
+ }
+ loadLocal(){
+  if(!this.loaded)return;
+  try{
+   const data=localStorage.getItem(this.localKey());
+   if(!data)throw Error('Сохранения для этого ROM нет');
+   this.applyState(JSON.parse(data));
+  }catch(e){this.setStatus(e.message||'Не удалось загрузить save');}
+ }
+ applyState(entry){
+  if(!this.loaded)throw Error('Сначала загрузите тот же ROM');
+  if(entry?.format!=='dashboardx-nes-save-v1'||entry.romKey!==this.romKey||!entry.state)
+   throw Error('Сохранение от другой игры или версия неверна');
+  this.nes.fromJSON(entry.state);this.releaseAll();
+  this.setStatus('Состояние восстановлено');
+ }
+ exportState(){
+  try{
+   const blob=new Blob([JSON.stringify(this.saveObject())],{type:'application/json'});
+   const url=URL.createObjectURL(blob),link=document.createElement('a');
+   link.href=url;link.download=(this.name.textContent||'game').replace(/[^a-z0-9._-]/gi,'_')+'.save.json';
+   link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+   this.setStatus('Файл сохранения подготовлен');
+  }catch(e){this.setStatus('Ошибка экспорта: '+(e.message||e));}
+ }
+ destroy(){
+  this.destroyed=true;this.paused=true;cancelAnimationFrame(this.raf);this.releaseAll();
+  for(const cleanup of this.unbind)cleanup();this.unbind=[];
+  this.audioNode?.disconnect();this.audioNode=null;
+  if(this.audioCtx)void this.audioCtx.close().catch(()=>{});this.audioCtx=null;
+  this.audioQueue=[];this.nes=null;
+ }
 }

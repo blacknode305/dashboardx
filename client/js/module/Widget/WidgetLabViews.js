@@ -30,7 +30,13 @@ export class GithubControlWidgetView {
     this.controller = new GitHubControlController();
     this.list = byRole(widget, 'results');
     this.input = byRole(widget, 'repo');
-    this.onRefresh = () => { void this.refresh(); };
+    this.store = window.dashboardxStore;
+    const saved = this.store?.getWidgetState(widget.instanceId) || {};
+    if (typeof saved.repository === 'string' && saved.repository) this.input.value = saved.repository;
+    this.onRefresh = () => {
+      this.store?.updateWidgetState(widget.instanceId, {repository:this.input?.value.trim() || ''});
+      void this.refresh();
+    };
     this.button = byRole(widget, 'refresh');
     this.button?.addEventListener('click', this.onRefresh);
     void this.refresh();
@@ -66,8 +72,14 @@ export class ServerMonitorWidgetView {
     this.widget = widget;
     this.controller = new ServerMonitorController({endpoint:'/'});
     this.input = byRole(widget, 'endpoint');
+    const store=window.dashboardxStore;
+    const saved=store?.getWidgetState(widget.instanceId) || {};
+    if (typeof saved.endpoint === 'string' && saved.endpoint) this.input.value=saved.endpoint;
     this.list = byRole(widget, 'results');
-    this.onRefresh = () => { void this.refresh(); };
+    this.onRefresh = () => {
+      store?.updateWidgetState(widget.instanceId, {endpoint:this.input?.value.trim() || '/'});
+      void this.refresh();
+    };
     this.button = byRole(widget, 'refresh');
     this.button?.addEventListener('click', this.onRefresh);
     void this.refresh();
@@ -100,6 +112,10 @@ export class SmartContactsWidgetView {
     this.onSearch = () => this.render();
     this.file?.addEventListener('change',this.onImport);
     this.search?.addEventListener('input',this.onSearch);
+    this.exportButton=document.createElement('button');
+    this.exportButton.type='button';this.exportButton.textContent='Экспорт VCF';
+    this.exportButton.addEventListener('click',()=>this.exportContacts());
+    this.file?.parentElement?.after(this.exportButton);
     setStatus(widget,'Контакты только в памяти вкладки · без загрузки на сервер');
   }
   async importFile(event) {
@@ -123,9 +139,24 @@ export class SmartContactsWidgetView {
     }
     if (!entries.length) this.list.append(line('Контакты','ничего не найдено'));
   }
+  exportContacts() {
+    const escape=value=>String(value||'').replaceAll('\\','\\\\')
+      .replaceAll('\n','\\n').replaceAll(',','\\,').replaceAll(';','\\;');
+    const entries=this.controller.getState().contacts;
+    if(!entries.length){setStatus(this.widget,'Нет контактов для экспорта',true);return;}
+    const body=entries.map(c=>[
+      'BEGIN:VCARD','VERSION:3.0','FN:'+escape(c.name),
+      'TEL:'+escape(c.phone),'EMAIL:'+escape(c.email),'END:VCARD'
+    ].join('\r\n')).join('\r\n')+'\r\n';
+    const url=URL.createObjectURL(new Blob([body],{type:'text/vcard;charset=utf-8'}));
+    const a=document.createElement('a');a.href=url;a.download='dashboardx-contacts.vcf';a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    setStatus(this.widget,'Подготовлен VCF: '+entries.length+' контактов');
+  }
   destroy() {
     this.file?.removeEventListener('change',this.onImport);
     this.search?.removeEventListener('input',this.onSearch);
+    this.exportButton?.remove();
     this.controller.destroy();
   }
 }

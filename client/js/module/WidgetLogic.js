@@ -10,17 +10,14 @@ import FinanceSummaryWidget from './Widget/FinanceSummary.js';
 import FinanceTableWidget from './Widget/FinanceTable.js';
 import MoneyConvertApiWidget from './Widget/MoneyConvertApi.js';
 import CalculatorWidget from './Widget/Calculator.js';
-import WishlistPriceWidget from './Widget/WishlistPrice.js';
-import WishlistGamesWidget from './Widget/WishlistGames.js';
-import AudioPlayerWidget from './Widget/AudioPlayer.js';
-import VideoPlayerWidget from './Widget/VideoPlayer.js';
+import LocalCollectionWidget from './Widget/LocalCollection.js';
+import MediaPlayerWidget from './Widget/MediaPlayer.js';
 import ServerConsoleWidget from './Widget/ServerConsole.js';
 import TelegramBotWidget from './Widget/TelegramBot.js';
 import DashboardSettingsWidget from './Widget/DashboardSettings.js';
 import OptimaSuppliersWidget from './Widget/OptimaSuppliers.js';
 import OptimaDataWidget from './Widget/OptimaData.js';
 import OptimaOrdersWidget from './Widget/OptimaOrders.js';
-import TorrentTrackerWidget from './Widget/TorrentTracker.js';
 import NesEmulatorWidget from './Widget/NesEmulator.js';
 import {
   GithubControlWidgetView,
@@ -43,10 +40,10 @@ const WidgetLogic = {
   MoneyConvertApiWidget,
   BinanceApiWidget,
   CalculatorWidget,
-  AudioPlayerWidget,
-  VideoPlayerWidget,
-  WishlistPriceWidget,
-  WishlistGamesWidget,
+  AudioPlayerWidget: MediaPlayerWidget,
+  VideoPlayerWidget: MediaPlayerWidget,
+  WishlistPriceWidget: LocalCollectionWidget,
+  WishlistGamesWidget: LocalCollectionWidget,
   ServerConsoleWidget,
   TelegramBotWidget,
   DashboardSettingsWidget,
@@ -57,7 +54,7 @@ const WidgetLogic = {
   OptimaCompareWidget: OptimaDataWidget,
   OptimaStocksWidget: OptimaDataWidget,
   OptimaOrdersWidget,
-  TorrentTrackerWidget,
+  TorrentTrackerWidget: LocalCollectionWidget,
   NesEmulatorWidget,
   GithubControlWidget: GithubControlWidgetView,
   ServerMonitorWidget: ServerMonitorWidgetView,

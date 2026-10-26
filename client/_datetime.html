@@ -1,67 +1,18 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=1280, initial-scale=1.0">
-  <link rel="stylesheet" href="./css/style.css">
-  <title>DashboardX</title>
-</head>
-<body>
-  <template
-    data-widget
-    data-id="datetime"
-    data-category="system"
-    data-title="Date & Time"
-  >
-    <div class="datetime">
-      <div data-role="date"></div>
-      <div data-role="time"></div>
-    </div>
-  </template>
-  
-  <template id="iconSize" data-ui="icon" data-action="size">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 10V4h6"/>
-      <path d="M20 14v6h-6"/>
-    </svg>
-  </template>
-  <template id="iconSave" data-ui="icon" data-action="save">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 4h14l2 2v14H4z"/>
-      <path d="M16 4v6H8V4"/>
-      <rect x="8" y="14" width="8" height="4" rx="1"/>
-    </svg>
-  </template>
-  <template id="iconPin" data-ui="icon" data-action="pin">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M14 4l6 6"/>
-      <path d="M8 10l6 6"/>
-      <path d="M9 15l-5 5"/>
-      <path d="M15 9l5-5"/>
-    </svg>
-  </template>
-  <template id="iconHide" data-ui="icon" data-action="hide">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M3 3l18 18"/>
-    </svg>
-  </template>
-  <template id="iconFavorite" data-ui="icon" data-action="favorite">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 3l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.8 6.1 21l1.2-6.5L2.5 9.9l6.6-.9z"/>
-    </svg>
-  </template>
-  <template id="iconWorkplace" data-ui="icon" data-action="workplace">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="3" width="7" height="7" rx="1"/>
-      <rect x="14" y="3" width="7" height="7" rx="1"/>
-      <rect x="3" y="14" width="7" height="7" rx="1"/>
-      <rect x="14" y="14" width="7" height="7" rx="1"/>
-    </svg>
-  </template>
-
-  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
-  <script type="module" src="./js/index.js"></script>
-</body>
-</html>
+<!doctype html><html lang="ru"><body><template data-widget data-id="datetime" data-category="system" data-title="Дата и время">
+<section class="dx-experience dx-worldclock">
+ <header class="dx-experience-head"><strong>Мировые часы</strong><span class="dx-chip" data-role="tz-name">Локальное время</span></header>
+ <div class="dx-worldclock-time" data-role="time">--:--:--</div>
+ <div class="dx-worldclock-date" data-role="date">—</div>
+ <div class="dx-experience-toolbar">
+  <label>Часовой пояс
+   <select data-role="timezone">
+    <option value="local">Системный</option><option value="Asia/Almaty">Казахстан · Алматы</option>
+    <option value="Europe/Moscow">Москва</option><option value="Europe/London">Лондон</option>
+    <option value="America/New_York">Нью-Йорк</option><option value="Asia/Tokyo">Токио</option>
+    <option value="UTC">UTC</option>
+   </select>
+  </label>
+  <label>Формат<select data-role="format"><option value="24">24 часа</option><option value="12">12 часов</option></select></label>
+  <button type="button" data-action="copy-time">Копировать</button>
+ </div>
+</section></template></body></html>

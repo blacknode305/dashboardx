@@ -246,6 +246,7 @@ export default class ClientDB {
       if (key && (
         key.startsWith('dashboardx.local.') ||
         key.startsWith('dashboardx.credentials.') ||
+        key.startsWith('dashboardx.nes.save.') ||
         key.startsWith('dashboardx.layout.') ||
         key === 'finance_local' ||
         key === 'finance_blacknode301'
