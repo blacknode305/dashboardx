@@ -85,23 +85,52 @@ export default class AddWidget {
 
     // Group the complete original catalog by category; catalog entries are not
     // removed when a template cannot load or when the widget needs the server.
-    const groups = ['system', 'optima', 'finance', 'tools', 'media', 'games', 'telegram'];
+    // Include every category from the live catalog, including newly added
+    // Developer/Spatial types, without altering the classic category order.
+    const groups = [...new Set([
+      'system', 'optima', 'finance', 'tools', 'developer', 'media', 'games', 'telegram',
+      ...availableTypes.map(type => type.category)
+    ])];
     for (const category of groups) {
       const entries = availableTypes.filter(type => type.category === category);
       if (!entries.length) continue;
-      const caption = document.createElement('div');
-      caption.className = 'dx-picker-category';
-      caption.textContent = t('nav.' + category);
-      this.typeOptions.append(caption);
+      // Collapsed by default. Open one category at a time to keep the
+      // catalog short, even when many new widget types are registered.
+      const group = document.createElement('details');
+      group.className = 'dx-picker-group';
+      group.dataset.category = category;
+      const heading = document.createElement('summary');
+      heading.className = 'dx-picker-group-heading';
+      const name = document.createElement('span');
+      name.className = 'dx-picker-group-name';
+      name.textContent = t('nav.' + category);
+      const count = document.createElement('span');
+      count.className = 'dx-picker-group-count';
+      count.textContent = String(entries.length);
+      const chevron = document.createElement('span');
+      chevron.className = 'dx-picker-group-chevron';
+      chevron.textContent = '⌄';
+      chevron.setAttribute('aria-hidden', 'true');
+      heading.append(name, count, chevron);
+      const options = document.createElement('div');
+      options.className = 'dx-picker-group-options';
       for (const type of entries) {
         const note = type.serverOnly ? t('ui.serverOnly') : type.id;
-        this.typeOptions.append(this.makeOption(widgetTitle(type.id,type.title), note, () => {
+        options.append(this.makeOption(widgetTitle(type.id,type.title), note, () => {
           this.selectedType = type.id;
           this.typeLabel.textContent = widgetTitle(type.id,type.title);
           this.typePicker.open = false;
           this.createButton.disabled = false;
         }));
       }
+      group.append(heading, options);
+      group.addEventListener('toggle', () => {
+        if (!group.open) return;
+        this.typeOptions.querySelectorAll('.dx-picker-group[open]').forEach(other => {
+          if (other !== group) other.open = false;
+        });
+      });
+      this.typeOptions.append(group);
     }
     if (!availableTypes.length) {
       this.typeOptions.append(this.makeEmpty(t('manager.templateUnavailable')));

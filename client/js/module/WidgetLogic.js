@@ -2,7 +2,7 @@
 // Импорт класса для работы с DOM-элементами виджета
 // Импорт глобальной шины событий (EventBus)
 // Импорт виджетов
-import AddWidget from './Widget/Add.js';
+import AddWidget from './Widget/Add.js?v=folded-widget-categories-20261026';
 import BinanceApiWidget from './Widget/BinanceApi.js';
 import DatetimeWidget from './Widget/Datetime.js';
 import DayBalanceWidget from './Widget/DayBalance.js';
