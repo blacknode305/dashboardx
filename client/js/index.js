@@ -1,6 +1,6 @@
 import eventBus from './module/EventBus.js';
 import ClientDB from './module/ClientDB.js';
-import WidgetElement from './module/WidgetElement.js?v=widget-experiences-20261026';
+import WidgetElement from './module/WidgetElement.js?v=nes-interactions-20261026';
 import NavigationBar from './module/NavigationBar.js';
 import { t, widgetTitle, setLanguage, translateElement } from './module/i18n.js';
 

@@ -10,15 +10,15 @@ import FinanceSummaryWidget from './Widget/FinanceSummary.js';
 import FinanceTableWidget from './Widget/FinanceTable.js';
 import MoneyConvertApiWidget from './Widget/MoneyConvertApi.js';
 import CalculatorWidget from './Widget/Calculator.js';
-import LocalCollectionWidget from './Widget/LocalCollection.js';
-import MediaPlayerWidget from './Widget/MediaPlayer.js';
-import ServerConsoleWidget from './Widget/ServerConsole.js';
-import TelegramBotWidget from './Widget/TelegramBot.js';
+import LocalCollectionWidget from './Widget/LocalCollection.js?v=nes-interactions-20261026';
+import MediaPlayerWidget from './Widget/MediaPlayer.js?v=nes-interactions-20261026';
+import ServerConsoleWidget from './Widget/ServerConsole.js?v=nes-interactions-20261026';
+import TelegramBotWidget from './Widget/TelegramBot.js?v=nes-interactions-20261026';
 import DashboardSettingsWidget from './Widget/DashboardSettings.js';
 import OptimaSuppliersWidget from './Widget/OptimaSuppliers.js';
 import OptimaDataWidget from './Widget/OptimaData.js';
 import OptimaOrdersWidget from './Widget/OptimaOrders.js';
-import NesEmulatorWidget from './Widget/NesEmulator.js';
+import NesEmulatorWidget from './Widget/NesEmulator.js?v=nes-interactions-20261026';
 import {
   GithubControlWidgetView,
   ServerMonitorWidgetView,

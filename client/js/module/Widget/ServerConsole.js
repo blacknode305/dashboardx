@@ -5,7 +5,9 @@ const EVENTS=[
  ['dashboardx:media-playing','Медиа'],
  ['dashboardx:collection-updated','Список'],
  ['dashboardx:credential-changed','Подключение'],
- ['dashboardx:ai-config','AI']
+ ['dashboardx:ai-config','AI'],
+ ['dashboardx:nes-playing','NES'],
+ ['dashboardx:share-text','Передача текста']
 ];
 export default class ServerConsoleWidget {
  constructor(widget){
@@ -19,6 +21,8 @@ export default class ServerConsoleWidget {
     if(key==='dashboardx:credential-changed')this.append('Настройки подключения изменены');
     else if(key==='dashboardx:media-playing')this.append('Медиаплеер начал воспроизведение');
     else if(key==='dashboardx:collection-updated')this.append('Локальный список обновлён');
+    else if(key==='dashboardx:share-text')this.append('Текст передан между виджетами');
+    else if(key==='dashboardx:nes-playing')this.append('NES запущена');
     else this.append(label+': событие');
    };
    window.addEventListener(key,handler);

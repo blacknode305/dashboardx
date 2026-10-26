@@ -270,3 +270,38 @@
  #workspace-canvas .dx-crypto-stats{grid-template-columns:1fr}
  #workspace-canvas .dx-worldclock-time{font-size:26px}
 }
+
+
+/* Shared local widget experience polish; OPTIMA selectors intentionally omitted. */
+#workspace-canvas .dx-experience .dx-experience-toolbar{
+  row-gap:8px;min-width:0;
+}
+#workspace-canvas .dx-experience .dx-experience-toolbar button,
+#workspace-canvas .dx-experience .dx-file-button{
+  min-height:36px;white-space:normal;
+}
+#workspace-canvas .dx-experience .dx-collection-card:focus-within{
+  border-color:var(--dx-accent,var(--blue));
+}
+#workspace-canvas .dx-nes-screen.is-drop-target{
+  border-color:var(--dx-accent,var(--blue));
+  outline:3px dashed var(--dx-accent,var(--blue));
+  outline-offset:3px;
+}
+#workspace-canvas .dx-nes-screen.is-scanlined{position:relative}
+#workspace-canvas .dx-nes-screen.is-scanlined::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0px,
+    rgba(0,0,0,0) 3px,rgba(0,0,0,.20) 4px);
+}
+#workspace-canvas .dx-nes-keymap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:9px}
+#workspace-canvas .dx-nes-keymap button[aria-pressed="true"]{
+  border-color:var(--dx-accent,var(--blue));
+  background:var(--dx-accent-soft,var(--bg-panel-light));
+}
+#workspace-canvas .dx-nes-toggle{display:inline-flex!important;align-items:center!important;gap:7px!important}
+#workspace-canvas .dx-nes-toggle input{accent-color:var(--dx-accent,var(--blue))}
+#workspace-canvas .dx-nes [data-role="nes-speed"]{min-width:72px}
+@media(max-width:410px){
+  #workspace-canvas .dx-nes-keymap{grid-template-columns:minmax(0,1fr)}
+}

@@ -110,14 +110,19 @@ export default class MediaPlayerWidget {
    if(Number.isFinite(this.media.duration)&&this.media.duration>0)
     this.media.currentTime=Number(seek.value)/1000*this.media.duration;
   });
-  on(widget,'keydown',e=>{
+  this.keyboardHandler=e=>{
+
    if(['INPUT','SELECT','TEXTAREA','BUTTON'].includes(e.target?.tagName)||e.metaKey||e.ctrlKey||e.altKey)return;
    if(e.code==='Space'){e.preventDefault();this.toggle();}
    if(!this.isAudio&&['ArrowLeft','ArrowRight'].includes(e.code)){
     e.preventDefault();this.media.currentTime=Math.max(0,this.media.currentTime+(e.code==='ArrowRight'?10:-10));
    }
    if(!this.isAudio&&e.code==='KeyF'){e.preventDefault();widget.querySelector('[data-action="fullscreen"]').click();}
-  });
+  };
+  on(widget,'keydown',this.keyboardHandler);
+  // A click on the video/canvas itself is focusable using the normal widget wrapper.
+  // Across audio/video/NES, only the chosen player continues playing.
+  on(window,'dashboardx:nes-playing',()=>this.media.pause());
   if(this.isAudio)this.renderPlaylist();
   else if(validUrl(state.videoUrl))this.openUrl(state.videoUrl);
  }

@@ -127,6 +127,18 @@ export default class LocalCollectionWidget {
     const anchor=text('a',this.type==='torrentTracker'?'Открыть в торрент-клиенте':'Открыть ссылку');
     anchor.href=href;anchor.rel='noopener noreferrer';anchor.target='_blank';actions.append(anchor);
    }
+   const share=text('button','В Telegram');share.type='button';
+   share.title='Передать название и ссылку в черновик Telegram';
+   share.addEventListener('click',()=>{
+    const lines=[r.name,r.platform?'Платформа: '+r.platform:'',
+      this.type==='wishlistPrice'?'Цель: '+String(r.target||0):'',
+      href||''].filter(Boolean);
+    window.dispatchEvent(new CustomEvent('dashboardx:share-text',{
+     detail:{text:lines.join('\n'),url:href||''}
+    }));
+    this.say('Передано в черновик Telegram (если виджет открыт)');
+   });
+   actions.append(share);
    const remove=text('button','Удалить');remove.type='button';
    remove.addEventListener('click',()=>{
     if(!window.confirm('Удалить «'+r.name+'»?'))return;

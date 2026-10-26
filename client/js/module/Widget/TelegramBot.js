@@ -13,6 +13,23 @@ export default class TelegramBotWidget {
    this.store.updateWidgetState(this.id,{message:this.message.value,url:this.url.value});
   },250);};
   on(this.message,'input',save);on(this.url,'input',save);
+  const onShared=event=>{
+   const payload=event.detail;
+   if(!payload||typeof payload.text!=='string')return;
+   const next=payload.text.slice(0,4000);
+   if(!next.trim())return;
+   // Never overwrite a partially composed message without user approval.
+   if(this.message.value.trim()&&!window.confirm('Заменить текущий черновик переданным текстом?'))return;
+   this.message.value=next;
+   const raw=typeof payload.url==='string'?payload.url:'';
+   try{
+    const link=new URL(raw);
+    this.url.value=['https:','http:'].includes(link.protocol)&&!link.username&&!link.password?link.href:'';
+   }catch{this.url.value='';}
+   this.status.textContent='Текст получен из другого виджета';
+   save();
+  };
+  on(window,'dashboardx:share-text',onShared);
   on(widget.querySelector('[data-action="copy"]'),'click',async()=>{
    if(!this.message.value.trim()){this.status.textContent='Введите текст';return;}
    try{await navigator.clipboard.writeText(this.message.value);this.status.textContent='Скопировано';}
