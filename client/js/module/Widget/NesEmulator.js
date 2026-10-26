@@ -136,9 +136,9 @@ export default class NesEmulatorWidget {
    on(button,'pointerdown',event=>{
     event.preventDefault();this.active=true;widget.activate?.();
     button.setPointerCapture?.(event.pointerId);
-    this.button(code,true);button.classList.add('pressed');this.unlockAudio();
+    this.button(code,true,true);button.classList.add('pressed');this.unlockAudio();
    });
-   const off=e=>{e.preventDefault();this.button(code,false);button.classList.remove('pressed');};
+   const off=e=>{e.preventDefault();this.button(code,false,true);button.classList.remove('pressed');};
    on(button,'pointerup',off);on(button,'pointercancel',off);on(button,'lostpointercapture',off);
   }
   this.setStatus('Загрузите игру в формате .nes');
@@ -158,9 +158,7 @@ export default class NesEmulatorWidget {
  }
  keyToNes(code){
   for(const [physical,mapped] of Object.entries(this.keyOverrides))if(mapped===code)return BUTTONS[physical];
-  if(Object.values(this.keyOverrides).includes(code))return undefined;
-  const overridden=Object.keys(this.keyOverrides).find(k=>k===code);
-  if(overridden)return undefined;
+  if(Object.keys(this.keyOverrides).includes(code))return undefined;
   return BUTTONS[code];
  }
  canCapture(e){
@@ -198,28 +196,38 @@ export default class NesEmulatorWidget {
     KeyM:()=>this.toggleMute(),F5:()=>this.saveLocal(),F9:()=>this.loadLocal()}[code];
   if(action){e.preventDefault();action();}
  }
- button(code,down){
-  const number=this.keyToNes(code);
+ button(code,down,virtual=false){
+  const number=virtual?BUTTONS[code]:this.keyToNes(code);
   if(number===undefined||!this.loaded)return;
-  if(down&&!this.pressed.has(code)){this.pressed.add(code);this.nes.buttonDown(1,number);}
-  if(!down&&this.pressed.has(code)){
-   this.pressed.delete(code);
-   if(![...this.pressed].some(key=>this.keyToNes(key)===number))this.nes.buttonUp(1,number);
+  const key=(virtual?'virtual:':'keyboard:')+code;
+  if(down&&!this.pressed.has(key)){
+   this.pressed.add(key);
+   this.nes.buttonDown(1,number);
+  }else if(!down&&this.pressed.has(key)){
+   this.pressed.delete(key);
+   if(!this.isButtonHeld(number))this.nes.buttonUp(1,number);
   }
  }
+ heldNumber(key){
+  return key.startsWith('virtual:')?BUTTONS[key.slice(8)]:this.keyToNes(key.slice(9));
+ }
+ isButtonHeld(number){
+  return [...this.pressed].some(key=>this.heldNumber(key)===number) ||
+    [...this.gamepadButtons].some(key=>BUTTONS[key]===number);
+ }
  releaseAll(){
-  for(const code of [...this.pressed])this.button(code,false);
-  for(const code of [...this.gamepadButtons]){
-   const number=BUTTONS[code];
-   if(![...this.pressed].some(k=>this.keyToNes(k)===number))this.nes?.buttonUp(1,number);
-  }
+  for(const key of [...this.pressed])
+   this.button(key.slice(key.indexOf(':')+1),false,key.startsWith('virtual:'));
+  for(const code of [...this.gamepadButtons])
+   if(![...this.pressed].some(key=>this.heldNumber(key)===BUTTONS[code]))
+    this.nes?.buttonUp(1,BUTTONS[code]);
   this.gamepadButtons.clear();
  }
  pollGamepad(){
   if(!navigator.getGamepads||!this.active||!this.widget.classList.contains('is-focus')){
    if(this.gamepadButtons.size){
     for(const code of this.gamepadButtons){
-     if(![...this.pressed].some(key=>BUTTONS[key]===BUTTONS[code]))this.nes.buttonUp(1,BUTTONS[code]);
+     if(![...this.pressed].some(key=>this.heldNumber(key)===BUTTONS[code]))this.nes.buttonUp(1,BUTTONS[code]);
     }
     this.gamepadButtons.clear();
    }
@@ -236,7 +244,7 @@ export default class NesEmulatorWidget {
   ]:[];
   const next=new Set(keys.filter(([,v])=>v).map(([k])=>k));
   for(const code of this.gamepadButtons){
-   if(!next.has(code)&&![...this.pressed].some(k=>this.keyToNes(k)===BUTTONS[code]))
+   if(!next.has(code)&&![...this.pressed].some(k=>this.heldNumber(k)===BUTTONS[code]))
     this.nes.buttonUp(1,BUTTONS[code]);
   }
   for(const code of next){
