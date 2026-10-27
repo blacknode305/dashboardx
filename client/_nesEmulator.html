@@ -5,11 +5,14 @@
   <div><strong>NES · Retro Console</strong><small data-role="game-name">Нет загруженной игры</small></div>
   <span class="dx-chip" data-role="game-status" aria-live="polite">Выберите файл .nes</span>
  </header>
+ <div class="dx-nes-topline"><span class="dx-nes-active" data-role="nes-active">○ ГОТОВНОСТЬ</span><span>F5 — SAVE · F9 — LOAD</span></div>
  <div class="dx-nes-screen" data-role="screen" tabindex="0" aria-label="Экран NES. Перетащите сюда ROM .nes или выберите файл">
   <canvas width="256" height="240" aria-label="Видеовыход NES"></canvas>
  </div>
  <div class="dx-experience-toolbar">
   <label class="dx-file-button">Загрузить ROM<input type="file" accept=".nes,application/octet-stream" data-role="romLoader" aria-label="Выбрать игру NES"></label>
+  <button type="button" data-action="nes-focus">⌨ Управление</button>
+  <button type="button" data-action="nes-quickstart">▶ Играть / ROM</button>
   <button type="button" data-action="pause" disabled>⏸ Пауза · P</button>
   <button type="button" data-action="reset" disabled>↻ Reset · R</button>
   <button type="button" data-action="mute">🔊 Звук · M</button>
@@ -46,6 +49,7 @@
  <details class="dx-experience-help">
   <summary>Клавиши и управление</summary>
   <p>Стрелки или WASD — движение · Z/J — A · X/K — B · Enter — Start · Shift — Select.</p>
+  <p>На Mac функциональные F5/F9 могут управлять системой — при необходимости используйте кнопки Save/Load в виджете.</p>
   <p>P — пауза · R — сброс · M — звук · F5 — сохранение · F9 — загрузка. Поддерживается геймпад Gamepad API.</p>
   <p>Клавиши действуют только когда активно окно NES; остальные поля DashboardX не перехватываются. ROM .nes можно перетащить на экран. Скорость: 0,5–2×.</p><p>Используйте только ROM-файлы, распространяемые законно.</p>
  </details>

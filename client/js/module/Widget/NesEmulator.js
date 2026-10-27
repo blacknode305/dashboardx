@@ -2,6 +2,7 @@ const BUTTONS={ArrowUp:4,ArrowDown:5,ArrowLeft:6,ArrowRight:7,KeyW:4,KeyS:5,KeyA
 const now=()=>performance.now();
 const INPUT_CODES=new Set(Object.keys(BUTTONS));
 const RESERVED=new Set(['Escape','F5','F9','KeyP','KeyR','KeyM']);
+const ACTION_KEYS=new Set(['KeyP','KeyR','KeyM','F5','F9']);
 const GAME_KEYS=['KeyZ','KeyX','Enter','ShiftRight'];
 const isTyping=el=>!!el?.closest?.('input,textarea,select,[contenteditable="true"]');
 const romId=bytes=>{
@@ -27,12 +28,13 @@ export default class NesEmulatorWidget {
    this.buttons[a]=widget.querySelector('[data-action="'+a+'"]');
   this.active=false;this.loaded=false;this.paused=true;this.muted=false;
   this.keyOverrides={};this.remapTarget=null;this.speed=1;this.scanlines=false;
+  this.keyboardHeld=new Map();this.lastRomFile=null;
   this.stateStore=window.dashboardxStore;
   const saved=this.stateStore?.getWidgetState(widget.instanceId)||{};
   if(saved.nesControls&&typeof saved.nesControls==='object'){
    for(const key of GAME_KEYS){
     const value=saved.nesControls[key];
-    if(typeof value==='string'&&/^([A-Za-z][a-zA-Z0-9]+)$/.test(value)&&!RESERVED.has(value))
+    if(typeof value==='string'&&/^(Key[A-Z]|Digit[0-9]|Arrow(?:Up|Down|Left|Right)|Space|Shift(?:Left|Right))$/.test(value)&&!RESERVED.has(value))
       this.keyOverrides[key]=value;
    }
   }
@@ -104,6 +106,8 @@ export default class NesEmulatorWidget {
   on(this.buttons.save,'click',()=>this.saveLocal());
   on(this.buttons.load,'click',()=>this.loadLocal());
   on(this.buttons.export,'click',()=>this.exportState());
+  on(widget.querySelector('[data-action="nes-focus"]'),'click',()=>this.focusGame());
+  on(widget.querySelector('[data-action="nes-quickstart"]'),'click',()=>this.quickStart());
   on(this.screen,'pointerdown',()=>{
     this.active=true;widget.activate?.();this.screen.focus();
     this.unlockAudio();
@@ -118,7 +122,12 @@ export default class NesEmulatorWidget {
   });
   on(widget,'focusin',()=>{this.active=true;});
   on(widget,'focusout',event=>{
-   if(!widget.contains(event.relatedTarget))this.releaseAll();
+   if(!widget.contains(event.relatedTarget)){
+    this.active=false;this.releaseAll();
+   }
+  });
+  on(window,'dashboardx:focus-changed',event=>{
+   if(event.detail?.id!==this.widget.instanceId){this.active=false;this.releaseAll();}
   });
   on(document,'visibilitychange',()=>{if(document.hidden){this.releaseAll();this.pause('Пауза: вкладка скрыта');}});
   on(window,'blur',()=>{this.releaseAll();this.pause('Пауза: окно неактивно');});
@@ -157,9 +166,25 @@ export default class NesEmulatorWidget {
   }
  }
  keyToNes(code){
-  for(const [physical,mapped] of Object.entries(this.keyOverrides))if(mapped===code)return BUTTONS[physical];
-  if(Object.keys(this.keyOverrides).includes(code))return undefined;
+  for(const [physical,mapped] of Object.entries(this.keyOverrides)){
+   if(mapped===code)return BUTTONS[physical];
+  }
+  // A mapped physical action must not still respond to its old default key.
+  if(Object.prototype.hasOwnProperty.call(this.keyOverrides,code))return undefined;
+  // A remapped key belongs to its new action only, never two actions.
+  if(Object.values(this.keyOverrides).includes(code))return undefined;
   return BUTTONS[code];
+ }
+ focusGame(){
+  this.active=true;
+  this.widget.activate?.();
+  this.screen?.focus();
+  this.unlockAudio();
+  this.setStatus(this.loaded?'Управление NES активно':'Загрузите .nes для игры');
+ }
+ quickStart(){
+  if(this.loaded){this.focusGame();if(this.paused)this.togglePause();return;}
+  this.input?.click();
  }
  canCapture(e){
   if(!this.loaded||!this.active||document.hidden||isTyping(e.target)||e.altKey||e.metaKey||e.ctrlKey)return false;
@@ -179,13 +204,20 @@ export default class NesEmulatorWidget {
     return;
    }
    for(const [key,value] of Object.entries(this.keyOverrides))if(value===e.code)delete this.keyOverrides[key];
+   // Reject keys currently assigned to another physical action by default.
+   if(GAME_KEYS.some(key=>key!==this.remapTarget&&(this.keyOverrides[key]||key)===e.code)){
+    this.setStatus('Эта клавиша уже занята другим действием');return;
+   }
    this.keyOverrides[this.remapTarget]=e.code;
    this.remapTarget=null;this.releaseAll();this.renderMapping();
    this.stateStore?.updateWidgetState(this.widget.instanceId,{nesControls:{...this.keyOverrides}});
    this.setStatus('Клавиша управления сохранена');
    return;
   }
-  if(!this.canCapture(e))return;
+  if(!this.canCapture(e)){
+   if(!down&&this.keyboardHeld.has(e.code))this.button(e.code,false);
+   return;
+  }
   const code=e.code;
   if(this.keyToNes(code)!==undefined){
    e.preventDefault();if(down&&e.repeat)return;
@@ -197,22 +229,25 @@ export default class NesEmulatorWidget {
   if(action){e.preventDefault();action();}
  }
  button(code,down,virtual=false){
-  const number=virtual?BUTTONS[code]:this.keyToNes(code);
+  const number=virtual?BUTTONS[code]:(down?this.keyToNes(code):(this.keyboardHeld.get(code)??this.keyToNes(code)));
   if(number===undefined||!this.loaded)return;
   const key=(virtual?'virtual:':'keyboard:')+code;
   if(down&&!this.pressed.has(key)){
+   const alreadyHeld=this.isButtonHeld(number);
    this.pressed.add(key);
-   this.nes.buttonDown(1,number);
+   if(!virtual)this.keyboardHeld.set(code,number);
+   if(!alreadyHeld)this.nes.buttonDown(1,number);
   }else if(!down&&this.pressed.has(key)){
    this.pressed.delete(key);
+   if(!virtual)this.keyboardHeld.delete(code);
    if(!this.isButtonHeld(number))this.nes.buttonUp(1,number);
   }
  }
  heldNumber(key){
-  return key.startsWith('virtual:')?BUTTONS[key.slice(8)]:this.keyToNes(key.slice(9));
+  return key.startsWith('virtual:')?BUTTONS[key.slice(8)]:(this.keyboardHeld.get(key.slice(9))??this.keyToNes(key.slice(9)));
  }
- isButtonHeld(number){
-  return [...this.pressed].some(key=>this.heldNumber(key)===number) ||
+ isButtonHeld(number,ignoreCurrent=false){
+  return (!ignoreCurrent&&[...this.pressed].some(key=>this.heldNumber(key)===number)) ||
     [...this.gamepadButtons].some(key=>BUTTONS[key]===number);
  }
  releaseAll(){
@@ -221,7 +256,7 @@ export default class NesEmulatorWidget {
   for(const code of [...this.gamepadButtons])
    if(![...this.pressed].some(key=>this.heldNumber(key)===BUTTONS[code]))
     this.nes?.buttonUp(1,BUTTONS[code]);
-  this.gamepadButtons.clear();
+  this.gamepadButtons.clear();this.keyboardHeld.clear();
  }
  pollGamepad(){
   if(!navigator.getGamepads||!this.active||!this.widget.classList.contains('is-focus')){
@@ -248,7 +283,7 @@ export default class NesEmulatorWidget {
     this.nes.buttonUp(1,BUTTONS[code]);
   }
   for(const code of next){
-   if(!this.gamepadButtons.has(code)&&![...this.pressed].some(k=>this.keyToNes(k)===BUTTONS[code]))
+   if(!this.gamepadButtons.has(code)&&![...this.pressed].some(k=>this.heldNumber(k)===BUTTONS[code]))
     this.nes.buttonDown(1,BUTTONS[code]);
   }
   this.gamepadButtons=next;
@@ -259,11 +294,12 @@ export default class NesEmulatorWidget {
   if(String.fromCharCode(...bytes.subarray(0,4))!=='NES\x1a')throw Error('Некорректный заголовок iNES');
   this.pause();this.releaseAll();
   this.nes.loadROM(toBinary(bytes));
-  this.romKey=romId(bytes);this.name.textContent=file.name.slice(0,100);
+  this.romKey=romId(bytes);this.name.textContent=file.name.slice(0,100);this.lastRomFile=file.name;
   this.loaded=true;this.paused=false;this.active=true;
   this.screen.focus();
   for(const name of ['pause','reset','save','load','export'])this.buttons[name].disabled=false;
   this.buttons.pause.textContent='⏸ Пауза · P';
+  this.widget.querySelector('[data-role="nes-active"]')?.replaceChildren(document.createTextNode('● ИГРА'));
   this.setStatus('Игра запущена · окно активно');
   this.unlockAudio();
   this.clock=0;this.lastTime=0;this.loop();
@@ -328,6 +364,7 @@ export default class NesEmulatorWidget {
   this.paused=true;cancelAnimationFrame(this.raf);this.raf=0;
   this.releaseAll();this.audioQueue=[];this.audioIndex=0;
   this.buttons.pause.textContent='▶ Продолжить · P';
+  this.widget.querySelector('[data-role="nes-active"]')?.replaceChildren(document.createTextNode('Ⅱ ПАУЗА'));
   this.setStatus(label||'Пауза');
  }
  togglePause(){
@@ -335,7 +372,9 @@ export default class NesEmulatorWidget {
   if(!this.paused){this.pause();return;}
   this.paused=false;this.active=true;
   this.clock=0;this.lastTime=0;this.unlockAudio();this.loop();
-  this.buttons.pause.textContent='⏸ Пауза · P';this.setStatus('Игра запущена');
+  this.buttons.pause.textContent='⏸ Пауза · P';
+  this.widget.querySelector('[data-role="nes-active"]')?.replaceChildren(document.createTextNode('● ИГРА'));
+  this.setStatus('Игра запущена');
   window.dispatchEvent(new CustomEvent('dashboardx:nes-playing',{detail:{id:this.widget.instanceId}}));
  }
  reset(){

@@ -305,3 +305,10 @@
 @media(max-width:410px){
   #workspace-canvas .dx-nes-keymap{grid-template-columns:minmax(0,1fr)}
 }
+
+/* NES console affordances — only the games widget. */
+#workspace-canvas .dx-nes-topline{display:flex;justify-content:space-between;gap:9px;flex-wrap:wrap;align-items:center;color:var(--text-muted);font:650 10px/1.35 var(--f-family-mono);letter-spacing:.035em}
+#workspace-canvas .dx-nes-active{color:var(--dx-accent,var(--blue));padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-panel-inside)}
+#workspace-canvas .dx-nes-screen:focus-visible{outline:2px solid var(--dx-accent,var(--blue));outline-offset:2px}
+#workspace-canvas .dx-nes [data-action="nes-focus"],#workspace-canvas .dx-nes [data-action="nes-quickstart"]{font-weight:750}
+#workspace-canvas .dx-experience button:focus-visible,#workspace-canvas .dx-experience input:focus-visible,#workspace-canvas .dx-experience select:focus-visible{outline:2px solid var(--dx-accent,var(--blue));outline-offset:2px}
