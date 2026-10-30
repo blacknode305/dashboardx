@@ -41,7 +41,7 @@ export function prepareSupplierChanges(snapshot,supplierId,values,replaceSchedul
     if(!Array.isArray(values.schedules))throw new Error('schedule list required');
     changed.schedules=values.schedules.map(r=>{
       const prior=(current.schedules||[]).find(x=>normalize(x.branch)===normalize(r.branch))||{};
-      const rules=Object.fromEntries(Object.entries(r.deliveryTimingByDay||{}).filter(([day,timing])=>DAY_NAMES.includes(day)&&['same','next'].includes(timing)));
+      const rules=Object.fromEntries(Object.entries(r.deliveryTimingByDay||{}).filter(([day,timing])=>DAY_NAMES.includes(day)&&['same','next','two'].includes(timing)));
       const result={...prior,branch:String(r.branch||'').trim(),
         order:String(r.order||'').trim(),delivery:String(r.delivery||'').trim(),
         note:String(r.note||'').trim()};
@@ -246,10 +246,10 @@ export default class OptimaSuppliersWidget {
     timing.append(timingTitle);
     const syncTimingRows=()=>{
       const active=field=>new Set([...wrapper.querySelectorAll('[data-field="'+field+'"] .dx-day-option[aria-pressed="true"]')].map(button=>button.dataset.day));
-      const orderDays=active('order'),deliveryDays=active('delivery');
+      const orderDays=active('order');
       timing.querySelectorAll('[data-timing-day]').forEach(select=>{
         const day=select.dataset.timingDay;
-        const enabled=orderDays.has(day)&&deliveryDays.has(day);
+        const enabled=orderDays.has(day);
         select.closest('.dx-day-timing-row').hidden=!enabled;
         if(!enabled)select.value='';
       });
@@ -259,9 +259,9 @@ export default class OptimaSuppliersWidget {
       const row=document.createElement('label');row.className='dx-day-timing-row';
       const name=document.createElement('span');name.textContent=DAY_NAMES[i];
       const select=document.createElement('select');select.dataset.timingDay=DAY_NAMES[i];
-      [['','По умолчанию'],['same','День в день'],['next','На следующий день']].forEach(([value,label])=>select.add(new Option(label,value)));
+      [['','По умолчанию'],['same','День в день'],['next','На следующий день'],['two','Через два дня']].forEach(([value,label])=>select.add(new Option(label,value)));
       const rule=data?.deliveryTimingByDay?.[DAY_NAMES[i]];
-      select.value=rule==='same'||rule==='next'?rule:'';
+      select.value=['same','next','two'].includes(rule)?rule:'';
       row.append(name,select);timing.append(row);
     });
     wrapper.append(timing);
