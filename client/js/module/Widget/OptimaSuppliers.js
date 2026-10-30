@@ -1,6 +1,6 @@
 import { t } from '../i18n.js';
 import { getCredential } from '../CredentialStore.js';
-import { loadOptima, patchOptima, OPTIMA_POLL_MS, OPTIMA_BASE } from '../OptimaAPI.js';
+import { loadOptima, patchOptima, OPTIMA_POLL_MS, OPTIMA_BASE, getOptimaWritePassword } from '../OptimaAPI.js';
 const DAYS=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const DAY_NAMES=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
 const parseDays=value=>new Set(String(value||'').split(/[,;/]+/).map(v=>v.trim().toLocaleLowerCase()).map(v=>DAY_NAMES.find(n=>n.toLocaleLowerCase()===v)||DAY_NAMES[DAYS.findIndex(d=>d.toLocaleLowerCase()===v)]).filter(Boolean));
@@ -262,7 +262,7 @@ export default class OptimaSuppliersWidget {
         // Do not overwrite the user's form; reload only after they dismiss it.
       } else if(error.status===401||error.status===403){
         this.editorError.textContent=t('optima.unauthorized');
-      }else this.editorError.textContent=t('optima.saveFailed');
+      }else this.editorError.textContent=error.message||t('optima.saveFailed');
     }finally{this.saving=false;button.disabled=false;}
   }
 
@@ -271,7 +271,8 @@ export default class OptimaSuppliersWidget {
     const name=String(supplier.name||'');
     if(!window.confirm('Удалить поставщика «'+name+'»? Это действие затронет список поставщиков.'))return;
     const token=getCredential('optima');
-    const writePassword=window.prompt('Пароль полного управления PRO OPTIMA:');
+    const writePassword=getOptimaWritePassword();
+    if(!writePassword){window.alert('Введите пароль администратора Оптима в настройках DashboardX.');return;}
     if(!token||!writePassword)return;
     try{
       // Refuse deletion if products/orders still refer to this supplier.
