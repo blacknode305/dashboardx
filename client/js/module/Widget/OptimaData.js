@@ -6,7 +6,7 @@ import {
 } from '../OptimaAPI.js';
 
 const CONFIG={
-  optimaProducts:{branch:false,status:['all','used','proposal'],extra:false,date:false,mode:false},
+  optimaProducts:{branch:true,status:['all','used','proposal'],extra:true,date:false,mode:false},
   optimaProposals:{branch:false,status:['all','linked','unlinked'],extra:true,date:false,mode:['catalog','proposals']},
   optimaOffers:{branch:true,status:['all','enabled','disabled','auto'],extra:true,date:false,mode:false},
   optimaCompare:{branch:true,status:['all','allPrices','different'],extra:true,date:false,mode:false},
@@ -61,6 +61,8 @@ export default class OptimaDataWidget {
     this.summary=widget.querySelector('[data-role="data-summary"]');
     this.results=widget.querySelector('[data-role="data-results"]');
     this.refresh=widget.querySelector('[data-role="data-refresh"]');
+    this.productAdd=this.type==='optimaProducts'?widget.querySelector('[data-role="product-add"]'):null;
+    this.productDraft=this.type==='optimaProducts'?widget.querySelector('[data-role="product-draft"]'):null;
     this.filters={
       search:typeof saved.search==='string'?saved.search:'',
       branch:typeof saved.branch==='string'?saved.branch:'',
@@ -91,7 +93,26 @@ export default class OptimaDataWidget {
     for(const key of ['branch','status','extra','date','mode']){
       this.listen(this.controls[key],'change',onFilter);
     }
-    this.listen(this.refresh,'click',()=>this.load());
+    if(this.refresh)this.listen(this.refresh,'click',()=>this.load());
+    if(this.productAdd){
+      const draftForm=widget.querySelector('[data-role="product-draft-form"]');
+      const branchContainer=widget.querySelector('[data-role="product-draft-branches"]');
+      const branchList=['Анжерская','Горняк','Ермекова','Лободы','Нуркена','Пришахтинск','Сарань'];
+      for(const branchName of branchList){
+        const label=document.createElement('label');
+        const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.name='excludedBranches';checkbox.value=branchName;
+        label.append(checkbox,document.createTextNode(branchName));branchContainer.append(label);
+      }
+      this.listen(this.productAdd,'click',()=>{
+        this.productDraft.hidden=false;
+        draftForm.elements.namedItem('name')?.focus({preventScroll:true});
+      });
+      this.listen(widget.querySelector('[data-role="product-draft-cancel"]'),'click',()=>{this.productDraft.hidden=true;});
+      this.listen(draftForm,'submit',event=>{
+        event.preventDefault();
+        widget.querySelector('[data-role="product-draft-info"]').textContent='Это форма-заглушка: сохранение в PRO OPTIMA пока не подключено. Данные не отправлены.';
+      });
+    }
     const onCredential=event=>{
       if(event.detail?.service!=='optima')return;
       this.controller?.abort();this.db=null;this.render();this.load();
@@ -133,7 +154,7 @@ export default class OptimaDataWidget {
     }
     this.controller?.abort();
     const ctrl=new AbortController();this.controller=ctrl;
-    const seq=++this.seq;this.refresh.disabled=true;this.setState('loading');
+    const seq=++this.seq;if(this.refresh)this.refresh.disabled=true;this.setState('loading');
     try{
       const result=await loadOptima(ctrl.signal);
       if(this.destroyed||ctrl.signal.aborted||seq!==this.seq)return;
@@ -144,7 +165,7 @@ export default class OptimaDataWidget {
       if(this.destroyed||ctrl.signal.aborted||seq!==this.seq)return;
       this.setState(error.status===401?'unauthorized':error.status===403?'denied':'offline');
       this.render();
-    }finally{if(!this.destroyed&&seq===this.seq)this.refresh.disabled=false;}
+    }finally{if(!this.destroyed&&seq===this.seq&&this.refresh)this.refresh.disabled=false;}
   }
   buildTable(columns,entries,rowClass=''){
     this.results.replaceChildren();
@@ -184,6 +205,8 @@ export default class OptimaDataWidget {
     const extra=f.extra;
     if(this.type==='optimaProducts'){
       const items=total('products').filter(x=>x&&
+        (!branch||!rows(x.excludedBranches).some(b=>norm(b)===norm(branch)))&&
+        (!extra||rows(x.orderSuppliers).some(link=>String(link.supplierId)===String(extra)||(!link.supplierId&&norm(link.supplier)===norm(rows(db.suppliers).find(s=>String(s.id)===String(extra))?.name))))&&
         (f.status==='all'||(f.status==='used'&&x.catalogStatus!=='proposal')||
         (f.status==='proposal'&&x.catalogStatus==='proposal')))
         .filter(x=>matches([x.name,x.unit,x.note,rowSupplierNames(x,db),x.id].join(' ')))
