@@ -2,6 +2,13 @@ import { t } from '../i18n.js';
 import { getCredential } from '../CredentialStore.js';
 import { loadOptima, patchOptima, OPTIMA_POLL_MS } from '../OptimaAPI.js';
 const normalize=value=>String(value??'').trim().toLocaleLowerCase();
+const whatsappUrl=phone=>{
+  const raw=String(phone||'').trim();
+  if(!/^\+?[\d\s().-]+$/.test(raw))return null;
+  let digits=raw.replace(/\D/g,'');
+  if(digits.length===11&&digits.startsWith('8'))digits='7'+digits.slice(1);
+  return digits.length>=10&&digits.length<=15?'https://wa.me/'+digits:null;
+};
 export function filterOptimaSuppliers(suppliers,search,branch){
   const query=normalize(search),required=normalize(branch);
   return suppliers.filter(s=>{
@@ -71,7 +78,6 @@ export default class OptimaSuppliersWidget {
     this.status=widget.querySelector('[data-role="optima-status"]');
     this.count=widget.querySelector('[data-role="optima-count"]');
     this.list=widget.querySelector('[data-role="optima-list"]');
-    this.refreshButton=widget.querySelector('[data-role="optima-refresh"]');
     this.search.value=typeof state.search==='string'?state.search:'';
     this.selectedBranch=typeof state.branch==='string'?state.branch:'';
     this.expanded=new Set();
@@ -107,10 +113,8 @@ export default class OptimaSuppliersWidget {
         this.closeEditor();this.load();
       }
     };
-    this.onRefresh=()=>{if(!this.editId)this.load();};
     this.search.addEventListener('input',this.onFilter);
     this.branch.addEventListener('change',this.onFilter);
-    this.refreshButton.addEventListener('click',this.onRefresh);
     window.addEventListener('dashboardx:credential-changed',this.onCredential);
     this.load();
     this.poll=setInterval(()=>{if(!document.hidden&&!this.editId)this.load();},OPTIMA_POLL_MS);
@@ -139,7 +143,6 @@ export default class OptimaSuppliersWidget {
     this.controller?.abort();
     const controller=new AbortController();
     this.controller=controller;const seq=++this.requestId;
-    this.refreshButton.disabled=true;
     this.setStatus('optima.loading');
     try{
       const result=await loadOptima(controller.signal);
@@ -158,7 +161,7 @@ export default class OptimaSuppliersWidget {
       this.setStatus(error.message==='HTTP 401'?'optima.unauthorized':
         error.message==='HTTP 403'?'optima.denied':'optima.offline');
     }finally{
-      if(!this.destroyed&&this.requestId===seq)this.refreshButton.disabled=false;
+      // Automatic polling remains active; no manual refresh control.
     }
   }
 
@@ -256,7 +259,20 @@ export default class OptimaSuppliersWidget {
         const row=document.createElement('p');row.textContent=t('optima.contact')+': '+supplier.contact;body.append(row);
       }
       if(supplier.phone){
-        const row=document.createElement('p');row.textContent=t('optima.phone')+': '+supplier.phone;body.append(row);
+        const row=document.createElement('p');
+        row.textContent=t('optima.phone')+': '+supplier.phone;
+        const url=whatsappUrl(supplier.phone);
+        if(url){
+          const link=document.createElement('a');
+          link.href=url;
+          link.target='_blank';
+          link.rel='noopener noreferrer';
+          link.textContent='WhatsApp';
+          link.setAttribute('aria-label','WhatsApp: '+supplier.phone);
+          link.style.marginInlineStart='10px';
+          row.append(link);
+        }
+        body.append(row);
       }
       const visibleSchedules=this.selectedBranch
         ?schedules.filter(row=>normalize(row?.branch)===normalize(this.selectedBranch)):schedules;
@@ -292,7 +308,6 @@ export default class OptimaSuppliersWidget {
     clearInterval(this.poll);clearTimeout(this.persistTimer);
     this.search.removeEventListener('input',this.onFilter);
     this.branch.removeEventListener('change',this.onFilter);
-    this.refreshButton.removeEventListener('click',this.onRefresh);
     window.removeEventListener('dashboardx:credential-changed',this.onCredential);
     window.removeEventListener('dashboardx:optima-updated',this.onExternalUpdate);
     this.widget.querySelector('[data-role="optima-cancel-edit"]').removeEventListener('click',this.onCancel);
