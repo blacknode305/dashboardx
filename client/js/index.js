@@ -72,7 +72,9 @@ async function loadTemplates() {
     // The manager template is embedded in index.html to survive template fetch failures.
     const embedded=document.querySelector('template[data-widget][data-id="'+id+'"]');
     if(embedded) return {id,template:embedded};
-    const response=await fetch(new URL('../'+entry.file,import.meta.url));
+    const url=new URL('../'+entry.file,import.meta.url);
+    if(id==='optimaProducts')url.searchParams.set('v','names-header-20261030');
+    const response=await fetch(url,{cache:id==='optimaProducts'?'no-store':'default'});
     if(!response.ok)throw Error(entry.file+': HTTP '+response.status);
     const doc=new DOMParser().parseFromString(await response.text(),'text/html');
     const source=doc.querySelector('template[data-widget][data-id="'+id+'"]');
