@@ -114,6 +114,25 @@ export default class OptimaSuppliersWidget {
     widget.querySelector('[data-role="optima-cancel-edit"]').addEventListener('click',this.onCancel);
     widget.querySelector('[data-role="optima-edit-form"]').addEventListener('submit',this.onSubmit);
     widget.querySelector('[data-role="optima-add-schedule"]').addEventListener('click',this.onAddSchedule);
+    this.onOpenSupplier=event=>{
+      const targetId=String(event.detail?.supplierId??'');
+      const targetName=normalize(event.detail?.supplierName);
+      const supplier=this.rows.find(item=>(targetId&&String(item.id)===targetId)||(!targetId&&targetName&&normalize(item.name)===targetName));
+      if(!supplier)return;
+      event.detail.handled=true;
+      this.search.value=String(supplier.name||'');
+      this.selectedBranch='';this.branch.value='';
+      this.selectedOrderDay='';this.orderDay.value='';
+      this.selectedDeliveryDay='';this.deliveryDay.value='';
+      this.expanded.add(String(supplier.id));
+      this.render();
+      const card=[...this.list.querySelectorAll('details.optima-supplier')].find(el=>el.dataset.supplierId===String(supplier.id));
+      if(card){
+        card.open=true;
+        card.scrollIntoView({behavior:'smooth',block:'center'});
+      }
+    };
+    window.addEventListener('dashboardx:open-optima-supplier',this.onOpenSupplier);
     this.onExternalUpdate=()=>{if(!this.editId)this.load();};
     window.addEventListener('dashboardx:optima-updated',this.onExternalUpdate);
     this.onFilter=()=>{
@@ -459,6 +478,7 @@ export default class OptimaSuppliersWidget {
     this.deliveryDay.removeEventListener('change',this.onFilter);
     window.removeEventListener('dashboardx:credential-changed',this.onCredential);
     window.removeEventListener('dashboardx:optima-updated',this.onExternalUpdate);
+    window.removeEventListener('dashboardx:open-optima-supplier',this.onOpenSupplier);
     this.widget.querySelector('[data-role="optima-create-supplier"]').removeEventListener('click',this.onCreate);
     this.widget.querySelector('[data-role="optima-cancel-edit"]').removeEventListener('click',this.onCancel);
     this.widget.querySelector('[data-role="optima-edit-form"]').removeEventListener('submit',this.onSubmit);
