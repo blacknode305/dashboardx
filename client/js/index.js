@@ -45,6 +45,7 @@ const store = new ClientDB();
 let navBar=null;
 const workspaceSurfaces=new Map();
 const workspaceScroll=new Map();
+const workspaceFilters=new Map();
 let spatialPreview = null;
 let spatialOpening = false;
 // Focus is ephemeral, per workspace, and never written to localStorage.
@@ -258,6 +259,7 @@ function renderWorkspaceNavigation(){
   navBar.initialize(categories);
   document.getElementById('widget-navigation').replaceChildren(navBar);
   navBar.filterWidgets(categories.includes(active)?active:'all');
+  workspaceFilters.set(store.workspace.id,categories.includes(active)?active:'all');
 }
 
 function renderCanvas() {
@@ -322,7 +324,8 @@ function renderCanvas() {
   navBar=document.createElement('navigation-bar');
   navBar.initialize(categories);
   document.getElementById('widget-navigation').replaceChildren(navBar);
-  navBar.filterWidgets('all');
+  const filter=workspaceFilters.get(workspaceId)||'all';
+  navBar.filterWidgets(categories.includes(filter)?filter:'all');
   const rememberedId = activeWidgetByWorkspace.get(store.workspace.id);
   const selected = [...surface.querySelectorAll('widget-element')].find(el =>
     el.instanceId === rememberedId && el.style.display !== 'none'
@@ -543,6 +546,10 @@ async function boot() {
         detail: { key:event.key, code:event.code, originalEvent:event },
         bubbles:false
       }));
+    });
+    document.getElementById('widget-navigation').addEventListener('click',event=>{
+      const button=event.target.closest('[data-category]');
+      if(button)workspaceFilters.set(store.workspace.id,button.dataset.category);
     });
     window.addEventListener('dashboardx:widget-visibility', () => {
       renderWorkspaceNavigation();
