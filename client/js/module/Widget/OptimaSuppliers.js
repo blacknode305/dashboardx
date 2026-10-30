@@ -233,7 +233,10 @@ export default class OptimaSuppliersWidget {
         const button=document.createElement('button');button.type='button';
         button.className='dx-day-option';button.dataset.day=DAY_NAMES[i];
         button.textContent=day;button.setAttribute('aria-pressed',String(selected.has(DAY_NAMES[i])));
-        button.addEventListener('click',()=>button.setAttribute('aria-pressed',String(button.getAttribute('aria-pressed')!=='true')));
+        button.addEventListener('click',()=>{
+          button.setAttribute('aria-pressed',String(button.getAttribute('aria-pressed')!=='true'));
+          syncTimingRows();
+        });
         controls.append(button);
       });
       group.append(controls);wrapper.append(group);
@@ -241,6 +244,17 @@ export default class OptimaSuppliersWidget {
     const timing=document.createElement('div');timing.className='dx-day-timing';
     const timingTitle=document.createElement('strong');timingTitle.textContent='Срок поставки по дням заявки';
     timing.append(timingTitle);
+    const syncTimingRows=()=>{
+      const active=field=>new Set([...wrapper.querySelectorAll('[data-field="'+field+'"] .dx-day-option[aria-pressed="true"]')].map(button=>button.dataset.day));
+      const orderDays=active('order'),deliveryDays=active('delivery');
+      timing.querySelectorAll('[data-timing-day]').forEach(select=>{
+        const day=select.dataset.timingDay;
+        const enabled=orderDays.has(day)&&deliveryDays.has(day);
+        select.closest('.dx-day-timing-row').hidden=!enabled;
+        if(!enabled)select.value='';
+      });
+      timing.hidden=![...timing.querySelectorAll('[data-timing-day]')].some(select=>!select.closest('.dx-day-timing-row').hidden);
+    };
     DAYS.forEach((day,i)=>{
       const row=document.createElement('label');row.className='dx-day-timing-row';
       const name=document.createElement('span');name.textContent=DAY_NAMES[i];
@@ -251,6 +265,7 @@ export default class OptimaSuppliersWidget {
       row.append(name,select);timing.append(row);
     });
     wrapper.append(timing);
+    syncTimingRows();
     const remove=document.createElement('button');remove.type='button';
     remove.className='optima-danger dx-remove-schedule';remove.textContent='×';
     remove.title=t('optima.removeSchedule');remove.setAttribute('aria-label',t('optima.removeSchedule'));
