@@ -247,8 +247,7 @@ export default class OptimaDataWidget {
       this.buildTable([
         {label:'ID',get:p=>p.id},{label:t('optima.product'),get:p=>p.name},
         {label:t('optima.unit'),get:p=>p.unit},
-        {label:t('optima.supplier'),get:p=>rowSupplierNames(p,db)},
-        {label:t('optima.status'),get:p=>p.catalogStatus==='proposal'?t('optima.mode.proposals'):t('optima.filter.used')}
+        {label:t('optima.supplier'),get:p=>rowSupplierNames(p,db)}
       ],items);
       this.summary.textContent=t('optima.found',{count:String(items.length),total:String(total('products').length)});
     }
