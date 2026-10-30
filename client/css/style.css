@@ -1892,3 +1892,10 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas .dx-day-options .dx-day-option[aria-pressed="true"]{background:#235f4b;border-color:#4cc79a;color:#fff}
 #workspace-canvas .dx-day-options .dx-day-option:hover{border-color:var(--dx-panel-strong,var(--blue))}
 #workspace-canvas .dx-supplier-delete{color:var(--dx-bad,#d36d77)!important;border-color:currentColor!important}
+
+
+/* Per-day delivery timing controls for supplier schedules */
+#workspace-canvas .dx-day-timing{display:grid;gap:7px;padding:11px 12px;margin:10px 0;border:1px solid var(--border,rgba(125,145,150,.25));border-radius:10px}
+#workspace-canvas .dx-day-timing>strong{font-size:12px;letter-spacing:.01em}
+#workspace-canvas .dx-day-timing-row{display:grid;grid-template-columns:minmax(100px,1fr) minmax(145px,1.3fr);align-items:center;gap:9px;font-size:12px}
+#workspace-canvas .dx-day-timing-row select{width:100%;min-width:0;padding:7px 9px;border-radius:7px}
