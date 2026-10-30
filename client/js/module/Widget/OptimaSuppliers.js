@@ -79,11 +79,18 @@ export default class OptimaSuppliersWidget {
     const state=this.store?.getWidgetState(this.id)||{};
     this.search=widget.querySelector('[data-role="optima-search"]');
     this.branch=widget.querySelector('[data-role="optima-branch"]');
+    this.orderDay=widget.querySelector('[data-role="optima-order-day"]');
+    this.deliveryDay=widget.querySelector('[data-role="optima-delivery-day"]');
     this.status=widget.querySelector('[data-role="optima-status"]');
     this.count=widget.querySelector('[data-role="optima-count"]');
     this.list=widget.querySelector('[data-role="optima-list"]');
     this.search.value=typeof state.search==='string'?state.search:'';
     this.selectedBranch=typeof state.branch==='string'?state.branch:'';
+    this.selectedOrderDay=typeof state.orderDay==='string'?state.orderDay:'';
+    this.selectedDeliveryDay=typeof state.deliveryDay==='string'?state.deliveryDay:'';
+    [this.orderDay,this.deliveryDay].forEach(select=>DAYS.forEach((day,i)=>select.add(new Option(DAY_NAMES[i],DAY_NAMES[i]))));
+    this.orderDay.value=this.selectedOrderDay;
+    this.deliveryDay.value=this.selectedDeliveryDay;
     this.expanded=new Set();
     this.editor=widget.querySelector('[data-role="optima-editor"]');
     this.editorHome=this.editor.parentElement;
@@ -105,11 +112,14 @@ export default class OptimaSuppliersWidget {
     window.addEventListener('dashboardx:optima-updated',this.onExternalUpdate);
     this.onFilter=()=>{
       this.selectedBranch=this.branch.value;
+      this.selectedOrderDay=this.orderDay.value;
+      this.selectedDeliveryDay=this.deliveryDay.value;
       this.render();
       clearTimeout(this.persistTimer);
       this.persistTimer=setTimeout(()=>{
         this.store.updateWidgetState(this.id,{
-          search:this.search.value,branch:this.selectedBranch
+          search:this.search.value,branch:this.selectedBranch,
+          orderDay:this.selectedOrderDay,deliveryDay:this.selectedDeliveryDay
         });
       },250);
     };
@@ -121,6 +131,8 @@ export default class OptimaSuppliersWidget {
     };
     this.search.addEventListener('input',this.onFilter);
     this.branch.addEventListener('change',this.onFilter);
+    this.orderDay.addEventListener('change',this.onFilter);
+    this.deliveryDay.addEventListener('change',this.onFilter);
     window.addEventListener('dashboardx:credential-changed',this.onCredential);
     this.load();
     this.poll=setInterval(()=>{if(!document.hidden&&!this.editId)this.load();},OPTIMA_POLL_MS);
@@ -295,7 +307,12 @@ export default class OptimaSuppliersWidget {
     // Keep the same live form and unsaved input across list rerenders.
     if(this.editor.parentElement!==this.editorHome)this.editorHome.append(this.editor);
     this.editCard=null;
-    const filtered=filterOptimaSuppliers(this.rows,this.search.value,this.selectedBranch);
+    const filtered=filterOptimaSuppliers(this.rows,this.search.value,this.selectedBranch).filter(s=>
+      (Array.isArray(s.schedules)?s.schedules:[]).some(row=>(!this.selectedBranch||normalize(row.branch)===normalize(this.selectedBranch))&&
+      (!this.selectedOrderDay||parseDays(row.order).has(this.selectedOrderDay))&&
+      (!this.selectedDeliveryDay||parseDays(row.delivery).has(this.selectedDeliveryDay))) ||
+      (!this.selectedBranch&&!this.selectedOrderDay&&!this.selectedDeliveryDay)
+    );
     this.count.textContent=t('optima.found',{count:String(filtered.length),total:String(this.rows.length)});
     this.list.replaceChildren();
     if(!filtered.length){
@@ -338,8 +355,11 @@ export default class OptimaSuppliersWidget {
         }
         body.append(row);
       }
-      const visibleSchedules=this.selectedBranch
-        ?schedules.filter(row=>normalize(row?.branch)===normalize(this.selectedBranch)):schedules;
+      const visibleSchedules=schedules.filter(row=>
+        (!this.selectedBranch||normalize(row?.branch)===normalize(this.selectedBranch))&&
+        (!this.selectedOrderDay||parseDays(row?.order).has(this.selectedOrderDay))&&
+        (!this.selectedDeliveryDay||parseDays(row?.delivery).has(this.selectedDeliveryDay))
+      );
       for(const schedule of visibleSchedules){
         const line=document.createElement('div');line.className='optima-schedule';
         const label=document.createElement('strong');label.textContent=String(schedule.branch||'—');
@@ -381,6 +401,8 @@ export default class OptimaSuppliersWidget {
     clearInterval(this.poll);clearTimeout(this.persistTimer);
     this.search.removeEventListener('input',this.onFilter);
     this.branch.removeEventListener('change',this.onFilter);
+    this.orderDay.removeEventListener('change',this.onFilter);
+    this.deliveryDay.removeEventListener('change',this.onFilter);
     window.removeEventListener('dashboardx:credential-changed',this.onCredential);
     window.removeEventListener('dashboardx:optima-updated',this.onExternalUpdate);
     this.widget.querySelector('[data-role="optima-cancel-edit"]').removeEventListener('click',this.onCancel);
