@@ -1912,3 +1912,5 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas .optima-edit-schedule .dx-day-fieldset{min-width:0;max-width:100%;box-sizing:border-box}
 #workspace-canvas .optima-edit-schedule .dx-remove-schedule{grid-column:1/-1;justify-self:end!important;display:grid;place-items:center;width:25px!important;height:25px!important;min-width:25px!important;min-height:25px!important;padding:0!important;line-height:1!important;font-size:17px!important;border-radius:6px!important;background:transparent!important;box-shadow:none!important}
 @media(max-width:540px){#workspace-canvas .optima-edit-schedule{grid-template-columns:minmax(0,1fr)}#workspace-canvas .optima-edit-schedule .dx-day-timing{grid-column:1}#workspace-canvas .optima-edit-schedule .dx-remove-schedule{grid-column:1}#workspace-canvas .optima-edit-schedule .dx-day-timing-row{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}}
+
+#workspace-canvas .dx-day-timing-row[hidden],#workspace-canvas .dx-day-timing[hidden]{display:none!important}
