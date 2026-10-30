@@ -22,7 +22,7 @@ export default class NavigationBar extends HTMLElement {
     this.querySelectorAll('button').forEach(button =>
       button.setAttribute('aria-pressed', String(button.dataset.category === category))
     );
-    document.querySelectorAll('widget-element.widget--element').forEach(widget => {
+    document.querySelectorAll('#workspace-surface > widget-element.widget--element').forEach(widget => {
       // Exactly one widget manager stays visible on every workspace and every category.
       if (widget.templateId === 'add') {
         widget.style.display = 'flex';
