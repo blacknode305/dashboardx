@@ -1,7 +1,7 @@
 import { t } from '../i18n.js';
 import { getCredential } from '../CredentialStore.js';
 import {
-  loadOptima, OPTIMA_POLL_MS, norm, rows, branchNames, money,
+  loadOptima, patchOptima, OPTIMA_POLL_MS, norm, rows, branchNames, money,
   stockCell, orderStatus, effectiveOffers, dateISO
 } from '../OptimaAPI.js';
 
@@ -105,12 +105,40 @@ export default class OptimaDataWidget {
       }
       this.listen(this.productAdd,'click',()=>{
         this.productDraft.hidden=false;
+        const ids=rows(this.db?.products).map(p=>Number(p.id)).filter(Number.isSafeInteger);
+        const idField=draftForm.elements.namedItem('id');
+        if(idField&&!idField.value)idField.value=String(Math.max(0,...ids)+1);
         draftForm.elements.namedItem('name')?.focus({preventScroll:true});
       });
       this.listen(widget.querySelector('[data-role="product-draft-cancel"]'),'click',()=>{this.productDraft.hidden=true;});
-      this.listen(draftForm,'submit',event=>{
+      this.listen(draftForm,'submit',async event=>{
         event.preventDefault();
-        widget.querySelector('[data-role="product-draft-info"]').textContent='Это форма-заглушка: сохранение в PRO OPTIMA пока не подключено. Данные не отправлены.';
+        const info=widget.querySelector('[data-role="product-draft-info"]');
+        const saveButton=draftForm.querySelector('[type="submit"]');
+        if(saveButton.disabled)return;
+        if(!this.db||!Number.isFinite(Number(this.revision))){
+          info.textContent='Сначала подключитесь к базе PRO OPTIMA.';return;
+        }
+        const id=Number(draftForm.elements.namedItem('id').value);
+        const name=draftForm.elements.namedItem('name').value.trim();
+        const unit=draftForm.elements.namedItem('unit').value.trim();
+        const note=draftForm.elements.namedItem('note').value.trim();
+        const catalogStatus=draftForm.elements.namedItem('catalogStatus').value==='proposal'?'proposal':'used';
+        const excludedBranches=[...branchContainer.querySelectorAll('input:checked')].map(x=>x.value);
+        if(!Number.isSafeInteger(id)||id<=0){info.textContent='Укажите положительный целый ID.';return;}
+        if(!name){info.textContent='Введите наименование сырья.';return;}
+        const products=rows(this.db.products);
+        if(products.some(p=>Number(p.id)===id)){info.textContent='Этот ID уже используется.';return;}
+        if(products.some(p=>norm(p.name)===norm(name))){info.textContent='Такое наименование уже существует.';return;}
+        const entry={id,name,unit,note,catalogStatus,excludedBranches,source:'manual',orderSuppliers:[]};
+        saveButton.disabled=true;info.textContent='Сохранение наименования…';
+        try{
+          await patchOptima({products:[...products,entry]},this.revision);
+          draftForm.reset();this.productDraft.hidden=true;
+          await this.load();
+        }catch(error){
+          info.textContent=error.status===409?'База была изменена другим пользователем. Закройте форму, обновите данные и повторите создание.':(error.message||'Не удалось сохранить наименование.');
+        }finally{saveButton.disabled=false;}
       });
     }
     const onCredential=event=>{
