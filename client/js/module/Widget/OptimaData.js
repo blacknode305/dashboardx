@@ -6,7 +6,7 @@ import {
 } from '../OptimaAPI.js';
 
 const CONFIG={
-  optimaProducts:{branch:true,status:['all','used','proposal'],extra:true,date:false,mode:false},
+  optimaProducts:{branch:true,status:['all'],extra:true,date:false,mode:false},
   optimaProposals:{branch:false,status:['all','linked','unlinked'],extra:true,date:false,mode:['catalog','proposals']},
   optimaOffers:{branch:true,status:['all','enabled','disabled','auto'],extra:true,date:false,mode:false},
   optimaCompare:{branch:true,status:['all','allPrices','different'],extra:true,date:false,mode:false},
@@ -75,7 +75,7 @@ export default class OptimaDataWidget {
     this.controls.search.value=this.filters.search;
     this.controls.date.value=this.filters.date;
     this.controls.branch.hidden=!this.cfg.branch;
-    this.controls.status.hidden=!this.cfg.status;
+    this.controls.status.hidden=this.type==='optimaProducts'||!this.cfg.status;
     this.controls.extra.hidden=!this.cfg.extra;
     this.controls.date.hidden=!this.cfg.date;
     this.controls.mode.hidden=!this.cfg.mode;
