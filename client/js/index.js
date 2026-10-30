@@ -43,6 +43,8 @@ window.dashboardxTemplates = CATALOG_ENTRIES.map(([id,entry])=>({
 }));
 const store = new ClientDB();
 let navBar=null;
+const workspaceSurfaces=new Map();
+const workspaceScroll=new Map();
 let spatialPreview = null;
 let spatialOpening = false;
 // Focus is ephemeral, per workspace, and never written to localStorage.
@@ -99,11 +101,14 @@ function reload() {
 // Mouse, keyboard and widget actions share the same renderer. No page refresh.
 function activateWorkspace(id) {
   if (id !== store.workspace.id && !store.selectWorkspace(id)) return false;
+  const canvas = document.getElementById('workspace-canvas');
+  const previous=canvas.querySelector('#workspace-surface');
+  if(previous) workspaceScroll.set(previous.dataset.workspaceId,{top:canvas.scrollTop,left:canvas.scrollLeft});
   renderWorkspaceTabs();
   renderCanvas();
-  const canvas = document.getElementById('workspace-canvas');
-  canvas.scrollTop = 0;
-  canvas.scrollLeft = 0;
+  const scroll=workspaceScroll.get(store.workspace.id);
+  canvas.scrollTop=scroll?.top||0;
+  canvas.scrollLeft=scroll?.left||0;
   measureHeader();
   return true;
 }
@@ -239,12 +244,46 @@ function measureHeader() {
 }
 
 
+function renderWorkspaceNavigation(){
+  const surface=document.getElementById('workspace-surface');
+  if(!surface)return;
+  const widgets=[...surface.querySelectorAll(':scope > widget-element')].filter(el=>el.templateId!=='add');
+  const categories=['all'];
+  if(widgets.some(w=>w.classList.contains('is-pinned')))categories.push('pinned');
+  if(widgets.some(w=>w.classList.contains('is-hidden')))categories.push('hidden');
+  if(widgets.some(w=>w.classList.contains('is-favorite')))categories.push('favorite');
+  categories.push(...new Set(widgets.map(w=>w.category)));
+  const active=document.querySelector('#widget-navigation [aria-pressed="true"]')?.dataset.category||'all';
+  navBar=document.createElement('navigation-bar');
+  navBar.initialize(categories);
+  document.getElementById('widget-navigation').replaceChildren(navBar);
+  navBar.filterWidgets(categories.includes(active)?active:'all');
+}
+
 function renderCanvas() {
   if (spatialPreview?.isOpen) spatialPreview.close();
   const canvas = document.getElementById('workspace-canvas');
-  const surface=document.createElement('div');
-  surface.id='workspace-surface';
-  canvas.replaceChildren(surface);
+  // Keep every workspace DOM/controller alive; only the active surface is displayed.
+  const workspaceId=store.workspace.id;
+  for(const [id,existing] of workspaceSurfaces){
+    existing.hidden=id!==workspaceId;
+    existing.style.display=id===workspaceId?'':'none';
+    existing.id=id===workspaceId?'workspace-surface':'';
+  }
+  let surface=workspaceSurfaces.get(workspaceId);
+  const fresh=!surface;
+  if(fresh){
+    surface=document.createElement('div');
+    surface.dataset.workspaceId=workspaceId;
+    surface.id='workspace-surface';
+    workspaceSurfaces.set(workspaceId,surface);
+    canvas.append(surface);
+  }
+  // Remove deleted workspaces/controllers rather than retaining orphaned surfaces.
+  const validIds=new Set(store.state.workspaces.map(w=>w.id));
+  for(const [id,old] of workspaceSurfaces){
+    if(!validIds.has(id)){old.remove();workspaceSurfaces.delete(id);workspaceScroll.delete(id);}
+  }
   const image=store.workspace.backgroundUrl;
   // Wallpaper belongs to the viewport, not the scrollable content.
   document.body.style.backgroundImage=image
@@ -253,24 +292,34 @@ function renderCanvas() {
   // Keep the panel and widgets in separate lanes; avoid covering dropdown controls.
   const wide = window.innerWidth >= 960;
   // Manager is a built-in tool, not a database widget. Users cannot remove or duplicate it.
-  const manager = makeWidget('add', 'manager-' + store.workspace.id, 0, wide);
-  if (manager) {
-    if (!manager.styleData.top) { manager.style.top = '14px'; manager.style.left = '14px'; }
-    surface.append(manager);
+  if(fresh){
+    const manager=makeWidget('add','manager-'+workspaceId,0,wide);
+    if(manager){
+      if(!manager.styleData.top){manager.style.top='14px';manager.style.left='14px';}
+      surface.append(manager);
+    }
   }
-
-  const managerBottom = manager ? manager.offsetTop + Math.max(manager.offsetHeight, 300) : 360;
-  const managerWidth = manager ? Math.max(manager.offsetWidth, 370) : 490;
-  store.workspace.widgets.forEach((id, index) => {
-    const instance = store.getInstance(id);
-    if (!instance) return;
-    const el = makeWidget(instance.type, id, index, wide, managerBottom, managerWidth);
-    if (el) surface.append(el);
+  const manager=surface.querySelector('widget-element[data-widget-type="add"]');
+  const managerBottom=manager?manager.offsetTop+Math.max(manager.offsetHeight,300):360;
+  const managerWidth=manager?Math.max(manager.offsetWidth,370):490;
+  const wanted=new Set(store.workspace.widgets);
+  for(const el of [...surface.querySelectorAll(':scope > widget-element')]){
+    if(el.templateId!=='add'&&!wanted.has(el.instanceId))el.remove();
+  }
+  store.workspace.widgets.forEach((id,index)=>{
+    if([...surface.children].some(el=>el.instanceId===id))return;
+    const instance=store.getInstance(id);
+    if(!instance)return;
+    const el=makeWidget(instance.type,id,index,wide,managerBottom,managerWidth);
+    if(el)surface.append(el);
   });
-
-  const categories = ['all', 'pinned', 'hidden', 'favorite',
-    ...new Set(templates.filter(t => t.id !== 'add').map(t => t.category))];
-  navBar = document.createElement('navigation-bar');
+  const present=[...surface.querySelectorAll(':scope > widget-element')].filter(el=>el.templateId!=='add');
+  const categories=['all'];
+  if(present.some(el=>el.classList.contains('is-pinned')))categories.push('pinned');
+  if(present.some(el=>el.classList.contains('is-hidden')))categories.push('hidden');
+  if(present.some(el=>el.classList.contains('is-favorite')))categories.push('favorite');
+  categories.push(...new Set(present.map(el=>el.category)));
+  navBar=document.createElement('navigation-bar');
   navBar.initialize(categories);
   document.getElementById('widget-navigation').replaceChildren(navBar);
   navBar.filterWidgets('all');
@@ -278,7 +327,7 @@ function renderCanvas() {
   const selected = [...surface.querySelectorAll('widget-element')].find(el =>
     el.instanceId === rememberedId && el.style.display !== 'none'
   ) || manager;
-  selected?.activate();
+  if(fresh)selected?.activate();
   updateCanvasHeight();
 }
 
@@ -405,8 +454,9 @@ async function boot() {
     }));
     syncLanguageButtons();
     const spatialButton=document.getElementById('spatial-toggle');
+    const arStyles=document.getElementById('dashboardx-ar-styles');
     spatialButton.addEventListener('click',async()=>{
-      if (spatialPreview?.isOpen) { spatialPreview.close(); return; }
+      if (spatialPreview?.isOpen) { spatialPreview.close(); arStyles.media='not all'; return; }
       if (spatialOpening) return;
       spatialOpening=true;
       spatialButton.disabled=true;
@@ -416,13 +466,15 @@ async function boot() {
         // Import only when requested: a CDN outage never blocks Desktop startup.
         const { default: SpatialPreview } = await import('./module/Spatial/SpatialPreview.js');
         if (!spatialPreview) spatialPreview=new SpatialPreview({
-          onClose:()=>{spatialButton.setAttribute('aria-pressed','false');spatialButton.textContent='◈ Spatial 3D';window.dispatchEvent(new Event('dashboardx:ui-changed'));}
+          onClose:()=>{arStyles.media='not all';spatialButton.setAttribute('aria-pressed','false');spatialButton.textContent='◈ Spatial 3D';window.dispatchEvent(new Event('dashboardx:ui-changed'));}
         });
+        arStyles.media='all';
         spatialPreview.open();
         spatialButton.setAttribute('aria-pressed','true');
         spatialButton.textContent='◈ Закрыть 3D';
         window.dispatchEvent(new Event('dashboardx:ui-changed'));
       } catch(error) {
+        arStyles.media='not all';
         console.error('Spatial Preview could not start',error);
         alert('Не удалось запустить Spatial Preview. Нужен интернет для Three.js и поддержка CSS 3D.\n'+String(error.message||error));
         spatialButton.textContent=oldText;
@@ -493,6 +545,7 @@ async function boot() {
       }));
     });
     window.addEventListener('dashboardx:widget-visibility', () => {
+      renderWorkspaceNavigation();
       const category=document.querySelector('#widget-navigation .nav--element[aria-pressed="true"]')?.dataset.category || 'all';
       navBar?.filterWidgets(category);
     });
