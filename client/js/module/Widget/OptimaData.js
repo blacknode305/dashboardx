@@ -30,7 +30,7 @@ const select=(element,items,selected)=>{
   element.value=items.some(([value])=>String(value)===String(selected))?String(selected):String(items[0]?.[0]??'');
 };
 const kindLabel=status=>t('optima.stage.'+status);
-const displayBranch=value=>{const name=String(value??'').trim();return norm(name)==='лободы'?'Лободы':name?name.charAt(0).toLocaleUpperCase('ru')+name.slice(1).toLocaleLowerCase('ru'):'';};
+const displayBranch=value=>{const name=String(value??'').replace(/\s+/g,' ').trim();return name?name.charAt(0).toLocaleUpperCase('ru')+name.slice(1).toLocaleLowerCase('ru'):'';};
 const uniqueBranches=values=>[...new Map(values.map(displayBranch).filter(Boolean).map(name=>[norm(name),name])).values()].sort((a,b)=>a.localeCompare(b,'ru'));
 
 
