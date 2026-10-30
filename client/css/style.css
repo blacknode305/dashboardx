@@ -1899,3 +1899,16 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas .dx-day-timing>strong{font-size:12px;letter-spacing:.01em}
 #workspace-canvas .dx-day-timing-row{display:grid;grid-template-columns:minmax(100px,1fr) minmax(145px,1.3fr);align-items:center;gap:9px;font-size:12px}
 #workspace-canvas .dx-day-timing-row select{width:100%;min-width:0;padding:7px 9px;border-radius:7px}
+
+
+/* Supplier schedule compact layout, constrained at all widget widths */
+#workspace-canvas .optima-edit-schedule{position:relative;min-width:0;grid-template-columns:repeat(2,minmax(0,1fr));padding:12px 10px 10px;gap:9px}
+#workspace-canvas .optima-edit-schedule>*{min-width:0;max-width:100%;box-sizing:border-box}
+#workspace-canvas .optima-edit-schedule .dx-day-timing{grid-column:1/-1;min-width:0;max-width:100%;padding:10px;margin:3px 0 0;gap:5px;overflow:hidden;background:transparent}
+#workspace-canvas .optima-edit-schedule .dx-day-timing>strong{font-size:11px;font-weight:700}
+#workspace-canvas .optima-edit-schedule .dx-day-timing-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:7px;min-width:0;align-items:center}
+#workspace-canvas .optima-edit-schedule .dx-day-timing-row span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+#workspace-canvas .optima-edit-schedule .dx-day-timing-row select{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;padding:6px 22px 6px 7px;font-size:11px;text-overflow:ellipsis;overflow:hidden}
+#workspace-canvas .optima-edit-schedule .dx-day-fieldset{min-width:0;max-width:100%;box-sizing:border-box}
+#workspace-canvas .optima-edit-schedule .dx-remove-schedule{grid-column:1/-1;justify-self:end!important;display:grid;place-items:center;width:25px!important;height:25px!important;min-width:25px!important;min-height:25px!important;padding:0!important;line-height:1!important;font-size:17px!important;border-radius:6px!important;background:transparent!important;box-shadow:none!important}
+@media(max-width:540px){#workspace-canvas .optima-edit-schedule{grid-template-columns:minmax(0,1fr)}#workspace-canvas .optima-edit-schedule .dx-day-timing{grid-column:1}#workspace-canvas .optima-edit-schedule .dx-remove-schedule{grid-column:1}#workspace-canvas .optima-edit-schedule .dx-day-timing-row{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}}
