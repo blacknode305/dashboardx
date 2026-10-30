@@ -107,6 +107,8 @@ export default class OptimaSuppliersWidget {
     this.scheduleEditor=widget.querySelector('[data-role="optima-edit-schedules"]');
     this.scheduleRows=widget.querySelector('[data-role="optima-schedule-rows"]');
     this.onCancel=()=>this.closeEditor();
+    this.onCreate=()=>this.createSupplier();
+    widget.querySelector('[data-role="optima-create-supplier"]').addEventListener('click',this.onCreate);
     this.onSubmit=event=>{event.preventDefault();this.saveEdit();};
     this.onAddSchedule=()=>this.makeScheduleRow({});
     widget.querySelector('[data-role="optima-cancel-edit"]').addEventListener('click',this.onCancel);
@@ -187,6 +189,18 @@ export default class OptimaSuppliersWidget {
     }
   }
 
+  createSupplier(){
+    if(!this.database||!Number.isFinite(Number(this.revision))||this.saving)return;
+    this.closeEditor();
+    this.editMode='create';this.editId='__new__';
+    this.editorTitle.textContent='Добавить поставщика';
+    this.editName.value='';this.editContact.value='';this.editPhone.value='';
+    this.editorError.textContent='';this.scheduleEditor.hidden=false;
+    this.scheduleRows.replaceChildren();this.makeScheduleRow({});
+    this.editorHome.insertBefore(this.editor,this.list);
+    this.editor.hidden=false;
+    this.editName.focus({preventScroll:true});
+  }
   edit(supplier,mode){
     if(!this.database||!Number.isFinite(Number(this.revision)))return;
     this.editId=supplier.id;this.editMode=mode;
@@ -286,7 +300,13 @@ export default class OptimaSuppliersWidget {
       return {branch:get('branch'),order:days('order'),delivery:days('delivery'),note:get('note'),deliveryTimingByDay};
     });
     let changes;
-    try {changes=prepareSupplierChanges(this.database,supplierId,values,true);}
+    try {
+      if(mode==='create'){
+        const id='sup_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,9);
+        const synthetic={...this.database,suppliers:[...this.database.suppliers,{id,name:'',contact:'',phone:'',active:true,schedules:[]}]};
+        changes=prepareSupplierChanges(synthetic,id,values,true);
+      }else changes=prepareSupplierChanges(this.database,supplierId,values,true);
+    }
     catch(error){this.editorError.textContent=t('optima.invalidEdit')+': '+error.message;return;}
     const button=this.widget.querySelector('[data-role="optima-save-edit"]');
     this.saving=true;button.disabled=true;this.editorError.textContent=t('optima.saving');
@@ -439,6 +459,7 @@ export default class OptimaSuppliersWidget {
     this.deliveryDay.removeEventListener('change',this.onFilter);
     window.removeEventListener('dashboardx:credential-changed',this.onCredential);
     window.removeEventListener('dashboardx:optima-updated',this.onExternalUpdate);
+    this.widget.querySelector('[data-role="optima-create-supplier"]').removeEventListener('click',this.onCreate);
     this.widget.querySelector('[data-role="optima-cancel-edit"]').removeEventListener('click',this.onCancel);
     this.widget.querySelector('[data-role="optima-edit-form"]').removeEventListener('submit',this.onSubmit);
     this.widget.querySelector('[data-role="optima-add-schedule"]').removeEventListener('click',this.onAddSchedule);
