@@ -1858,3 +1858,27 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas .dx-picker-options .dx-picker-group-options .dx-picker-option {
   width:100%;min-width:0;
 }
+
+/* Compact WhatsApp action inside PRO-OPTIMA supplier cards. */
+#workspace-canvas .optima-supplier .dx-whatsapp-link {
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  margin-inline-start:10px;padding:5px 11px;min-height:30px;
+  border:1px solid rgba(55,190,117,.48);border-radius:9px;
+  background:linear-gradient(135deg,#176e48,#168551);
+  color:#f2fff6;text-decoration:none;font-size:12px;font-weight:700;
+  line-height:1.2;vertical-align:middle;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(5,55,31,.16);
+  transition:background .15s ease,box-shadow .15s ease,transform .15s ease;
+}
+#workspace-canvas .optima-supplier .dx-whatsapp-link:hover {
+  color:white;background:linear-gradient(135deg,#168655,#20a469);
+  box-shadow:0 4px 14px rgba(12,112,67,.24);transform:translateY(-1px);
+}
+#workspace-canvas .optima-supplier .dx-whatsapp-link:active{transform:translateY(0)}
+#workspace-canvas .optima-supplier .dx-whatsapp-link:focus-visible{
+  outline:2px solid #53dca0;outline-offset:3px;
+}
+#workspace-canvas .optima-supplier .dx-whatsapp-link svg{flex:none}
+@media(prefers-reduced-motion:reduce){
+  #workspace-canvas .optima-supplier .dx-whatsapp-link{transition:none}
+}
