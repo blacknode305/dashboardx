@@ -105,6 +105,12 @@ export default class OptimaDataWidget {
       }
       this.listen(this.productAdd,'click',()=>{
         this.productDraft.hidden=false;
+        const supplierSelect=draftForm.elements.namedItem('supplierId');
+        supplierSelect.replaceChildren(new Option('Поставщик не выбран',''));
+        for(const supplier of rows(this.db?.suppliers).filter(x=>x?.id!=null&&x?.name).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ru'))){
+          supplierSelect.add(new Option(String(supplier.name),String(supplier.id)));
+        }
+        supplierSelect.value='';
         const ids=rows(this.db?.products).map(p=>Number(p.id)).filter(Number.isSafeInteger);
         const idField=draftForm.elements.namedItem('id');
         if(idField&&!idField.value)idField.value=String(Math.max(0,...ids)+1);
@@ -125,12 +131,15 @@ export default class OptimaDataWidget {
         const note=draftForm.elements.namedItem('note').value.trim();
         const catalogStatus=draftForm.elements.namedItem('catalogStatus').value==='proposal'?'proposal':'used';
         const excludedBranches=[...branchContainer.querySelectorAll('input:checked')].map(x=>x.value);
+        const supplierId=draftForm.elements.namedItem('supplierId').value;
+        const supplier=supplierId?rows(this.db.suppliers).find(x=>String(x.id)===supplierId):null;
+        if(supplierId&&!supplier){info.textContent='Выбранный поставщик больше не найден. Выберите другого.';return;}
         if(!Number.isSafeInteger(id)||id<=0){info.textContent='Укажите положительный целый ID.';return;}
         if(!name){info.textContent='Введите наименование сырья.';return;}
         const products=rows(this.db.products);
         if(products.some(p=>Number(p.id)===id)){info.textContent='Этот ID уже используется.';return;}
         if(products.some(p=>norm(p.name)===norm(name))){info.textContent='Такое наименование уже существует.';return;}
-        const entry={id,name,unit,note,catalogStatus,excludedBranches,source:'manual',orderSuppliers:[]};
+        const entry={id,name,unit,note,catalogStatus,excludedBranches,source:'manual',orderSuppliers:supplier?[{supplierId:String(supplier.id),supplier:String(supplier.name),unit,priority:0}]:[]};
         saveButton.disabled=true;info.textContent='Сохранение наименования…';
         try{
           await patchOptima({products:[...products,entry]},this.revision);
