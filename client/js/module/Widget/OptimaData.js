@@ -24,6 +24,27 @@ const make=(tag,text,cls)=>{
 const rowSupplierNames=(p,db)=>rows(p.orderSuppliers).map(link=>
   rows(db.suppliers).find(s=>String(s.id)===String(link.supplierId))?.name||link.supplier||''
 ).filter(Boolean).join(' / ');
+const supplierLinks=(product,db)=>{
+  const container=document.createElement('div');
+  container.className='dx-product-supplier-links';
+  for(const link of rows(product.orderSuppliers)){
+    const supplier=rows(db.suppliers).find(s=>String(s.id)===String(link.supplierId))||
+      rows(db.suppliers).find(s=>norm(s.name)===norm(link.supplier));
+    const name=supplier?.name||link.supplier||'';
+    if(!name)continue;
+    if(container.childNodes.length)container.append(document.createTextNode(' / '));
+    const button=document.createElement('button');
+    button.type='button';button.className='dx-product-supplier-link';
+    button.textContent=String(name);button.title='Открыть график поставщика '+name;
+    button.addEventListener('click',()=>{
+      const detail={supplierId:supplier?.id??'',supplierName:name,handled:false};
+      window.dispatchEvent(new CustomEvent('dashboardx:open-optima-supplier',{detail}));
+      if(!detail.handled)window.alert('Добавьте виджет «Поставщики» на рабочее пространство, чтобы открыть график.');
+    });
+    container.append(button);
+  }
+  return container;
+};
 const select=(element,items,selected)=>{
   element.replaceChildren();
   for(const [value,label] of items)element.append(new Option(label,String(value)));
@@ -247,7 +268,7 @@ export default class OptimaDataWidget {
       this.buildTable([
         {label:'ID',get:p=>p.id},{label:t('optima.product'),get:p=>p.name},
         {label:t('optima.unit'),get:p=>p.unit},
-        {label:t('optima.supplier'),get:p=>rowSupplierNames(p,db)}
+        {label:t('optima.supplier'),get:p=>supplierLinks(p,db)}
       ],items);
       this.summary.textContent=t('optima.found',{count:String(items.length),total:String(total('products').length)});
     }
