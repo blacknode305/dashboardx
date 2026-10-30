@@ -53,6 +53,18 @@
       </form>
       <p class="dx-credential-status" data-role="credential-status" aria-live="polite"></p>
     </div>
+    <div class="dx-credential dx-optima-owner">
+      <label for="dx-optima-owner-password">Пароль администратора Оптима</label>
+      <form data-role="optima-owner-password-form" class="dx-credential-form" autocomplete="off">
+        <input id="dx-optima-owner-password" data-role="optima-owner-password" type="password" autocomplete="new-password" spellcheck="false" placeholder="Пароль полного управления">
+        <div class="dx-credential-actions">
+          <button type="submit" class="dx-primary">Применить</button>
+          <button type="button" data-role="optima-owner-reveal" aria-label="Показать пароль">Показать</button>
+          <button type="button" data-role="optima-owner-clear">Заблокировать</button>
+        </div>
+      </form>
+      <p class="dx-credential-status" data-role="optima-owner-status" aria-live="polite">Пароль не сохраняется. Действует только в открытой вкладке.</p>
+    </div>
     <div class="dx-credential" data-service="optima">
       <label data-i18n="settings.optima">PRO-OPTIMA Admin Token</label>
       <form class="dx-credential-form" autocomplete="off" data-service="optima">
