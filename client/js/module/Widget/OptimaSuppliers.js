@@ -144,11 +144,14 @@ export default class OptimaSuppliersWidget {
     try{
       const result=await loadOptima(controller.signal);
       if(this.destroyed||controller.signal.aborted||this.requestId!==seq)return;
+      const changed=this.revision!==result.revision || !this.database;
       this.database=result.data;
       this.rows=result.data.suppliers.filter(x=>x&&typeof x==='object');
       this.revision=result.revision;
-      this.setBranches();
-      this.render();
+      if(changed){
+        this.setBranches();
+        this.render();
+      }
       this.setStatus('optima.connected',{revision:String(this.revision??'—')});
     }catch(error){
       if(this.destroyed||controller.signal.aborted||this.requestId!==seq)return;
@@ -221,6 +224,12 @@ export default class OptimaSuppliersWidget {
   }
 
   render(){
+    // The DOM is authoritative: retain expanded cards even if an API poll
+    // or an unrelated filter update would otherwise replace every <details>.
+    for(const card of this.list.querySelectorAll('details.optima-supplier[data-supplier-id]')){
+      const id=card.dataset.supplierId;
+      if(card.open)this.expanded.add(id);else this.expanded.delete(id);
+    }
     const filtered=filterOptimaSuppliers(this.rows,this.search.value,this.selectedBranch);
     this.count.textContent=t('optima.found',{count:String(filtered.length),total:String(this.rows.length)});
     this.list.replaceChildren();
@@ -233,6 +242,7 @@ export default class OptimaSuppliersWidget {
       const card=document.createElement('details');
       card.className='optima-supplier';
       const id=String(supplier.id??supplier.name??'');
+      card.dataset.supplierId=id;
       card.open=this.expanded.has(id);
       const heading=document.createElement('summary');
       const title=document.createElement('strong');
