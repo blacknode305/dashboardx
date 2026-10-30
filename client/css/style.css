@@ -1973,3 +1973,26 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 @media(max-width:510px){
   #workspace-canvas .optima-filters{grid-template-columns:minmax(0,1fr)}
 }
+
+
+/* OPTIMA product catalogue: plus and search share the original search cell */
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-search{display:flex;gap:6px;min-width:0;align-items:stretch}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-search input{flex:1 1 auto;width:0;min-width:0;min-height:38px;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel-inside);color:var(--text-main)}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-search button{flex:0 0 32px;width:32px;min-width:32px;min-height:38px;padding:0;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel-inside);color:var(--text-main);font-size:21px;cursor:pointer}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-search button:hover{border-color:var(--dx-hover-border);background:var(--bg-panel-light)}
+#workspace-canvas .dx-product-draft[hidden]{display:none!important}
+#workspace-canvas .dx-product-draft{min-width:0;padding:12px;margin:10px 0;border:1px solid var(--border);border-radius:10px;background:var(--bg-panel-inside)}
+#workspace-canvas .dx-product-draft form{display:grid;gap:10px;min-width:0}
+#workspace-canvas .dx-product-draft-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#workspace-canvas .dx-product-draft-head span,#workspace-canvas .dx-product-draft-info{font-size:11px;color:var(--text-muted)}
+#workspace-canvas .dx-product-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;min-width:0}
+#workspace-canvas .dx-product-fields label{display:grid;gap:4px;min-width:0;font-size:11px;color:var(--text-muted)}
+#workspace-canvas .dx-product-fields .dx-wide{grid-column:1/-1}
+#workspace-canvas .dx-product-fields input,#workspace-canvas .dx-product-fields select,#workspace-canvas .dx-product-fields textarea{box-sizing:border-box;width:100%;min-width:0;padding:8px;border:1px solid var(--border);border-radius:7px;background:var(--bg-panel);color:var(--text-main);font:inherit}
+#workspace-canvas .dx-product-branches{min-width:0;border:1px solid var(--border);border-radius:8px;padding:9px}
+#workspace-canvas .dx-product-branches legend{padding:0 5px;font-size:11px}
+#workspace-canvas .dx-product-branches>div{display:flex;flex-wrap:wrap;gap:8px 12px}
+#workspace-canvas .dx-product-branches label{display:flex;align-items:center;gap:5px;font-size:11px}
+#workspace-canvas .dx-product-draft-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+#workspace-canvas .dx-product-draft-actions button{padding:7px 11px;border:1px solid var(--border);border-radius:7px;background:var(--bg-panel);color:var(--text-main);cursor:pointer}
+@media(max-width:440px){#workspace-canvas .dx-product-fields{grid-template-columns:minmax(0,1fr)}#workspace-canvas .dx-product-fields .dx-wide{grid-column:1}}
