@@ -3,16 +3,17 @@
 <section class="optima-data" data-optima-module="optimaProducts">
   <header class="optima-toolbar">
     <strong data-i18n="widget.optimaProducts">Товары</strong>
-    <button type="button" data-role="data-refresh" data-i18n="optima.refresh">Обновить</button>
+
   </header>
   <div class="optima-data-filters">
-    <input type="search" data-role="data-search" data-i18n-placeholder="optima.searchSimple" placeholder="Поиск…">
+    <div class="dx-product-search"><button type="button" data-role="product-add" title="Добавить товар" aria-label="Добавить товар">+</button><input type="search" data-role="data-search" data-i18n-placeholder="optima.searchSimple" placeholder="Поиск…"></div>
     <select data-role="data-branch" data-i18n-aria="optima.branch" aria-label="Филиал"></select>
     <select data-role="data-status" data-i18n-aria="optima.status" aria-label="Статус"></select>
     <select data-role="data-extra" data-i18n-aria="optima.supplier" aria-label="Поставщик"></select>
     <input type="date" data-role="data-date" data-i18n-aria="optima.date" aria-label="Дата">
     <select data-role="data-mode" data-i18n-aria="optima.mode" aria-label="Режим"></select>
   </div>
+  <section class="dx-product-draft" data-role="product-draft" hidden><form data-role="product-draft-form"><div class="dx-product-draft-head"><strong>Добавить товар</strong><span>Предварительная форма</span></div><div class="dx-product-fields"><label>ID<input name="id" type="number" min="1" inputmode="numeric"></label><label>Единица<input name="unit" placeholder="шт, кг, л"></label><label class="dx-wide">Наименование<input name="name" required placeholder="Наименование товара"></label><label class="dx-wide">Примечание<textarea name="note" rows="2"></textarea></label><label>Статус<select name="catalogStatus"><option value="used">Используемый</option><option value="proposal">Предложение</option></select></label></div><fieldset class="dx-product-branches"><legend>Не использовать на производствах</legend><div data-role="product-draft-branches"></div></fieldset><p class="dx-product-draft-info" data-role="product-draft-info">Заглушка: форма пока не записывает товары в базу PRO OPTIMA.</p><div class="dx-product-draft-actions"><button type="button" data-role="product-draft-cancel">Отмена</button><button type="submit">Сохранить</button></div></form></section>
   <p class="optima-status" data-role="data-status-text" aria-live="polite"></p>
   <p class="optima-summary" data-role="data-summary"></p>
   <div class="optima-table-scroll" data-role="data-results"></div>
