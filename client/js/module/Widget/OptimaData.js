@@ -30,6 +30,9 @@ const select=(element,items,selected)=>{
   element.value=items.some(([value])=>String(value)===String(selected))?String(selected):String(items[0]?.[0]??'');
 };
 const kindLabel=status=>t('optima.stage.'+status);
+const displayBranch=value=>{const name=String(value??'').trim();return norm(name)==='лободы'?'Лободы':name?name.charAt(0).toLocaleUpperCase('ru')+name.slice(1).toLocaleLowerCase('ru'):'';};
+const uniqueBranches=values=>[...new Map(values.map(displayBranch).filter(Boolean).map(name=>[norm(name),name])).values()].sort((a,b)=>a.localeCompare(b,'ru'));
+
 
 export function projectOptimaStockRows(db,branch,date,search='',supplierId=''){
   const available=branch? [branch]:branchNames(db);
@@ -163,7 +166,9 @@ export default class OptimaDataWidget {
     if(this.cfg.mode)select(this.controls.mode,this.cfg.mode.map(x=>[x,t('optima.mode.'+x)]),f.mode);
     else select(this.controls.mode,[['','—']],'');
     const db=this.db||{};
-    select(this.controls.branch,[['',t('optima.allBranches')],...branchNames(db).map(x=>[x,x])],f.branch);
+    const branches=this.type==='optimaProducts'?uniqueBranches(branchNames(db)):branchNames(db);
+    const chosenBranch=this.type==='optimaProducts'?displayBranch(f.branch):f.branch;
+    select(this.controls.branch,[['',t('optima.allBranches')],...branches.map(x=>[x,x])],chosenBranch);
     if(this.cfg.extra){
       select(this.controls.extra,[['',t('optima.allSuppliers')],...rows(db.suppliers).map(s=>[s.id,s.name])],f.extra);
     }else select(this.controls.extra,[['','—']],'');
