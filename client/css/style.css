@@ -1914,3 +1914,8 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 @media(max-width:540px){#workspace-canvas .optima-edit-schedule{grid-template-columns:minmax(0,1fr)}#workspace-canvas .optima-edit-schedule .dx-day-timing{grid-column:1}#workspace-canvas .optima-edit-schedule .dx-remove-schedule{grid-column:1}#workspace-canvas .optima-edit-schedule .dx-day-timing-row{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}}
 
 #workspace-canvas .dx-day-timing-row[hidden],#workspace-canvas .dx-day-timing[hidden]{display:none!important}
+
+/* Add supplier — compact toolbar action */
+#workspace-canvas .dx-supplier-toolbar{display:flex;justify-content:flex-end;margin:0 0 6px;min-width:0}
+#workspace-canvas .dx-supplier-toolbar .dx-add-supplier{display:grid;place-items:center;flex:0 0 29px;width:29px;height:29px;min-width:29px;min-height:29px;padding:0;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel);color:var(--text-main);font-size:20px;font-weight:500;line-height:1;cursor:pointer}
+#workspace-canvas .dx-supplier-toolbar .dx-add-supplier:hover{border-color:var(--dx-hover-border);background:var(--bg-panel-light)}
