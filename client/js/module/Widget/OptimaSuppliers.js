@@ -5,6 +5,7 @@ const DAYS=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const DAY_NAMES=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
 const parseDays=value=>new Set(String(value||'').split(/[,;/]+/).map(v=>v.trim().toLocaleLowerCase()).map(v=>DAY_NAMES.find(n=>n.toLocaleLowerCase()===v)||DAY_NAMES[DAYS.findIndex(d=>d.toLocaleLowerCase()===v)]).filter(Boolean));
 const normalize=value=>String(value??'').trim().toLocaleLowerCase();
+const canonicalBranch=value=>normalize(value)==='лободы'?'Лободы':String(value??'').trim();
 const whatsappUrl=phone=>{
   const raw=String(phone||'').trim();
   if(!/^\+?[\d\s().-]+$/.test(raw))return null;
@@ -127,9 +128,9 @@ export default class OptimaSuppliersWidget {
 
   setStatus(key,values){this.status.textContent=t(key,values);}
   setBranches(){
-    const names=[...new Set(this.rows.flatMap(row=>
-      Array.isArray(row.schedules)?row.schedules.map(r=>String(r?.branch||'').trim()).filter(Boolean):[]
-    ))].sort((a,b)=>a.localeCompare(b,'ru'));
+    const names=[...new Map(this.rows.flatMap(row=>
+      Array.isArray(row.schedules)?row.schedules.map(r=>canonicalBranch(r?.branch)).filter(Boolean):[]
+    ).map(name=>[normalize(name),name])).values()].sort((a,b)=>a.localeCompare(b,'ru'));
     this.branch.replaceChildren();
     const all=new Option(t('optima.allBranches'),'');
     this.branch.append(all);
@@ -204,7 +205,7 @@ export default class OptimaSuppliersWidget {
     for(const name of ['branch','note']){
       const label=document.createElement('label');label.textContent=t('optima.'+name);
       const input=document.createElement('input');input.dataset.field=name;
-      input.value=String(data?.[name]||'');label.append(input);wrapper.append(label);
+      input.value=name==='branch'?canonicalBranch(data?.[name]):String(data?.[name]||'');label.append(input);wrapper.append(label);
     }
     for(const name of ['order','delivery']){
       const group=document.createElement('fieldset');group.className='dx-day-fieldset';
