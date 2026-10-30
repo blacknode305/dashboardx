@@ -270,14 +270,10 @@ export default class OptimaSuppliersWidget {
     if(this.saving||this.editId)return;
     const name=String(supplier.name||'');
     if(!window.confirm('Удалить поставщика «'+name+'»? Это действие затронет список поставщиков.'))return;
-    const token=window.prompt('Для удаления повторно введите Admin Token PRO OPTIMA:');
-    if(!token)return;
-    // Verify the freshly entered token on the server: never trust a client-side password comparison.
+    const token=getCredential('optima');
+    const writePassword=window.prompt('Пароль полного управления PRO OPTIMA:');
+    if(!token||!writePassword)return;
     try{
-      const res=await fetch(OPTIMA_BASE+'/api/admin/db',{
-        method:'GET',headers:{Authorization:'Bearer '+token.trim()},cache:'no-store'
-      });
-      if(!res.ok)throw new Error(res.status===401?'Неверный пароль администратора':'Не удалось подтвердить права');
       // Refuse deletion if products/orders still refer to this supplier.
       const id=String(supplier.id);
       const products=Array.isArray(this.database?.products)?this.database.products:[];
@@ -286,7 +282,7 @@ export default class OptimaSuppliersWidget {
       if(linked){window.alert('Поставщик связан с товарами. Сначала удалите или измените эти связи в PRO OPTIMA.');return;}
       const changes={suppliers:this.database.suppliers.filter(x=>String(x.id)!==id)};
       const response=await fetch(OPTIMA_BASE+'/api/admin/db',{
-        method:'PATCH',headers:{Authorization:'Bearer '+token.trim(),'Content-Type':'application/json'},
+        method:'PATCH',headers:{Authorization:'Bearer '+token.trim(),'X-Optima-Write-Password':writePassword,'Content-Type':'application/json'},
         body:JSON.stringify({baseRevision:Number(this.revision),changes}),cache:'no-store'
       });
       if(!response.ok){
