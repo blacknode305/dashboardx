@@ -82,6 +82,8 @@ export default class OptimaSuppliersWidget {
     this.selectedBranch=typeof state.branch==='string'?state.branch:'';
     this.expanded=new Set();
     this.editor=widget.querySelector('[data-role="optima-editor"]');
+    this.editorHome=this.editor.parentElement;
+    this.editCard=null;
     this.editorTitle=widget.querySelector('[data-role="optima-editor-title"]');
     this.editorError=widget.querySelector('[data-role="optima-editor-error"]');
     this.editName=widget.querySelector('[data-role="optima-edit-name"]');
@@ -176,12 +178,23 @@ export default class OptimaSuppliersWidget {
     this.scheduleEditor.hidden=mode!=='replace';
     this.scheduleRows.replaceChildren();
     if(mode==='replace')for(const row of Array.isArray(supplier.schedules)?supplier.schedules:[])this.makeScheduleRow(row);
+    const card=[...this.list.querySelectorAll('details.optima-supplier')].find(
+      el=>el.dataset.supplierId===String(supplier.id)
+    );
+    if(card){
+      card.open=true;
+      this.expanded.add(String(supplier.id));
+      card.querySelector('.optima-supplier-body')?.append(this.editor);
+      this.editCard=card;
+    }
     this.editor.hidden=false;
     this.editName.focus({preventScroll:true});
   }
   closeEditor(){
     this.editId=null;this.editMode=null;
     this.editor.hidden=true;this.editorError.textContent='';
+    this.editorHome.append(this.editor);
+    this.editCard=null;
   }
   makeScheduleRow(data){
     const wrapper=document.createElement('div');wrapper.className='optima-edit-schedule';
@@ -233,6 +246,9 @@ export default class OptimaSuppliersWidget {
       const id=card.dataset.supplierId;
       if(card.open)this.expanded.add(id);else this.expanded.delete(id);
     }
+    // Keep the same live form and unsaved input across list rerenders.
+    if(this.editor.parentElement!==this.editorHome)this.editorHome.append(this.editor);
+    this.editCard=null;
     const filtered=filterOptimaSuppliers(this.rows,this.search.value,this.selectedBranch);
     this.count.textContent=t('optima.found',{count:String(filtered.length),total:String(this.rows.length)});
     this.list.replaceChildren();
@@ -302,6 +318,11 @@ export default class OptimaSuppliersWidget {
         if(card.open)this.expanded.add(id);else this.expanded.delete(id);
       });
       this.list.append(card);
+      if(this.editId!==null&&id===String(this.editId)){
+        card.open=true;
+        body.append(this.editor);
+        this.editCard=card;
+      }
     }
   }
 
