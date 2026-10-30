@@ -1,6 +1,6 @@
 import eventBus from './module/EventBus.js';
 import ClientDB from './module/ClientDB.js';
-import WidgetElement from './module/WidgetElement.js?v=optima-names-no-status-column-20261030';
+import WidgetElement from './module/WidgetElement.js?v=optima-supplier-links-20261030';
 import NavigationBar from './module/NavigationBar.js';
 import { t, widgetTitle, setLanguage, translateElement } from './module/i18n.js';
 
