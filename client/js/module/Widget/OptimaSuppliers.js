@@ -246,10 +246,10 @@ export default class OptimaSuppliersWidget {
     timing.append(timingTitle);
     const syncTimingRows=()=>{
       const active=field=>new Set([...wrapper.querySelectorAll('[data-field="'+field+'"] .dx-day-option[aria-pressed="true"]')].map(button=>button.dataset.day));
-      const orderDays=active('order'),deliveryDays=active('delivery');
+      const orderDays=active('order');
       timing.querySelectorAll('[data-timing-day]').forEach(select=>{
         const day=select.dataset.timingDay;
-        const enabled=orderDays.has(day)&&deliveryDays.has(day);
+        const enabled=orderDays.has(day);
         select.closest('.dx-day-timing-row').hidden=!enabled;
         if(!enabled)select.value='';
       });
