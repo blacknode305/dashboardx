@@ -252,7 +252,8 @@ export default class OptimaSuppliersWidget {
     });
     wrapper.append(timing);
     const remove=document.createElement('button');remove.type='button';
-    remove.className='optima-danger';remove.textContent=t('optima.removeSchedule');
+    remove.className='optima-danger dx-remove-schedule';remove.textContent='×';
+    remove.title=t('optima.removeSchedule');remove.setAttribute('aria-label',t('optima.removeSchedule'));
     remove.addEventListener('click',()=>wrapper.remove());
     wrapper.append(remove);this.scheduleRows.append(wrapper);
   }
