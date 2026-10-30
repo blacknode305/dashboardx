@@ -1882,3 +1882,13 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 @media(prefers-reduced-motion:reduce){
   #workspace-canvas .optima-supplier .dx-whatsapp-link{transition:none}
 }
+
+
+/* Compact weekday toggles for PRO OPTIMA supplier schedules. */
+#workspace-canvas .dx-day-fieldset{min-width:0;margin:0;padding:9px 10px;border:1px solid var(--border);border-radius:9px}
+#workspace-canvas .dx-day-fieldset legend{padding:0 5px;font-size:12px;font-weight:650;color:var(--text-main)}
+#workspace-canvas .dx-day-options{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+#workspace-canvas .dx-day-options .dx-day-option{min-width:0;width:100%;padding:7px 1px;min-height:32px;border-radius:7px;background:var(--bg-panel-light);color:var(--text-muted);border:1px solid var(--border);font-weight:700}
+#workspace-canvas .dx-day-options .dx-day-option[aria-pressed="true"]{background:#235f4b;border-color:#4cc79a;color:#fff}
+#workspace-canvas .dx-day-options .dx-day-option:hover{border-color:var(--dx-panel-strong,var(--blue))}
+#workspace-canvas .dx-supplier-delete{color:var(--dx-bad,#d36d77)!important;border-color:currentColor!important}
