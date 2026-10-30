@@ -1996,3 +1996,8 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas .dx-product-draft-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 #workspace-canvas .dx-product-draft-actions button{padding:7px 11px;border:1px solid var(--border);border-radius:7px;background:var(--bg-panel);color:var(--text-main);cursor:pointer}
 @media(max-width:440px){#workspace-canvas .dx-product-fields{grid-template-columns:minmax(0,1fr)}#workspace-canvas .dx-product-fields .dx-wide{grid-column:1}}
+
+/* Material names: search is the primary filter; keep branch/supplier selects compact. */
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .optima-data-filters .dx-product-search{flex:3 1 310px;min-width:190px;max-width:100%}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .optima-data-filters>select:not([hidden]){flex:1 1 145px;min-width:0}
+@media(max-width:500px){#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .optima-data-filters .dx-product-search{flex:1 1 100%;min-width:0}}
