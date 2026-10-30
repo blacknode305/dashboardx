@@ -1,5 +1,10 @@
 import { getCredential } from './CredentialStore.js';
 
+// Write password lives only in JS memory for this tab; never persist it.
+let ownerWritePassword='';
+export const setOptimaWritePassword=value=>{ownerWritePassword=String(value||'');};
+export const hasOptimaWritePassword=()=>Boolean(ownerWritePassword);
+export const getOptimaWritePassword=()=>ownerWritePassword;
 export const OPTIMA_BASE='https://pro-optima-production.up.railway.app';
 export const OPTIMA_POLL_MS=90000;
 export const PRODUCTION_BRANCHES=['ГОРНЯК','ЛОБОДЫ','НУРКЕН','САРАНЬ','ПРИШАХТИНСК'];
@@ -21,9 +26,9 @@ export async function optimaRequest(path,options={}){
   const token=getCredential('optima');
   if(!token)throw Object.assign(new Error('Missing Admin Token'),{status:401,noToken:true});
   const method=String(options.method||'GET').toUpperCase();
-  const writePassword=!['GET','HEAD','OPTIONS'].includes(method)
-    ?window.prompt('Пароль полного управления PRO OPTIMA (не сохраняется в браузере):'):null;
-  if(writePassword===null && !['GET','HEAD','OPTIONS'].includes(method))throw new Error('Изменение отменено: пароль не введён');
+  const writePassword=!['GET','HEAD','OPTIONS'].includes(method)?ownerWritePassword:null;
+  if(writePassword===null && !['GET','HEAD','OPTIONS'].includes(method))throw new Error('В настройках требуется пароль администратора Оптима.');
+  if(writePassword==='')throw new Error('Укажите пароль администратора Оптима в настройках DashboardX.');
   const headers={
     'Authorization':'Bearer '+token,
     ...(writePassword!==null?{'X-Optima-Write-Password':writePassword}:{}),
