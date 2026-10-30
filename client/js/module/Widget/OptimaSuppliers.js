@@ -1,6 +1,9 @@
 import { t } from '../i18n.js';
 import { getCredential } from '../CredentialStore.js';
-import { loadOptima, patchOptima, OPTIMA_POLL_MS } from '../OptimaAPI.js';
+import { loadOptima, patchOptima, OPTIMA_POLL_MS, OPTIMA_BASE } from '../OptimaAPI.js';
+const DAYS=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+const DAY_NAMES=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
+const parseDays=value=>new Set(String(value||'').split(/[,;/]+/).map(v=>v.trim().toLocaleLowerCase()).map(v=>DAY_NAMES.find(n=>n.toLocaleLowerCase()===v)||DAY_NAMES[DAYS.findIndex(d=>d.toLocaleLowerCase()===v)]).filter(Boolean));
 const normalize=value=>String(value??'').trim().toLocaleLowerCase();
 const whatsappUrl=phone=>{
   const raw=String(phone||'').trim();
@@ -175,9 +178,9 @@ export default class OptimaSuppliersWidget {
     this.editName.value=String(supplier.name||'');
     this.editContact.value=String(supplier.contact||'');
     this.editPhone.value=String(supplier.phone||'');
-    this.scheduleEditor.hidden=mode!=='replace';
+    this.scheduleEditor.hidden=false;
     this.scheduleRows.replaceChildren();
-    if(mode==='replace')for(const row of Array.isArray(supplier.schedules)?supplier.schedules:[])this.makeScheduleRow(row);
+    for(const row of Array.isArray(supplier.schedules)?supplier.schedules:[])this.makeScheduleRow(row);
     const card=[...this.list.querySelectorAll('details.optima-supplier')].find(
       el=>el.dataset.supplierId===String(supplier.id)
     );
@@ -198,12 +201,25 @@ export default class OptimaSuppliersWidget {
   }
   makeScheduleRow(data){
     const wrapper=document.createElement('div');wrapper.className='optima-edit-schedule';
-    const names=['branch','order','delivery','note'];
-    for(const name of names){
+    for(const name of ['branch','note']){
       const label=document.createElement('label');label.textContent=t('optima.'+name);
-      const input=document.createElement('input');
-      input.dataset.field=name;input.value=String(data?.[name]||'');
-      label.append(input);wrapper.append(label);
+      const input=document.createElement('input');input.dataset.field=name;
+      input.value=String(data?.[name]||'');label.append(input);wrapper.append(label);
+    }
+    for(const name of ['order','delivery']){
+      const group=document.createElement('fieldset');group.className='dx-day-fieldset';
+      const legend=document.createElement('legend');legend.textContent=name==='order'?'Дни заявки':'Дни поставки';
+      group.append(legend);
+      const selected=parseDays(data?.[name]);
+      const controls=document.createElement('div');controls.className='dx-day-options';controls.dataset.field=name;
+      DAYS.forEach((day,i)=>{
+        const button=document.createElement('button');button.type='button';
+        button.className='dx-day-option';button.dataset.day=DAY_NAMES[i];
+        button.textContent=day;button.setAttribute('aria-pressed',String(selected.has(DAY_NAMES[i])));
+        button.addEventListener('click',()=>button.setAttribute('aria-pressed',String(button.getAttribute('aria-pressed')!=='true')));
+        controls.append(button);
+      });
+      group.append(controls);wrapper.append(group);
     }
     const remove=document.createElement('button');remove.type='button';
     remove.className='optima-danger';remove.textContent=t('optima.removeSchedule');
@@ -214,16 +230,14 @@ export default class OptimaSuppliersWidget {
     if(this.saving||!this.database||!this.editId)return;
     const supplierId=this.editId,mode=this.editMode;
     const values={name:this.editName.value,contact:this.editContact.value,phone:this.editPhone.value};
-    if(mode==='replace'){
-      values.schedules=[...this.scheduleRows.querySelectorAll('.optima-edit-schedule')].map(row=>{
-        const get=k=>row.querySelector('[data-field="'+k+'"]')?.value||'';
-        return {branch:get('branch'),order:get('order'),delivery:get('delivery'),note:get('note')};
-      });
-    }
+    values.schedules=[...this.scheduleRows.querySelectorAll('.optima-edit-schedule')].map(row=>{
+      const get=k=>row.querySelector('input[data-field="'+k+'"]')?.value||'';
+      const days=k=>[...row.querySelectorAll('[data-field="'+k+'"] [aria-pressed="true"]')].map(x=>x.dataset.day).join(', ');
+      return {branch:get('branch'),order:days('order'),delivery:days('delivery'),note:get('note')};
+    });
     let changes;
-    try {changes=prepareSupplierChanges(this.database,supplierId,values,mode==='replace');}
+    try {changes=prepareSupplierChanges(this.database,supplierId,values,true);}
     catch(error){this.editorError.textContent=t('optima.invalidEdit')+': '+error.message;return;}
-    if(mode==='replace'&&!window.confirm(t('optima.replaceConfirm')))return;
     const button=this.widget.querySelector('[data-role="optima-save-edit"]');
     this.saving=true;button.disabled=true;this.editorError.textContent=t('optima.saving');
     try {
@@ -237,6 +251,37 @@ export default class OptimaSuppliersWidget {
         this.editorError.textContent=t('optima.unauthorized');
       }else this.editorError.textContent=t('optima.saveFailed');
     }finally{this.saving=false;button.disabled=false;}
+  }
+
+  async deleteSupplier(supplier){
+    if(this.saving||this.editId)return;
+    const name=String(supplier.name||'');
+    if(!window.confirm('Удалить поставщика «'+name+'»? Это действие затронет список поставщиков.'))return;
+    const token=window.prompt('Для удаления повторно введите Admin Token PRO OPTIMA:');
+    if(!token)return;
+    // Verify the freshly entered token on the server: never trust a client-side password comparison.
+    try{
+      const res=await fetch(OPTIMA_BASE+'/api/admin/db',{
+        method:'GET',headers:{Authorization:'Bearer '+token.trim()},cache:'no-store'
+      });
+      if(!res.ok)throw new Error(res.status===401?'Неверный пароль администратора':'Не удалось подтвердить права');
+      // Refuse deletion if products/orders still refer to this supplier.
+      const id=String(supplier.id);
+      const products=Array.isArray(this.database?.products)?this.database.products:[];
+      const linked=products.some(p=>Array.isArray(p.orderSuppliers)&&p.orderSuppliers.some(l=>
+        String(l.supplierId||'')===id || (!l.supplierId&&normalize(l.supplier)===normalize(name))));
+      if(linked){window.alert('Поставщик связан с товарами. Сначала удалите или измените эти связи в PRO OPTIMA.');return;}
+      const changes={suppliers:this.database.suppliers.filter(x=>String(x.id)!==id)};
+      const response=await fetch(OPTIMA_BASE+'/api/admin/db',{
+        method:'PATCH',headers:{Authorization:'Bearer '+token.trim(),'Content-Type':'application/json'},
+        body:JSON.stringify({baseRevision:Number(this.revision),changes}),cache:'no-store'
+      });
+      if(!response.ok){
+        const result=await response.json().catch(()=>({}));
+        throw new Error(result.error||'Ошибка удаления: HTTP '+response.status);
+      }
+      await this.load();
+    }catch(error){window.alert(error.message||String(error));}
   }
 
   render(){
@@ -306,12 +351,16 @@ export default class OptimaSuppliersWidget {
         body.append(line);
       }
       const actions=document.createElement('div');actions.className='optima-supplier-actions';
-      for(const [action,label] of [['edit','optima.edit'],['replace','optima.replace']]){
+      for(const [action,label] of [['edit','optima.edit']]){
         const button=document.createElement('button');button.type='button';
         button.textContent=t(label);
         button.addEventListener('click',()=>this.edit(supplier,action));
         actions.append(button);
       }
+      const remove=document.createElement('button');remove.type='button';
+      remove.className='optima-danger dx-supplier-delete';remove.textContent='Удалить';
+      remove.addEventListener('click',()=>this.deleteSupplier(supplier));
+      actions.append(remove);
       body.append(actions);
       card.append(heading,body);
       card.addEventListener('toggle',()=>{
