@@ -1,4 +1,5 @@
 import { t } from '../i18n.js';
+import { setOptimaWritePassword, hasOptimaWritePassword } from '../OptimaAPI.js';
 import { getCredential, hasCredential, setCredential, clearCredential } from '../CredentialStore.js';
 import {
   getGatewayUrl, configureGatewayAccess, disconnectGateway, gatewayStatus,
@@ -68,6 +69,27 @@ export default class DashboardSettingsWidget {
         this.unbind.push(()=>button.removeEventListener('click',test));
       }
       update();
+    }
+    const ownerPasswordForm=widget.querySelector('[data-role="optima-owner-password-form"]');
+    if(ownerPasswordForm){
+      const password=ownerPasswordForm.querySelector('[data-role="optima-owner-password"]');
+      const reveal=ownerPasswordForm.querySelector('[data-role="optima-owner-reveal"]');
+      const clear=ownerPasswordForm.querySelector('[data-role="optima-owner-clear"]');
+      const status=widget.querySelector('[data-role="optima-owner-status"]');
+      const submit=e=>{
+        e.preventDefault();
+        if(!password.value){status.textContent='Введите пароль администратора.';return;}
+        setOptimaWritePassword(password.value);
+        password.value='';password.type='password';reveal.textContent='Показать';
+        status.textContent='Пароль установлен для этой вкладки. Сервер проверит его при сохранении.';
+      };
+      const toggle=()=>{password.type=password.type==='password'?'text':'password';reveal.textContent=password.type==='password'?'Показать':'Скрыть';};
+      const lock=()=>{setOptimaWritePassword('');password.value='';password.type='password';reveal.textContent='Показать';status.textContent='Полное управление заблокировано в этой вкладке.';};
+      ownerPasswordForm.addEventListener('submit',submit);
+      reveal.addEventListener('click',toggle);
+      clear.addEventListener('click',lock);
+      if(hasOptimaWritePassword())status.textContent='Пароль уже введён в этой вкладке.';
+      this.unbind.push(()=>{ownerPasswordForm.removeEventListener('submit',submit);reveal.removeEventListener('click',toggle);clear.removeEventListener('click',lock);password.value='';});
     }
     // Per-installation BYOK: never write OpenAI or gateway tokens to localStorage.
     const ownerForm = widget.querySelector('[data-role="ai-owner-form"]');
