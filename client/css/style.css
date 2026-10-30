@@ -1919,3 +1919,15 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas .dx-supplier-toolbar{display:flex;justify-content:flex-end;margin:0 0 6px;min-width:0}
 #workspace-canvas .dx-supplier-toolbar .dx-add-supplier{display:grid;place-items:center;flex:0 0 29px;width:29px;height:29px;min-width:29px;min-height:29px;padding:0;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel);color:var(--text-main);font-size:20px;font-weight:500;line-height:1;cursor:pointer}
 #workspace-canvas .dx-supplier-toolbar .dx-add-supplier:hover{border-color:var(--dx-hover-border);background:var(--bg-panel-light)}
+
+
+/* Keep the add action in the same row as search, without taking a full row. */
+#workspace-canvas .optima-filters .dx-add-supplier{
+  flex:0 0 29px!important;width:29px!important;min-width:29px!important;
+  height:29px!important;min-height:29px!important;align-self:center;
+  display:grid;place-items:center;padding:0!important;margin:0;
+  border:1px solid var(--border);border-radius:8px;
+  background:var(--bg-panel);color:var(--text-main);
+  font-size:20px;line-height:1;font-weight:500;cursor:pointer;
+}
+#workspace-canvas .optima-filters .dx-add-supplier:hover{border-color:var(--dx-hover-border);background:var(--bg-panel-light)}
