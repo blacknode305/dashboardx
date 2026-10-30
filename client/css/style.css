@@ -1915,25 +1915,61 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 
 #workspace-canvas .dx-day-timing-row[hidden],#workspace-canvas .dx-day-timing[hidden]{display:none!important}
 
-/* Add supplier — compact toolbar action */
-#workspace-canvas .dx-supplier-toolbar{display:flex;justify-content:flex-end;margin:0 0 6px;min-width:0}
-#workspace-canvas .dx-supplier-toolbar .dx-add-supplier{display:grid;place-items:center;flex:0 0 29px;width:29px;height:29px;min-width:29px;min-height:29px;padding:0;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel);color:var(--text-main);font-size:20px;font-weight:500;line-height:1;cursor:pointer}
-#workspace-canvas .dx-supplier-toolbar .dx-add-supplier:hover{border-color:var(--dx-hover-border);background:var(--bg-panel-light)}
-
-
-/* Keep the add action in the same row as search, without taking a full row. */
-#workspace-canvas .optima-filters .dx-add-supplier{
-  flex:0 0 29px!important;width:29px!important;min-width:29px!important;
-  height:29px!important;min-height:29px!important;align-self:center;
-  display:grid;place-items:center;padding:0!important;margin:0;
-  border:1px solid var(--border);border-radius:8px;
-  background:var(--bg-panel);color:var(--text-main);
-  font-size:20px;line-height:1;font-weight:500;cursor:pointer;
+/* Supplier filters: original two-column layout; + and search share one flex row. */
+#workspace-canvas .optima-filters{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(120px,38%);
+  gap:8px;
+  align-items:stretch;
+  min-width:0;
 }
-#workspace-canvas .optima-filters .dx-add-supplier:hover{border-color:var(--dx-hover-border);background:var(--bg-panel-light)}
-
-
-/* The search/add pair occupies the original first filter grid cell. */
-#workspace-canvas .optima-filters .dx-supplier-search-wrap{display:flex;align-items:stretch;gap:7px;min-width:0;width:100%}
-#workspace-canvas .optima-filters .dx-supplier-search-wrap>input{box-sizing:border-box;display:block;flex:1 1 0;width:0;min-width:0;max-width:100%;min-height:40px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel-inside);color:var(--text-main);font:550 12px/1.3 var(--f-family-inter)}
-#workspace-canvas .optima-filters .dx-supplier-search-wrap>.dx-add-supplier{flex:0 0 32px!important;width:32px!important;height:40px!important;min-width:32px!important;min-height:40px!important;align-self:auto}
+#workspace-canvas .optima-filters .dx-supplier-search-wrap{
+  display:flex;
+  flex-flow:row nowrap;
+  align-items:stretch;
+  gap:6px;
+  min-width:0;
+  width:100%;
+}
+#workspace-canvas .optima-filters .dx-supplier-search-wrap input[data-role="optima-search"]{
+  flex:1 1 auto;
+  width:0;
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+  height:40px;
+  padding:9px 10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--bg-panel-inside);
+  color:var(--text-main);
+  font:550 12px/1.3 var(--f-family-inter);
+}
+#workspace-canvas .optima-filters .dx-supplier-search-wrap button.dx-add-supplier{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex:0 0 32px;
+  width:32px;
+  min-width:32px;
+  height:40px;
+  min-height:40px;
+  padding:0;
+  margin:0;
+  box-sizing:border-box;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--bg-panel-inside);
+  color:var(--text-main);
+  font-size:20px;
+  font-weight:500;
+  line-height:1;
+  cursor:pointer;
+}
+#workspace-canvas .optima-filters .dx-supplier-search-wrap button.dx-add-supplier:hover{
+  border-color:var(--dx-hover-border);
+  background:var(--bg-panel-light);
+}
+@media(max-width:510px){
+  #workspace-canvas .optima-filters{grid-template-columns:minmax(0,1fr)}
+}
