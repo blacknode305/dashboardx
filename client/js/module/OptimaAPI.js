@@ -20,8 +20,13 @@ export const branchNames=db=>{
 export async function optimaRequest(path,options={}){
   const token=getCredential('optima');
   if(!token)throw Object.assign(new Error('Missing Admin Token'),{status:401,noToken:true});
+  const method=String(options.method||'GET').toUpperCase();
+  const writePassword=!['GET','HEAD','OPTIONS'].includes(method)
+    ?window.prompt('Пароль полного управления PRO OPTIMA (не сохраняется в браузере):'):null;
+  if(writePassword===null && !['GET','HEAD','OPTIONS'].includes(method))throw new Error('Изменение отменено: пароль не введён');
   const headers={
     'Authorization':'Bearer '+token,
+    ...(writePassword!==null?{'X-Optima-Write-Password':writePassword}:{}),
     ...(options.body!==undefined?{'Content-Type':'application/json'}:{}),
     ...(options.headers||{})
   };
