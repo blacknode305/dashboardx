@@ -39,12 +39,16 @@ export function prepareSupplierChanges(snapshot,supplierId,values,replaceSchedul
   };
   if(replaceSchedules){
     if(!Array.isArray(values.schedules))throw new Error('schedule list required');
-    changed.schedules=values.schedules.map(r=>({
-      branch:String(r.branch||'').trim(),
-      order:String(r.order||'').trim(),
-      delivery:String(r.delivery||'').trim(),
-      note:String(r.note||'').trim()
-    })).filter(r=>r.branch||r.order||r.delivery||r.note);
+    changed.schedules=values.schedules.map(r=>{
+      const prior=(current.schedules||[]).find(x=>normalize(x.branch)===normalize(r.branch))||{};
+      const rules=Object.fromEntries(Object.entries(r.deliveryTimingByDay||{}).filter(([day,timing])=>DAY_NAMES.includes(day)&&['same','next'].includes(timing)));
+      const result={...prior,branch:String(r.branch||'').trim(),
+        order:String(r.order||'').trim(),delivery:String(r.delivery||'').trim(),
+        note:String(r.note||'').trim()};
+      if(Object.keys(rules).length)result.deliveryTimingByDay=rules;
+      else delete result.deliveryTimingByDay;
+      return result;
+    }).filter(r=>r.branch||r.order||r.delivery||r.note);
     if(changed.schedules.some(r=>!r.branch))throw new Error('branch required');
     const unique=new Set();
     for(const r of changed.schedules){
@@ -234,6 +238,19 @@ export default class OptimaSuppliersWidget {
       });
       group.append(controls);wrapper.append(group);
     }
+    const timing=document.createElement('div');timing.className='dx-day-timing';
+    const timingTitle=document.createElement('strong');timingTitle.textContent='Срок поставки по дням заявки';
+    timing.append(timingTitle);
+    DAYS.forEach((day,i)=>{
+      const row=document.createElement('label');row.className='dx-day-timing-row';
+      const name=document.createElement('span');name.textContent=DAY_NAMES[i];
+      const select=document.createElement('select');select.dataset.timingDay=DAY_NAMES[i];
+      [['','По умолчанию'],['same','День в день'],['next','На следующий день']].forEach(([value,label])=>select.add(new Option(label,value)));
+      const rule=data?.deliveryTimingByDay?.[DAY_NAMES[i]];
+      select.value=rule==='same'||rule==='next'?rule:'';
+      row.append(name,select);timing.append(row);
+    });
+    wrapper.append(timing);
     const remove=document.createElement('button');remove.type='button';
     remove.className='optima-danger';remove.textContent=t('optima.removeSchedule');
     remove.addEventListener('click',()=>wrapper.remove());
@@ -246,7 +263,11 @@ export default class OptimaSuppliersWidget {
     values.schedules=[...this.scheduleRows.querySelectorAll('.optima-edit-schedule')].map(row=>{
       const get=k=>row.querySelector('input[data-field="'+k+'"]')?.value||'';
       const days=k=>[...row.querySelectorAll('[data-field="'+k+'"] [aria-pressed="true"]')].map(x=>x.dataset.day).join(', ');
-      return {branch:get('branch'),order:days('order'),delivery:days('delivery'),note:get('note')};
+      const deliveryTimingByDay={};
+      row.querySelectorAll('[data-timing-day]').forEach(select=>{
+        if(select.value)deliveryTimingByDay[select.dataset.timingDay]=select.value;
+      });
+      return {branch:get('branch'),order:days('order'),delivery:days('delivery'),note:get('note'),deliveryTimingByDay};
     });
     let changes;
     try {changes=prepareSupplierChanges(this.database,supplierId,values,true);}
