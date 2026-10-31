@@ -2338,3 +2338,74 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas widget-element table.dx-table-sortable thead .dx-table-sort-button[data-sort-direction="desc"] .dx-table-sort-arrow{
   opacity:1;color:var(--dx-accent);
 }
+
+
+/* Suppliers + Names: keep filters and counters fixed; scroll only the contents. */
+#workspace-canvas .widget--element[data-widget-type="optimaSuppliers"],
+#workspace-canvas .widget--element[data-widget-type="optimaProducts"]{
+  height:min(76vh,680px);
+  min-height:min(325px,80vh);
+}
+#workspace-canvas .widget--element[data-widget-type="optimaSuppliers"] > .widget--element--body,
+#workspace-canvas .widget--element[data-widget-type="optimaProducts"] > .widget--element--body{
+  display:flex;
+  flex-direction:column;
+  flex:1 1 auto;
+  min-height:0;
+  min-width:0;
+  overflow:hidden;
+}
+#workspace-canvas [data-widget-type="optimaSuppliers"] .optima-suppliers,
+#workspace-canvas [data-widget-type="optimaProducts"] .optima-data{
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  flex:1 1 auto;
+  height:100%;
+  min-height:0;
+  min-width:0;
+  overflow:hidden;
+}
+#workspace-canvas [data-widget-type="optimaSuppliers"] .optima-suppliers > .optima-filters,
+#workspace-canvas [data-widget-type="optimaSuppliers"] .optima-suppliers > .optima-status,
+#workspace-canvas [data-widget-type="optimaSuppliers"] .optima-suppliers > .optima-summary,
+#workspace-canvas [data-widget-type="optimaProducts"] .optima-data > .optima-data-filters,
+#workspace-canvas [data-widget-type="optimaProducts"] .optima-data > .optima-status,
+#workspace-canvas [data-widget-type="optimaProducts"] .optima-data > .optima-summary{
+  flex:0 0 auto;
+}
+#workspace-canvas [data-widget-type="optimaSuppliers"] .optima-supplier-scroll,
+#workspace-canvas [data-widget-type="optimaProducts"] .optima-table-scroll{
+  box-sizing:border-box;
+  flex:1 1 auto;
+  min-height:0;
+  min-width:0;
+  max-height:none;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:var(--border) transparent;
+}
+#workspace-canvas [data-widget-type="optimaSuppliers"] .optima-supplier-scroll{
+  overflow-x:hidden;
+}
+#workspace-canvas [data-widget-type="optimaSuppliers"] .optima-supplier-list{
+  align-content:start;
+  grid-auto-rows:max-content;
+}
+#workspace-canvas [data-widget-type="optimaProducts"] .optima-table-scroll{
+  overflow-x:auto;
+}
+#workspace-canvas [data-widget-type="optimaProducts"] .dx-product-draft{
+  flex:0 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+@media(max-width:510px){
+  #workspace-canvas .widget--element[data-widget-type="optimaSuppliers"],
+  #workspace-canvas .widget--element[data-widget-type="optimaProducts"]{
+    height:min(80vh,700px);
+    min-height:min(390px,85vh);
+  }
+}

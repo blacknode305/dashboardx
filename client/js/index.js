@@ -76,7 +76,8 @@ async function loadTemplates() {
     if(embedded) return {id,template:embedded};
     const url=new URL('../'+entry.file,import.meta.url);
     if(id==='optimaProducts')url.searchParams.set('v','names-one-supplier-input-v2-20261031');
-    const response=await fetch(url,{cache:id==='optimaProducts'?'no-store':'default'});
+    if(id==='optimaSuppliers')url.searchParams.set('v','optima-list-only-scroll-20261031');
+    const response=await fetch(url,{cache:(id==='optimaProducts'||id==='optimaSuppliers')?'no-store':'default'});
     if(!response.ok)throw Error(entry.file+': HTTP '+response.status);
     const doc=new DOMParser().parseFromString(await response.text(),'text/html');
     const source=doc.querySelector('template[data-widget][data-id="'+id+'"]');

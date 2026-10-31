@@ -18,8 +18,9 @@
     </div>
     <p data-role="optima-status" class="optima-status" role="status" aria-live="polite"></p>
     <div class="optima-summary" data-role="optima-count"></div>
-    <div class="optima-supplier-list" data-role="optima-list"></div>
-    <section class="optima-editor" data-role="optima-editor" hidden>
+    <div class="optima-supplier-scroll" data-role="optima-supplier-scroll">
+      <div class="optima-supplier-list" data-role="optima-list"></div>
+      <section class="optima-editor" data-role="optima-editor" hidden>
       <h3 data-role="optima-editor-title"></h3>
       <form data-role="optima-edit-form" autocomplete="off">
         <label><span data-i18n="optima.name">Название</span><input data-role="optima-edit-name" required maxlength="160"></label>
@@ -36,6 +37,7 @@
           <button type="button" data-role="optima-cancel-edit" data-i18n="optima.cancel">Отмена</button>
         </div>
       </form>
-    </section>
+      </section>
+    </div>
   </section>
 </template></body></html>
