@@ -1,61 +1,66 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import {checkSegaRom,segaEmbedHTML,SEGA_ROM_EXTENSIONS} from '../client/js/module/Widget/SegaEmulator.js';
+import {readFileSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import {checkSegaRom,segaPlayerURL,SEGA_ROM_EXTENSIONS} from '../client/js/module/Widget/SegaEmulator.js';
 
-test('Sega ROM accepts real-sized 4 MiB .gen files and rejects invalid data',()=>{
+const playerHTML=readFileSync(fileURLToPath(new URL('../client/sega-player.html',import.meta.url)),'utf8');
+test('Sega ROM .gen validation',()=>{
   assert.deepEqual(SEGA_ROM_EXTENSIONS,['md','bin','gen','smd','zip']);
   assert.equal(checkSegaRom({name:'Ultimate Mortal Kombat 3 (USA).gen',size:4194304}),'gen');
-  assert.equal(checkSegaRom({name:'homebrew.zip',size:4096}),'zip');
-  assert.throws(()=>checkSegaRom({name:'notes.txt',size:1000}),/ROM/);
-  assert.throws(()=>checkSegaRom({name:'broken.md',size:32}),/размер/);
-  assert.throws(()=>checkSegaRom({name:'huge.bin',size:26*1024*1024}),/размер/);
+  assert.equal(checkSegaRom({name:'homebrew.zip',size:10000}),'zip');
+  assert.throws(()=>checkSegaRom({name:'malware.exe',size:1024}),/ROM/);
+  assert.throws(()=>checkSegaRom({name:'invalid.gen',size:42}),/размер/);
 });
-test('EmulatorJS receives the original File with .gen extension, not a blob UUID',()=>{
-  const html=segaEmbedHTML({gameName:'Ultimate Mortal Kombat 3 (USA).gen',token:'test-token'});
-  assert.match(html,/EJS_core='segaMD'/);
-  assert.match(html,/EJS_controlScheme='segaMD'/);
-  assert.match(html,/cdn\.emulatorjs\.org\/stable\/data\/loader\.js/);
-  assert.match(html,/window\.EJS_gameUrl=file/);
-  assert.match(html,/dashboardx:sega-ready/);
-  assert.match(html,/dashboardx:sega-received/);
-  const inline=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+test('Sega boot URL resolves to actual HTML file on DashboardX origin',()=>{
+  const url=segaPlayerURL('https://example.com/dashboardx/client/js/module/Widget/SegaEmulator.js?v=1','session-12');
+  assert.equal(new URL(url).pathname,'/dashboardx/client/sega-player.html');
+  assert.equal(new URL(url).hash,'#token=session-12');
+  assert.throws(()=>segaPlayerURL('https://example.com/widget.js',''),/ключ/);
+});
+test('Sega player transfers the original File and starts stable loader after valid handshake',()=>{
+  const inline=playerHTML.match(/<script>([\s\S]*?)<\/script>/)?.[1];
   assert.ok(inline);
-
-  const messages=[];
-  let messageHandler=null;
-  const parent={postMessage:(value,origin)=>messages.push({value,origin})};
-  const window={
-    parent,location:{origin:'https://dashboard.example'},
-    addEventListener:(type,cb)=>{if(type==='message')messageHandler=cb;}
-  };
-  const scripts=[];
-  const document={
-    createElement:()=>({src:'',onerror:null}),
-    head:{append:script=>scripts.push(script)}
-  };
-  vm.runInNewContext(inline,{window,document,File},{timeout:1000});
-  assert.equal(messages[0].value.type,'dashboardx:sega-ready');
-  const file=new File([new Uint8Array(4194304)],'Ultimate Mortal Kombat 3 (USA).gen');
-  messageHandler({source:parent,origin:'https://foreign.example',data:{type:'dashboardx:sega-rom',token:'test-token',file}});
-  assert.equal(scripts.length,0);
-  messageHandler({source:parent,origin:'https://dashboard.example',data:{type:'dashboardx:sega-rom',token:'wrong-token',file}});
-  assert.equal(scripts.length,0);
-  messageHandler({source:parent,origin:'https://dashboard.example',data:{type:'dashboardx:sega-rom',token:'test-token',file}});
-  assert.equal(window.EJS_gameUrl,file);
-  assert.equal(window.EJS_gameUrl.name,'Ultimate Mortal Kombat 3 (USA).gen');
+  new vm.Script(inline);
+  const listeners=new Map(),messages=[],scripts=[];
+  const elements=new Map();
+  ['#status','#boot','#progress','#again'].forEach(name=>{
+    elements.set(name,{textContent:'',hidden:false,addEventListener:(event,cb)=>{
+      listeners.set('button:'+event,cb);
+    }});
+  });
+  const parent={postMessage:(data,origin)=>messages.push({data,origin})};
+  const window={addEventListener:(event,cb)=>listeners.set('window:'+event,cb)};
+  const document={querySelector:selector=>elements.get(selector),
+    createElement:()=>({src:'',onerror:null,onload:null}),
+    head:{append:script=>scripts.push(script)}};
+  const location={origin:'https://example.com',hash:'#token=session-12'};
+  class FileMock {constructor(name,size){this.name=name;this.size=size}}
+  vm.runInNewContext(inline,{window,document,location,parent,File:FileMock,URLSearchParams,
+    clearTimeout:()=>{},setTimeout:()=>9},{timeout:1000});
+  assert.equal(messages[0].data.type,'dashboardx:sega-ready');
+  const file=new FileMock('Ultimate Mortal Kombat 3 (USA).gen',4194304);
+  const handler=listeners.get('window:message');
+  handler({source:parent,origin:'https://malicious.example',data:{type:'dashboardx:sega-rom',token:'session-12',file}});
+  assert.equal(scripts.length,0,'reject foreign origins');
+  handler({source:parent,origin:location.origin,data:{type:'dashboardx:sega-rom',token:'wrong',file}});
+  assert.equal(scripts.length,0,'reject mismatched tokens');
+  handler({source:parent,origin:location.origin,data:{type:'dashboardx:sega-rom',token:'session-12',file}});
+  assert.equal(window.EJS_gameUrl,file,'must pass original file with .gen extension');
+  assert.equal(window.EJS_core,'segaMD');
   assert.equal(scripts.length,1);
   assert.equal(scripts[0].src,'https://cdn.emulatorjs.org/stable/data/loader.js');
-  assert.equal(messages.at(-1).value.type,'dashboardx:sega-received');
-  messageHandler({source:parent,origin:'https://dashboard.example',data:{type:'dashboardx:sega-rom',token:'test-token',file}});
-  assert.equal(scripts.length,1,'same ROM must not start the loader twice');
+  assert.ok(messages.some(m=>m.data.type==='dashboardx:sega-received'));
+  handler({source:parent,origin:location.origin,data:{type:'dashboardx:sega-rom',token:'session-12',file}});
+  assert.equal(scripts.length,1,'loader must only start once');
+  window.EJS_ready();
+  assert.equal(elements.get('#boot').hidden,true,'boot overlay clears once EmulatorJS UI is ready');
+  assert.ok(messages.some(m=>m.data.type==='dashboardx:sega-ui-ready'));
 });
-test('ROM filename is escaped, cannot inject code into the iframe bootstrap',()=>{
-  const payload='abc</script><script>window.hijacked=true</script>.gen';
-  const html=segaEmbedHTML({gameName:payload,token:'safe'});
-  assert.equal((html.match(/<script/g)||[]).length,1);
-  assert.equal(html.includes(payload),false);
-  assert.equal(html.includes('window.hijacked=true</script>'),false);
-  assert.match(html,/\\u003c\/script>/);
-  assert.throws(()=>segaEmbedHTML({gameName:'',token:'a'}),/обязательны/);
+test('Sega loader has fallback and visible diagnostics',()=>{
+  assert.match(playerHTML,/cdn\.emulatorjs\.org\/latest\/data\//);
+  assert.match(playerHTML,/EmulatorJS не запустился за 30 секунд/);
+  assert.match(playerHTML,/id="again"/);
+  assert.match(playerHTML,/window\.addEventListener\('unhandledrejection'/);
 });

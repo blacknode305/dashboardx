@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DashboardX Sega Player</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;background:#070a10;color:#e0e8f1;font:13px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}
+    #game{position:absolute;inset:0;width:100%;height:100%}
+    #boot{position:absolute;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:18px;background:#090d15}
+    #boot[hidden]{display:none!important}
+    #boot strong{letter-spacing:.12em;font-size:16px}
+    #status{max-width:350px;overflow-wrap:anywhere;color:#aabacc}
+    #again{padding:8px 15px;border:1px solid #536b83;border-radius:7px;background:#1b2b3a;color:#f6f8fc;font:inherit;cursor:pointer}
+    #again[hidden]{display:none!important}
+    #progress{width:34px;height:34px;border:3px solid #3b4656;border-top-color:#92b1d2;border-radius:50%;animation:spin .9s linear infinite}
+    #progress[hidden]{display:none!important}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(prefers-reduced-motion:reduce){#progress{animation:none}}
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+  <div id="boot">
+    <strong>SEGA · EMULATORJS</strong>
+    <div id="progress"></div>
+    <div id="status" role="status" aria-live="polite">Подключение эмулятора…</div>
+    <button type="button" id="again" hidden>Повторить загрузку</button>
+  </div>
+  <script>
+    (() => {
+      'use strict';
+      const token = new URLSearchParams(location.hash.slice(1)).get('token');
+      const expectedOrigin = location.origin;
+      const status = document.querySelector('#status');
+      const boot = document.querySelector('#boot');
+      const progress = document.querySelector('#progress');
+      const retry = document.querySelector('#again');
+      const EJS_STABLE = 'https://cdn.emulatorjs.org/stable/data/';
+      const EJS_FALLBACK = 'https://cdn.emulatorjs.org/latest/data/';
+      let received = false;
+      let launched = false;
+      let coreReady = false;
+      let timeoutId = null;
+      const send = (type, fields = {}) => {
+        parent.postMessage({type, token, ...fields}, expectedOrigin);
+      };
+      function announce(message) {
+        status.textContent = message;
+        send('dashboardx:sega-status', {message});
+      }
+      function failed(message) {
+        clearTimeout(timeoutId);
+        if (coreReady) return;
+        progress.hidden = true;
+        retry.hidden = false;
+        announce(message);
+        send('dashboardx:sega-error', {reason:message});
+      }
+      retry.addEventListener('click', () => send('dashboardx:sega-retry'));
+      window.addEventListener('error', event => {
+        if (event.target !== window) return;
+        if (!coreReady) failed('Ошибка EmulatorJS: ' + String(event.message || 'сбой JavaScript').slice(0,160));
+      });
+      window.addEventListener('unhandledrejection', event => {
+        if (!coreReady) failed('Ошибка загрузки ядра: ' + String(event.reason?.message || event.reason || 'ошибка').slice(0,160));
+      });
+      function loadEmulator(base, fallback = false) {
+        if (coreReady) return;
+        window.EJS_pathtodata = base;
+        const loader = document.createElement('script');
+        loader.src = base + 'loader.js';
+        loader.onload = () => {
+          if (!coreReady) announce(fallback ? 'Резервный загрузчик подключён · ждём интерфейс…'
+            : 'Загрузчик EmulatorJS подключён · ждём интерфейс…');
+        };
+        loader.onerror = () => {
+          if (!fallback) {
+            announce('Основной CDN недоступен · пробуем резервный…');
+            loadEmulator(EJS_FALLBACK, true);
+          } else failed('EmulatorJS CDN недоступен. Проверьте сеть или блокировку CDN в браузере.');
+        };
+        document.head.append(loader);
+      }
+      window.EJS_ready = () => {
+        coreReady = true;
+        clearTimeout(timeoutId);
+        boot.hidden = true;
+        send('dashboardx:sega-ui-ready');
+      };
+      window.EJS_onGameStart = () => {
+        launched = true;
+        coreReady = true;
+        clearTimeout(timeoutId);
+        boot.hidden = true;
+        send('dashboardx:sega-start');
+      };
+      window.addEventListener('message', event => {
+        if (received || !token || event.source !== parent || event.origin !== expectedOrigin ||
+            event.data?.type !== 'dashboardx:sega-rom' || event.data?.token !== token) return;
+        const file = event.data.file;
+        if (!(file instanceof File) || file.size < 128) {
+          failed('ROM не получен или повреждён.');return;
+        }
+        received = true;
+        window.EJS_player = '#game';
+        window.EJS_core = 'segaMD';
+        window.EJS_controlScheme = 'segaMD';
+        window.EJS_gameName = file.name;
+        window.EJS_gameUrl = file;
+        window.EJS_startOnLoaded = false;
+        window.EJS_language = 'en-US';
+        window.EJS_defaultControls = {0:{
+          0:{value:'x'},1:{value:'z'},3:{value:'enter'},
+          4:{value:'up arrow'},5:{value:'down arrow'},6:{value:'left arrow'},7:{value:'right arrow'},
+          8:{value:'c'},9:{value:'a'},10:{value:'s'},11:{value:'d'}
+        }};
+        announce('ROM получен: ' + file.name + ' · подключение EmulatorJS…');
+        send('dashboardx:sega-received',{name:file.name,size:file.size});
+        timeoutId = setTimeout(() => {
+          if (!coreReady) failed('EmulatorJS не запустился за 30 секунд. Возможна блокировка загрузчика, CSS или ядра WebAssembly.');
+        },30000);
+        loadEmulator(EJS_STABLE);
+      });
+      if (token) send('dashboardx:sega-ready');
+      else failed('Ошибка запуска: отсутствует идентификатор сессии.');
+    })();
+  </script>
+</body>
+</html>
