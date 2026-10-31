@@ -320,9 +320,9 @@ export default class OptimaDataWidget {
   saveFilters(){this.store?.updateWidgetState(this.id,{...this.filters});}
   configureProductSupplierOptions(){
     if(this.type!=='optimaProducts')return;
-    const query=norm(this.productSupplierQuery?.value||'').replace(/\\s+/g,' ');
+    const query=norm(this.productSupplierQuery?.value||'').replace(/\s+/g,' ');
     const options=rows(this.db?.suppliers)
-      .filter(s=>!query||norm(s.name).replace(/\\s+/g,' ').includes(query))
+      .filter(s=>!query||norm(s.name).replace(/\s+/g,' ').includes(query))
       .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ru'))
       .map(s=>[s.id,s.name]);
     select(this.controls.extra,[['',t('optima.allSuppliers')],...options],this.filters.extra);
