@@ -37,12 +37,21 @@
       const boot = document.querySelector('#boot');
       const progress = document.querySelector('#progress');
       const retry = document.querySelector('#again');
+      const gameRoot = document.querySelector('#game');
       const EJS_STABLE = 'https://cdn.emulatorjs.org/stable/data/';
       const EJS_FALLBACK = 'https://cdn.emulatorjs.org/latest/data/';
       let received = false;
       let launched = false;
       let coreReady = false;
       let timeoutId = null;
+      let sourceMode = true;
+      // EmulatorJS may create its Start button before an external EJS_ready
+      // callback is attached. Observe the real UI as a second ready signal.
+      const uiObserver = new MutationObserver(() => {
+        if (!received || coreReady) return;
+        if (gameRoot.querySelector('.ejs_start_button')) onInterfaceReady('DOM');
+      });
+      uiObserver.observe(gameRoot, {childList:true,subtree:true});
       const send = (type, fields = {}) => {
         parent.postMessage({type, token, ...fields}, expectedOrigin);
       };
@@ -51,24 +60,45 @@
         send('dashboardx:sega-status', {message});
       }
       function failed(message) {
-        clearTimeout(timeoutId);
         if (coreReady) return;
+        clearTimeout(timeoutId);
+        uiObserver.disconnect();
         progress.hidden = true;
         retry.hidden = false;
         announce(message);
         send('dashboardx:sega-error', {reason:message});
       }
+      function onInterfaceReady(source) {
+        if (coreReady) return;
+        coreReady = true;
+        clearTimeout(timeoutId);
+        uiObserver.disconnect();
+        boot.hidden = true;
+        send('dashboardx:sega-ui-ready',{source});
+      }
       retry.addEventListener('click', () => send('dashboardx:sega-retry'));
       window.addEventListener('error', event => {
-        if (event.target !== window) return;
-        if (!coreReady) failed('Ошибка EmulatorJS: ' + String(event.message || 'сбой JavaScript').slice(0,160));
-      });
+        if (coreReady) return;
+        if (event.target === window) {
+          failed('Ошибка EmulatorJS: ' + String(event.message || 'сбой JavaScript').slice(0,160));
+          return;
+        }
+        // Resource errors do not generate normal window errors. Report the URL
+        // for the missing module/style so a black screen is diagnosable.
+        const resource = String(event.target?.src || event.target?.href || '');
+        if (resource.includes('emulatorjs.org') && !resource.endsWith('/loader.js')) {
+          failed('Не загрузился ресурс EmulatorJS: ' + resource.slice(0,180));
+        }
+      }, true);
       window.addEventListener('unhandledrejection', event => {
         if (!coreReady) failed('Ошибка загрузки ядра: ' + String(event.reason?.message || event.reason || 'ошибка').slice(0,160));
       });
       function loadEmulator(base, fallback = false) {
         if (coreReady) return;
         window.EJS_pathtodata = base;
+        // Prefer the unminified official stable module. It avoids silent failures
+        // when the optimized bundle is blocked or unavailable and reports errors.
+        window.EJS_DEBUG_XX = sourceMode;
         const loader = document.createElement('script');
         loader.src = base + 'loader.js';
         loader.onload = () => {
@@ -83,17 +113,10 @@
         };
         document.head.append(loader);
       }
-      window.EJS_ready = () => {
-        coreReady = true;
-        clearTimeout(timeoutId);
-        boot.hidden = true;
-        send('dashboardx:sega-ui-ready');
-      };
+      window.EJS_ready = () => onInterfaceReady('event');
       window.EJS_onGameStart = () => {
         launched = true;
-        coreReady = true;
-        clearTimeout(timeoutId);
-        boot.hidden = true;
+        onInterfaceReady('start');
         send('dashboardx:sega-start');
       };
       window.addEventListener('message', event => {
@@ -116,7 +139,7 @@
           4:{value:'up arrow'},5:{value:'down arrow'},6:{value:'left arrow'},7:{value:'right arrow'},
           8:{value:'c'},9:{value:'a'},10:{value:'s'},11:{value:'d'}
         }};
-        announce('ROM получен: ' + file.name + ' · подключение EmulatorJS…');
+        announce('ROM получен: ' + file.name + ' · подключение EmulatorJS (stable source)…');
         send('dashboardx:sega-received',{name:file.name,size:file.size});
         timeoutId = setTimeout(() => {
           if (!coreReady) failed('EmulatorJS не запустился за 30 секунд. Возможна блокировка загрузчика, CSS или ядра WebAssembly.');

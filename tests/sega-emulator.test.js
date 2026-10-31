@@ -30,6 +30,13 @@ test('Sega player transfers the original File and starts stable loader after val
       listeners.set('button:'+event,cb);
     }});
   });
+  let startButtonVisible=false,observerTick=null;
+  elements.set('#game',{querySelector:selector=>startButtonVisible&&selector==='.ejs_start_button'?{}:null});
+  class MutationObserverMock {
+    constructor(cb){observerTick=cb}
+    observe(){}
+    disconnect(){}
+  }
   const parent={postMessage:(data,origin)=>messages.push({data,origin})};
   const window={addEventListener:(event,cb)=>listeners.set('window:'+event,cb)};
   const document={querySelector:selector=>elements.get(selector),
@@ -38,6 +45,7 @@ test('Sega player transfers the original File and starts stable loader after val
   const location={origin:'https://example.com',hash:'#token=session-12'};
   class FileMock {constructor(name,size){this.name=name;this.size=size}}
   vm.runInNewContext(inline,{window,document,location,parent,File:FileMock,URLSearchParams,
+    MutationObserver:MutationObserverMock,
     clearTimeout:()=>{},setTimeout:()=>9},{timeout:1000});
   assert.equal(messages[0].data.type,'dashboardx:sega-ready');
   const file=new FileMock('Ultimate Mortal Kombat 3 (USA).gen',4194304);
@@ -51,12 +59,18 @@ test('Sega player transfers the original File and starts stable loader after val
   assert.equal(window.EJS_core,'segaMD');
   assert.equal(scripts.length,1);
   assert.equal(scripts[0].src,'https://cdn.emulatorjs.org/stable/data/loader.js');
+  assert.equal(window.EJS_DEBUG_XX,true,'use official stable source instead of silent minified bundle');
   assert.ok(messages.some(m=>m.data.type==='dashboardx:sega-received'));
   handler({source:parent,origin:location.origin,data:{type:'dashboardx:sega-rom',token:'session-12',file}});
   assert.equal(scripts.length,1,'loader must only start once');
+  // This is the regression: the emulator renders a start button, but the
+  // ready callback may be missed. The overlay must not block the real controls.
+  startButtonVisible=true;
+  observerTick();
+  assert.equal(elements.get('#boot').hidden,true,'visible Start button clears boot overlay even without ready callback');
+  assert.equal(messages.filter(m=>m.data.type==='dashboardx:sega-ui-ready').length,1);
   window.EJS_ready();
-  assert.equal(elements.get('#boot').hidden,true,'boot overlay clears once EmulatorJS UI is ready');
-  assert.ok(messages.some(m=>m.data.type==='dashboardx:sega-ui-ready'));
+  assert.equal(messages.filter(m=>m.data.type==='dashboardx:sega-ui-ready').length,1,'ready signal sent once');
 });
 test('Sega loader has fallback and visible diagnostics',()=>{
   assert.match(playerHTML,/cdn\.emulatorjs\.org\/latest\/data\//);

@@ -12,7 +12,7 @@ export function checkSegaRom(file){
 export function segaPlayerURL(moduleUrl,token){
   if(!token||typeof token!=='string')throw Error('Не указан ключ запуска Sega.');
   const url=new URL('../../../sega-player.html',moduleUrl);
-  url.searchParams.set('v','sega-boot-diagnostics-20261101');
+  url.searchParams.set('v','sega-visible-controls-20261101');
   url.hash=new URLSearchParams({token}).toString();
   return url.href;
 }
