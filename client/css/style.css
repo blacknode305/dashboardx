@@ -2019,3 +2019,80 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   font-weight:500;
   line-height:1;
 }
+
+/* Only Optima / Names: Excel-like resizable columns with multiline cells. */
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .optima-grid-table.dx-product-resizable{
+  table-layout:fixed;
+  min-width:0;
+  max-width:none;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-resizable th,
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-resizable td{
+  min-width:0;
+  max-width:none;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-resizable thead th{
+  padding-right:17px;
+  white-space:normal;
+  line-height:1.35;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-col-label{
+  display:block;
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-col-grip{
+  position:absolute;
+  right:0;
+  top:0;
+  bottom:0;
+  display:block;
+  width:12px;
+  min-width:12px;
+  height:100%;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  cursor:col-resize;
+  touch-action:none;
+  user-select:none;
+  z-index:2;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-col-grip:after{
+  content:"";
+  position:absolute;
+  right:4px;
+  top:22%;
+  bottom:22%;
+  width:2px;
+  border-radius:2px;
+  background:var(--border);
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-col-grip:is(:hover,:focus-visible):after{
+  background:var(--dx-accent);
+  width:3px;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-links{
+  min-width:0;
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-links .dx-product-supplier-link{
+  max-width:100%;
+  min-width:0;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  text-align:left;
+}
+@media(max-width:600px){
+  #workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-col-grip{
+    width:18px;
+    min-width:18px;
+  }
+}

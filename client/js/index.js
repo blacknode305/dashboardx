@@ -1,6 +1,6 @@
 import eventBus from './module/EventBus.js';
 import ClientDB from './module/ClientDB.js';
-import WidgetElement from './module/WidgetElement.js?v=audiobot-removed-20261031';
+import WidgetElement from './module/WidgetElement.js?v=optima-names-columns-20261031';
 import NavigationBar from './module/NavigationBar.js';
 import { t, widgetTitle, setLanguage, translateElement } from './module/i18n.js';
 

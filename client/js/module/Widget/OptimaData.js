@@ -14,6 +14,15 @@ const CONFIG={
   optimaOrders:{branch:true,status:['all','received','sent','expected','today','overdue','done','pending','approved','rejected'],extra:false,date:true,mode:['history','requests']}
 };
 const MAX_ROWS=400;
+const PRODUCT_COL_DEFAULTS=Object.freeze({id:64,name:225,unit:88,supplier:245});
+const PRODUCT_COL_KEYS=Object.keys(PRODUCT_COL_DEFAULTS);
+const PRODUCT_COL_MIN=48;
+const PRODUCT_COL_MAX=720;
+const productColWidth=(value,fallback)=>{
+  const width=Number(value);
+  return Number.isFinite(width)&&width>=PRODUCT_COL_MIN&&width<=PRODUCT_COL_MAX
+    ?Math.round(width):fallback;
+};
 const cellText=(value)=>value===null||value===undefined||value===''?'—':String(value);
 const make=(tag,text,cls)=>{
   const el=document.createElement(tag);
@@ -73,6 +82,9 @@ export default class OptimaDataWidget {
     this.cfg=CONFIG[this.type];if(!this.cfg)throw new Error('Unknown Optima widget: '+this.type);
     this.store=window.dashboardxStore;
     const saved=this.store?.getWidgetState(this.id)||{};
+    this.productColumnWidths=this.type==='optimaProducts'?
+      Object.fromEntries(PRODUCT_COL_KEYS.map(key=>[key,productColWidth(saved.columnWidths?.[key],PRODUCT_COL_DEFAULTS[key])])):null;
+    this.columnDragCleanup=null;
     this.controls={
       search:widget.querySelector('[data-role="data-search"]'),
       branch:widget.querySelector('[data-role="data-branch"]'),
@@ -221,14 +233,84 @@ export default class OptimaDataWidget {
       this.render();
     }finally{if(!this.destroyed&&seq===this.seq&&this.refresh)this.refresh.disabled=false;}
   }
+  applyProductColumnWidths(){
+    if(this.type!=='optimaProducts')return;
+    const table=this.results.querySelector('table.dx-product-resizable');
+    if(!table)return;
+    const widths=PRODUCT_COL_KEYS.map(key=>this.productColumnWidths[key]);
+    table.style.width=widths.reduce((total,width)=>total+width,0)+'px';
+    table.querySelectorAll('col').forEach((col,index)=>{
+      col.style.width=widths[index]+'px';
+    });
+  }
+  setProductColumnWidth(key,width,save=false){
+    if(this.type!=='optimaProducts'||!PRODUCT_COL_KEYS.includes(key))return;
+    this.productColumnWidths[key]=Math.max(PRODUCT_COL_MIN,Math.min(PRODUCT_COL_MAX,Math.round(width)));
+    this.applyProductColumnWidths();
+    if(save)this.store?.updateWidgetState(this.id,{columnWidths:{...this.productColumnWidths}});
+  }
+  startProductColumnResize(event,key){
+    if(!event.isPrimary||(event.pointerType==='mouse'&&event.button!==0))return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.columnDragCleanup?.();
+    const startX=event.clientX;
+    const startWidth=this.productColumnWidths[key];
+    const pointerId=event.pointerId;
+    const onMove=move=>{
+      if(move.pointerId!==pointerId)return;
+      this.setProductColumnWidth(key,startWidth+move.clientX-startX);
+    };
+    const onEnd=end=>{
+      if(end.pointerId!==pointerId)return;
+      cleanup();
+      this.store?.updateWidgetState(this.id,{columnWidths:{...this.productColumnWidths}});
+    };
+    const cleanup=()=>{
+      window.removeEventListener('pointermove',onMove);
+      window.removeEventListener('pointerup',onEnd);
+      window.removeEventListener('pointercancel',onEnd);
+      if(this.columnDragCleanup===cleanup)this.columnDragCleanup=null;
+    };
+    this.columnDragCleanup=cleanup;
+    window.addEventListener('pointermove',onMove);
+    window.addEventListener('pointerup',onEnd);
+    window.addEventListener('pointercancel',onEnd);
+  }
   buildTable(columns,entries,rowClass=''){
     this.results.replaceChildren();
     if(!entries.length){
       this.results.append(make('p',t('optima.empty'),'optima-empty'));return;
     }
-    const table=make('table',undefined,'optima-grid-table');
+    const isProductTable=this.type==='optimaProducts';
+    const table=make('table',undefined,'optima-grid-table'+(isProductTable?' dx-product-resizable':''));
+    if(isProductTable){
+      const colgroup=make('colgroup');
+      columns.forEach(()=>colgroup.append(make('col')));
+      table.append(colgroup);
+    }
     const thead=make('thead'),headrow=make('tr');
-    columns.forEach(x=>headrow.append(make('th',x.label)));
+    columns.forEach(col=>{
+      const th=make('th');
+      if(!isProductTable){th.textContent=col.label;headrow.append(th);return;}
+      th.append(make('span',col.label,'dx-product-col-label'));
+      const handle=make('button',undefined,'dx-product-col-grip');
+      handle.type='button';
+      handle.setAttribute('aria-label','Изменить ширину колонки «'+col.label+'»');
+      handle.title='Перетащите границу или используйте стрелки ← →';
+      handle.addEventListener('pointerdown',event=>this.startProductColumnResize(event,col.key));
+      handle.addEventListener('keydown',event=>{
+        if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;
+        event.preventDefault();event.stopPropagation();
+        const increment=(event.shiftKey?25:10)*(event.key==='ArrowRight'?1:-1);
+        this.setProductColumnWidth(col.key,this.productColumnWidths[col.key]+increment,true);
+      });
+      handle.addEventListener('dblclick',event=>{
+        event.preventDefault();event.stopPropagation();
+        this.setProductColumnWidth(col.key,PRODUCT_COL_DEFAULTS[col.key],true);
+      });
+      th.append(handle);headrow.append(th);
+    });
     thead.append(headrow);table.append(thead);
     const tbody=make('tbody');
     for(const entry of entries.slice(0,MAX_ROWS)){
@@ -247,6 +329,7 @@ export default class OptimaDataWidget {
       tbody.append(row);
     }
     table.append(tbody);this.results.append(table);
+    if(isProductTable)this.applyProductColumnWidths();
     if(entries.length>MAX_ROWS)this.results.append(make('p',t('optima.limit',{count:String(MAX_ROWS)}),'optima-hint'));
   }
   render(){
@@ -266,9 +349,9 @@ export default class OptimaDataWidget {
         .filter(x=>matches([x.name,x.unit,x.note,rowSupplierNames(x,db),x.id].join(' ')))
         .sort((a,b)=>String(a.name).localeCompare(String(b.name),'ru'));
       this.buildTable([
-        {label:'ID',get:p=>p.id},{label:t('optima.product'),get:p=>p.name},
-        {label:t('optima.unit'),get:p=>p.unit},
-        {label:t('optima.supplier'),get:p=>supplierLinks(p,db)}
+        {key:'id',label:'ID',get:p=>p.id},{key:'name',label:t('optima.product'),get:p=>p.name},
+        {key:'unit',label:t('optima.unit'),get:p=>p.unit},
+        {key:'supplier',label:t('optima.supplier'),get:p=>supplierLinks(p,db)}
       ],items);
       this.summary.textContent=t('optima.found',{count:String(items.length),total:String(total('products').length)});
     }
@@ -422,6 +505,7 @@ export default class OptimaDataWidget {
   destroy(){
     this.destroyed=true;
     this.controller?.abort();clearInterval(this.poll);
+    this.columnDragCleanup?.();
     clearTimeout(this.saveTimer);this.saveFilters();
     this.listeners.forEach(unbind=>unbind());this.listeners=[];
   }
