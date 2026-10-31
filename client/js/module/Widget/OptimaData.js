@@ -36,15 +36,19 @@ const rowSupplierNames=(p,db)=>rows(p.orderSuppliers).map(link=>
 const supplierLinks=(product,db)=>{
   const container=document.createElement('div');
   container.className='dx-product-supplier-links';
+  const shown=new Set();
   for(const link of rows(product.orderSuppliers)){
     const supplier=rows(db.suppliers).find(s=>String(s.id)===String(link.supplierId))||
       rows(db.suppliers).find(s=>norm(s.name)===norm(link.supplier));
     const name=supplier?.name||link.supplier||'';
     if(!name)continue;
+    const key=supplier?.id!=null?'id:'+supplier.id:'name:'+norm(name);
+    if(shown.has(key))continue;
+    shown.add(key);
     if(container.childNodes.length)container.append(document.createTextNode(' / '));
     const button=document.createElement('button');
     button.type='button';button.className='dx-product-supplier-link';
-    button.textContent=String(name);button.title='Открыть график поставщика '+name;
+    button.textContent=String(name);button.title='Открыть карточку поставщика «'+name+'»';
     button.addEventListener('click',()=>{
       const detail={supplierId:supplier?.id??'',supplierName:name,handled:false};
       window.dispatchEvent(new CustomEvent('dashboardx:open-optima-supplier',{detail}));
@@ -52,6 +56,7 @@ const supplierLinks=(product,db)=>{
     });
     container.append(button);
   }
+  if(!container.childNodes.length){container.textContent='—';container.title='Поставщик пока не привязан';}
   return container;
 };
 const select=(element,items,selected)=>{
@@ -122,6 +127,7 @@ export default class OptimaDataWidget {
     const onFilter=()=>{
       for(const [key,control] of Object.entries(this.controls))this.filters[key]=control.value;
       this.render();
+      this.updateProductFilterReset?.();
       clearTimeout(this.saveTimer);
       this.saveTimer=setTimeout(()=>this.saveFilters(),220);
     };
@@ -131,25 +137,56 @@ export default class OptimaDataWidget {
     }
     if(this.refresh)this.listen(this.refresh,'click',()=>this.load());
     if(this.productAdd){
+      const searchShell=widget.querySelector('.dx-product-search');
+      const resetFilters=make('button','×');
+      resetFilters.type='button';
+      resetFilters.title='Сбросить поиск и фильтры';
+      resetFilters.setAttribute('aria-label','Сбросить поиск и фильтры');
+      resetFilters.hidden=true;
+      searchShell.append(resetFilters);
+      this.updateProductFilterReset=()=>{
+        resetFilters.hidden=!Boolean(this.controls.search.value.trim()||this.controls.branch.value||this.controls.extra.value);
+      };
+      this.listen(resetFilters,'click',()=>{
+        for(const key of ['search','branch','extra']){
+          this.filters[key]='';
+          this.controls[key].value='';
+        }
+        this.render();this.saveFilters();this.updateProductFilterReset();
+        this.controls.search.focus();
+      });
       const draftForm=widget.querySelector('[data-role="product-draft-form"]');
       const branchContainer=widget.querySelector('[data-role="product-draft-branches"]');
+      const info=widget.querySelector('[data-role="product-draft-info"]');
+      const defaultInfo=info.textContent;
+      this.productAdd.setAttribute('aria-expanded','false');
       const branchList=['Анжерская','Горняк','Ермекова','Лободы','Нуркена','Пришахтинск','Сарань'];
       for(const branchName of branchList){
         const label=document.createElement('label');
         const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.name='excludedBranches';checkbox.value=branchName;
         label.append(checkbox,document.createTextNode(branchName));branchContainer.append(label);
       }
+      const closeDraft=()=>{
+        this.productDraft.hidden=true;
+        this.productAdd.setAttribute('aria-expanded','false');
+      };
       this.listen(this.productAdd,'click',()=>{
+        if(!this.productDraft.hidden){closeDraft();return;}
         this.productDraft.hidden=false;
+        this.productAdd.setAttribute('aria-expanded','true');
+        info.textContent=this.db?defaultInfo:'Сначала подключитесь к базе PRO OPTIMA.';
         const ids=rows(this.db?.products).map(p=>Number(p.id)).filter(Number.isSafeInteger);
         const idField=draftForm.elements.namedItem('id');
-        if(idField&&!idField.value)idField.value=String(Math.max(0,...ids)+1);
+        if(this.db&&idField&&!idField.value)idField.value=String(Math.max(0,...ids)+1);
         draftForm.elements.namedItem('name')?.focus({preventScroll:true});
       });
-      this.listen(widget.querySelector('[data-role="product-draft-cancel"]'),'click',()=>{this.productDraft.hidden=true;});
+      this.listen(widget.querySelector('[data-role="product-draft-cancel"]'),'click',closeDraft);
+      this.listen(widget,'keydown',event=>{
+        if(event.key!=='Escape'||this.productDraft.hidden)return;
+        event.preventDefault();closeDraft();this.productAdd.focus();
+      });
       this.listen(draftForm,'submit',async event=>{
         event.preventDefault();
-        const info=widget.querySelector('[data-role="product-draft-info"]');
         const saveButton=draftForm.querySelector('[type="submit"]');
         if(saveButton.disabled)return;
         if(!this.db||!Number.isFinite(Number(this.revision))){
@@ -170,7 +207,7 @@ export default class OptimaDataWidget {
         saveButton.disabled=true;info.textContent='Сохранение наименования…';
         try{
           await patchOptima({products:[...products,entry]},this.revision);
-          draftForm.reset();this.productDraft.hidden=true;
+          draftForm.reset();closeDraft();
           await this.load();
         }catch(error){
           info.textContent=error.status===409?'База была изменена другим пользователем. Закройте форму, обновите данные и повторите создание.':(error.message||'Не удалось сохранить наименование.');
@@ -211,6 +248,7 @@ export default class OptimaDataWidget {
       if(!this.db && (key==='branch'||key==='extra'))continue;
       f[key]=this.controls[key].value;
     }
+    this.updateProductFilterReset?.();
   }
   setState(key,values={}){this.statusText.textContent=t('optima.'+key,values);}
   async load(){
