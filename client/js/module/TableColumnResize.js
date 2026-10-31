@@ -35,7 +35,7 @@ export default function installTableColumnResize(canvas,store){
   };
 
   const enhance=table=>{
-    if(installed.has(table))return;
+    if(installed.has(table)||table.closest('.dx-catalog-import'))return;
     if(table.closest('widget-element')?.dataset.widgetType==='add')return;
     const {widget,key}=columnId(table);
     if(!widget||EXCLUDED.has(widget.templateId))return;

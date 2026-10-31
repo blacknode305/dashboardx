@@ -1,5 +1,6 @@
 import { t } from '../i18n.js';
 import { openOptimaPrintPreview } from '../OptimaPrint.js?v=optima-catalog-refresh-20261031';
+import { attachCatalogImporter } from '../CatalogImport.js?v=optima-price-upload-20261031';
 import { getCredential } from '../CredentialStore.js';
 import {
   loadOptima, patchOptima, OPTIMA_POLL_MS, norm, rows, branchNames, money,
@@ -169,6 +170,13 @@ export default class OptimaDataWidget {
     if(this.refresh)this.listen(this.refresh,'click',()=>this.load());
     if(this.productPrint)this.listen(this.productPrint,'click',()=>this.printProducts());
     if(this.catalogPrint)this.listen(this.catalogPrint,'click',()=>this.printCatalog());
+    this.catalogImporter=this.type==='optimaProposals'?attachCatalogImporter({
+      widget,
+      getDatabase:()=>this.db,
+      getRevision:()=>this.revision,
+      getSupplierFilter:()=>this.filters.extra,
+      onSaved:()=>this.load()
+    }):null;
     if(this.productSupplierQuery){
       const query=this.productSupplierQuery;
       const options=this.productSupplierOptions;
@@ -838,6 +846,7 @@ export default class OptimaDataWidget {
     }
   }
   destroy(){
+    this.catalogImporter?.destroy?.();
     this.destroyed=true;
     this.controller?.abort();clearInterval(this.poll);
     this.columnDragCleanup?.();

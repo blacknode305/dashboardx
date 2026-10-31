@@ -99,7 +99,7 @@ export default function installTableSort(canvas,store){
     });
   };
   const enhance=table=>{
-    if(installed.has(table))return;
+    if(installed.has(table)||table.closest('.dx-catalog-import'))return;
     const widget=table.closest('widget-element');
     if(!widget||EXCLUDED.has(widget.templateId))return;
     const headerRows=table.tHead?.rows;

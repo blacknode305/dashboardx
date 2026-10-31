@@ -16,8 +16,49 @@
   <p class="optima-status" data-role="data-status-text" aria-live="polite"></p>
   <div class="dx-optima-print-row">
     <p class="optima-summary" data-role="data-summary"></p>
-    <button type="button" class="dx-optima-print-button" data-role="catalog-print" title="Печать отфильтрованного каталога" aria-label="Печать отфильтрованного каталога">🖨</button>
+    <div class="dx-catalog-toolbar-actions">
+      <button type="button" class="dx-catalog-upload-button" data-role="catalog-upload" aria-expanded="false" title="Загрузить данные прайс-листа">↑ Загрузка</button>
+      <button type="button" class="dx-optima-print-button" data-role="catalog-print" title="Печать отфильтрованного каталога" aria-label="Печать отфильтрованного каталога">🖨</button>
+    </div>
   </div>
+  <section class="dx-catalog-import" data-role="catalog-import-panel" aria-label="Загрузка прайс-листа" hidden>
+    <div class="dx-catalog-import-title"><strong>Загрузка прайс-листа</strong><span>Проверка перед сохранением</span></div>
+    <label class="dx-catalog-import-field">Файл XLSX, CSV, TSV или TXT
+      <input type="file" data-role="catalog-import-file" accept=".xlsx,.csv,.tsv,.txt">
+    </label>
+    <div class="dx-catalog-import-fields">
+      <label class="dx-catalog-import-field">Поставщик
+        <select data-role="catalog-import-supplier" aria-label="Поставщик для импортируемого прайс-листа"></select>
+      </label>
+      <label class="dx-catalog-import-field">Лист Excel
+        <select data-role="catalog-import-sheet" aria-label="Лист прайс-листа" disabled></select>
+      </label>
+      <label class="dx-catalog-import-field">Номер строки заголовка (0 — без заголовка)
+        <input type="number" data-role="catalog-import-header" value="1" min="0" max="100">
+      </label>
+      <label class="dx-catalog-import-field">Колонка «Наименование»
+        <select data-role="catalog-map-name"></select>
+      </label>
+      <label class="dx-catalog-import-field">Колонка «Единица измерения»
+        <select data-role="catalog-map-unit"></select>
+      </label>
+      <label class="dx-catalog-import-field">Колонка «Цена»
+        <select data-role="catalog-map-price"></select>
+      </label>
+    </div>
+    <label class="dx-catalog-import-option">
+      <input type="checkbox" data-role="catalog-import-update">
+      Обновлять цены совпадающих позиций (по умолчанию только добавление)
+    </label>
+    <p class="dx-catalog-import-summary" data-role="catalog-import-summary"></p>
+    <p class="dx-catalog-import-status" data-role="catalog-import-status" role="status" aria-live="polite">Выберите файл. До подтверждения база не изменяется.</p>
+    <div class="dx-catalog-import-preview" data-role="catalog-import-preview" aria-label="Предварительный просмотр импорта"></div>
+    <div class="dx-catalog-import-actions">
+      <button type="button" data-role="catalog-import-close">Закрыть</button>
+      <button type="button" data-role="catalog-import-save" disabled>Сохранить в каталог</button>
+    </div>
+    <p class="dx-catalog-import-note">Сопоставьте колонки и проверьте строки перед записью. Поддерживаются стандартные таблицы; для сложного прайса понадобится отдельный анализ. Не импортируются заявки, остатки и данные других поставщиков.</p>
+  </section>
   <div class="optima-table-scroll" data-role="data-results"></div>
 </section>
 </template></body></html>
