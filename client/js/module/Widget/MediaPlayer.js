@@ -135,7 +135,7 @@ export default class MediaPlayerWidget {
   const request=async(method,path,body)=>{
    const base=validUrl(api.value.trim());
    if(!base||!base.startsWith('https:'))throw new Error('Укажите HTTPS-адрес Railway');
-   const response=await fetch(base.replace(/\\/$/,'')+path,{method,headers:{Authorization:'Bearer '+token.value.trim(),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
+   const response=await fetch((base.endsWith('/')?base.slice(0,-1):base)+path,{method,headers:{Authorization:'Bearer '+token.value.trim(),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
    const data=await response.json().catch(()=>({}));
    if(!response.ok)throw new Error(data.error||'Ошибка '+response.status);
    return data;
