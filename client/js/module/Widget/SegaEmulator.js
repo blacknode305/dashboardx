@@ -21,23 +21,37 @@ export function checkSegaRom(file){
   if(file.size<128||file.size>max)throw Error('Неверный размер ROM (допускается до '+(max/1024/1024)+' МБ).');
   return extension;
 }
-export function segaEmbedHTML({gameUrl,gameName,token}){
-  if(typeof gameUrl!=='string'||!gameUrl.startsWith('blob:'))throw Error('ROM должен быть локальным blob URL.');
+export function segaEmbedHTML({gameName,token}){
+  if(typeof gameName!=='string'||!gameName.trim()||typeof token!=='string'||!token.trim())
+    throw Error('Название и ключ запуска обязательны.');
   const config=[
     "window.EJS_player='#game';",
     "window.EJS_core='segaMD';",
     "window.EJS_controlScheme='segaMD';",
     "window.EJS_pathtodata="+safeScriptString(CDN)+";",
-    "window.EJS_gameUrl="+safeScriptString(gameUrl)+";",
+    "// The original File, including its extension, arrives via a same-origin message.",
     "window.EJS_gameName="+safeScriptString(gameName)+";",
     "window.EJS_color='#8595a7';",
     "window.EJS_startOnLoaded=false;",
     "window.EJS_defaultControls={0:"+JSON.stringify(DEFAULT_KEYS)+"};",
-    "window.EJS_onGameStart=()=>window.parent.postMessage({type:'dashboardx:sega-start',token:"+safeScriptString(token)+"},'*');",
-    "const loader=document.createElement('script');",
-    "loader.src="+safeScriptString(CDN+'loader.js')+";",
-    "loader.onerror=()=>window.parent.postMessage({type:'dashboardx:sega-error',token:"+safeScriptString(token)+"},'*');",
-    "document.head.append(loader);"
+    "const launchToken="+safeScriptString(token)+";",
+    "const parentOrigin=window.location.origin;",
+    "const send=(type,message)=>window.parent.postMessage({type,token:launchToken,...message},parentOrigin==='null'?'*':parentOrigin);",
+    "window.EJS_onGameStart=()=>send('dashboardx:sega-start',{});",
+    "let romReceived=false;",
+    "window.addEventListener('message',event=>{",
+    " if(romReceived||event.source!==window.parent||event.origin!==parentOrigin||event.data?.token!==launchToken||event.data?.type!=='dashboardx:sega-rom')return;",
+    " const file=event.data.file;",
+    " if(!(file instanceof File)||file.size<128){send('dashboardx:sega-error',{reason:'Неверный файл ROM'});return;}",
+    " romReceived=true;",
+    " window.EJS_gameUrl=file;",
+    " send('dashboardx:sega-received',{name:file.name,size:file.size});",
+    " const loader=document.createElement('script');",
+    " loader.src="+safeScriptString(CDN+'loader.js')+";",
+    " loader.onerror=()=>send('dashboardx:sega-error',{reason:'Не удалось загрузить скрипт EmulatorJS'});",
+    " document.head.append(loader);",
+    "});",
+    "send('dashboardx:sega-ready',{});"
   ].join('\n');
   return '<!doctype html><html lang="ru"><head><meta charset="utf-8">'+
     '<meta name="viewport" content="width=device-width,initial-scale=1">'+
@@ -60,7 +74,7 @@ export default class SegaEmulatorWidget{
     this.play=widget.querySelector('[data-action="sega-play"]');
     this.stop=widget.querySelector('[data-action="sega-stop"]');
     this.fullscreen=widget.querySelector('[data-action="sega-fullscreen"]');
-    this.url=null;this.token=null;this.loaded=false;this.destroyed=false;
+    this.romFile=null;this.token=null;this.loaded=false;this.destroyed=false;
     this.unbind=[];
     const state=window.dashboardxStore?.getWidgetState(widget.instanceId)||{};
     this.crt.checked=state.segaCrt===true;
@@ -101,16 +115,27 @@ export default class SegaEmulatorWidget{
     });
     on(this.frame,'focus',()=>widget.activate?.());
     on(window,'message',event=>{
-      if(!this.loaded||event.source!==this.frame.contentWindow||event.data?.token!==this.token)return;
+      if(!this.loaded||event.origin!==window.location.origin||
+        event.source!==this.frame.contentWindow||event.data?.token!==this.token)return;
+      if(event.data?.type==='dashboardx:sega-ready'){
+        if(!this.romFile)return;
+        // Structured cloning preserves the File's name, extension and contents.
+        event.source.postMessage({type:'dashboardx:sega-rom',token:this.token,file:this.romFile},event.origin);
+        this.setStatus('ROM передан эмулятору · загрузка ядра…');
+      }
+      if(event.data?.type==='dashboardx:sega-received'){
+        this.setStatus('ROM распознан: '+event.data.name+' · ждём EmulatorJS');
+      }
       if(event.data?.type==='dashboardx:sega-start'){
         this.setStatus('Игра запущена · управление внутри экрана');
         this.led.textContent='● PLAYING';this.led.classList.add('is-running');
         window.dispatchEvent(new CustomEvent('dashboardx:media-playing',{detail:{id:widget.instanceId,kind:'sega'}}));
       }
-      if(event.data?.type==='dashboardx:sega-error')this.setStatus('Не удалось загрузить EmulatorJS с CDN. Проверьте интернет.');
+      if(event.data?.type==='dashboardx:sega-error')
+        this.setStatus(event.data.reason||'Не удалось загрузить EmulatorJS с CDN. Проверьте интернет.');
     });
     on(this.frame,'load',()=>{
-      if(this.loaded)this.setStatus('EmulatorJS загружается · нажмите ▶ внутри экрана');
+      if(this.loaded&&this.romFile)this.setStatus('Подключение EmulatorJS · ожидаем ROM…');
     });
     on(document,'fullscreenchange',()=>this.fullscreen.setAttribute('aria-pressed',String(document.fullscreenElement===this.stage)));
     this.setStatus('Выберите Sega ROM на устройстве');
@@ -119,13 +144,13 @@ export default class SegaEmulatorWidget{
   openRom(file){
     try{checkSegaRom(file)}catch(error){this.setStatus(error.message);return false;}
     this.stopGame();
-    this.url=URL.createObjectURL(file);
+    this.romFile=file;
     this.token=String(this.widget.instanceId)+'-'+Math.random().toString(36).slice(2);
     try{
-      // Blob URL remains in the same origin as the iframe, allowing EJS to load it.
+      // Allow same-origin structured File delivery without exposing a public ROM URL.
       this.frame.setAttribute('sandbox','allow-scripts allow-same-origin allow-downloads allow-pointer-lock allow-forms');
       this.frame.setAttribute('allow','fullscreen; autoplay; gamepad');
-      this.frame.srcdoc=segaEmbedHTML({gameUrl:this.url,gameName:file.name,token:this.token});
+      this.frame.srcdoc=segaEmbedHTML({gameName:file.name,token:this.token});
     }catch(error){
       this.stopGame();this.setStatus(error.message);return false;
     }
@@ -148,8 +173,7 @@ export default class SegaEmulatorWidget{
     this.led.textContent='● STANDBY';this.led.classList.remove('is-running');
     this.name.textContent='Нет загруженной игры';
     this.stop.disabled=true;this.fullscreen.disabled=true;
-    if(this.url)URL.revokeObjectURL(this.url);
-    this.url=null;this.token=null;
+    this.romFile=null;this.token=null;
     this.setStatus('ROM выгружен');
   }
   destroy(){
