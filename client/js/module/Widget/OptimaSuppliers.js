@@ -1,6 +1,7 @@
 import { t } from '../i18n.js';
 import { getCredential } from '../CredentialStore.js';
 import { loadOptima, patchOptima, OPTIMA_POLL_MS, OPTIMA_BASE, getOptimaWritePassword } from '../OptimaAPI.js';
+import { openOptimaPrintPreview } from '../OptimaPrint.js?v=optima-print-20261031';
 const DAYS=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const DAY_NAMES=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
 const parseDays=value=>new Set(String(value||'').split(/[,;/]+/).map(v=>v.trim().toLocaleLowerCase()).map(v=>DAY_NAMES.find(n=>n.toLocaleLowerCase()===v)||DAY_NAMES[DAYS.findIndex(d=>d.toLocaleLowerCase()===v)]).filter(Boolean));
@@ -88,6 +89,9 @@ export default class OptimaSuppliersWidget {
     this.status=widget.querySelector('[data-role="optima-status"]');
     this.count=widget.querySelector('[data-role="optima-count"]');
     this.list=widget.querySelector('[data-role="optima-list"]');
+    this.printButton=widget.querySelector('[data-role="optima-print"]');
+    this.onPrint=()=>this.printSuppliers();
+    this.printButton.addEventListener('click',this.onPrint);
     this.search.value=typeof state.search==='string'?state.search:'';
     this.selectedBranch=typeof state.branch==='string'?state.branch:'';
     this.selectedOrderDay=typeof state.orderDay==='string'?state.orderDay:'';
@@ -370,6 +374,40 @@ export default class OptimaSuppliersWidget {
     }catch(error){window.alert(error.message||String(error));}
   }
 
+  printSuppliers(){
+    if(!this.database){
+      window.alert('Сначала подключитесь к базе PRO OPTIMA.');
+      return;
+    }
+    // The current list already contains exactly the suppliers matching the filters.
+    // Do not open or edit live cards: the printable copy is always separate.
+    const suppliers=[...this.list.querySelectorAll('details.optima-supplier[data-supplier-id]')].map(card=>{
+      const supplier=this.rows.find(item=>String(item.id)===card.dataset.supplierId);
+      if(!supplier)return null;
+      const schedules=(Array.isArray(supplier.schedules)?supplier.schedules:[]).filter(row=>
+        (!this.selectedBranch||normalize(row.branch)===normalize(this.selectedBranch))&&
+        (!this.selectedOrderDay||parseDays(row.order).has(this.selectedOrderDay))&&
+        (!this.selectedDeliveryDay||parseDays(row.delivery).has(this.selectedDeliveryDay))
+      ).map(row=>({
+        branch:String(row.branch||''),order:String(row.order||''),
+        delivery:String(row.delivery||''),note:String(row.note||'')
+      }));
+      return {
+        name:String(supplier.name||'—'),contact:String(supplier.contact||''),
+        phone:String(supplier.phone||''),expanded:card.open,schedules
+      };
+    }).filter(Boolean);
+    openOptimaPrintPreview({
+      kind:'suppliers',title:'Графики поставщиков',rows:suppliers,
+      filters:[
+        ['Поиск',this.search.value.trim()],
+        ['Филиал',this.selectedBranch||'Все филиалы'],
+        ['День заявки',this.selectedOrderDay||'Любой'],
+        ['День поставки',this.selectedDeliveryDay||'Любой']
+      ]
+    });
+  }
+
   render(){
     // The DOM is authoritative: retain expanded cards even if an API poll
     // or an unrelated filter update would otherwise replace every <details>.
@@ -472,6 +510,7 @@ export default class OptimaSuppliersWidget {
   destroy(){
     this.destroyed=true;this.controller?.abort();
     clearInterval(this.poll);clearTimeout(this.persistTimer);
+    this.printButton.removeEventListener('click',this.onPrint);
     this.search.removeEventListener('input',this.onFilter);
     this.branch.removeEventListener('change',this.onFilter);
     this.orderDay.removeEventListener('change',this.onFilter);

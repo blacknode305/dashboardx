@@ -2409,3 +2409,35 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
     min-height:min(390px,85vh);
   }
 }
+
+
+/* Print actions beside live result counts. Applies only to Names and Suppliers. */
+#workspace-canvas [data-widget-type="optimaSuppliers"] .dx-optima-print-row,
+#workspace-canvas [data-widget-type="optimaProducts"] .dx-optima-print-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-height:30px;min-width:0;flex:0 0 auto;
+}
+#workspace-canvas [data-widget-type="optimaSuppliers"] .dx-optima-print-row .optima-summary,
+#workspace-canvas [data-widget-type="optimaProducts"] .dx-optima-print-row .optima-summary{
+  flex:1 1 auto;min-width:0;margin:0;
+}
+#workspace-canvas [data-widget-type="optimaSuppliers"] .dx-optima-print-button,
+#workspace-canvas [data-widget-type="optimaProducts"] .dx-optima-print-button{
+  flex:0 0 30px;display:grid;place-items:center;
+  width:30px;min-width:30px;height:30px;
+  padding:0;border:1px solid var(--border);border-radius:7px;
+  background:var(--bg-panel-inside);color:var(--text-main);
+  font-size:15px;cursor:pointer;
+}
+#workspace-canvas [data-widget-type="optimaSuppliers"] .dx-optima-print-button:hover,
+#workspace-canvas [data-widget-type="optimaProducts"] .dx-optima-print-button:hover{
+  border-color:var(--dx-accent);background:var(--bg-panel-light);
+}
+#workspace-canvas [data-widget-type="optimaSuppliers"] .dx-optima-print-button:focus-visible,
+#workspace-canvas [data-widget-type="optimaProducts"] .dx-optima-print-button:focus-visible{
+  outline:2px solid var(--dx-accent);outline-offset:2px;
+}
+/* Keep supplier schedule cards 5 px from the vertical scroll bar. */
+#workspace-canvas [data-widget-type="optimaSuppliers"] .optima-supplier-scroll{
+  padding-right:5px;
+}

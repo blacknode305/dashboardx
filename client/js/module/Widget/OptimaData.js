@@ -1,4 +1,5 @@
 import { t } from '../i18n.js';
+import { openOptimaPrintPreview } from '../OptimaPrint.js?v=optima-print-20261031';
 import { getCredential } from '../CredentialStore.js';
 import {
   loadOptima, patchOptima, OPTIMA_POLL_MS, norm, rows, branchNames, money,
@@ -127,6 +128,7 @@ export default class OptimaDataWidget {
     this.refresh=widget.querySelector('[data-role="data-refresh"]');
     this.productAdd=this.type==='optimaProducts'?widget.querySelector('[data-role="product-add"]'):null;
     this.productDraft=this.type==='optimaProducts'?widget.querySelector('[data-role="product-draft"]'):null;
+    this.productPrint=this.type==='optimaProducts'?widget.querySelector('[data-role="product-print"]'):null;
     this.productSupplierQuery=this.type==='optimaProducts'?widget.querySelector('[data-role="data-supplier-query"]'):null;
     this.productSupplierOptions=this.type==='optimaProducts'?widget.querySelector('[data-role="data-supplier-options"]'):null;
     this.productSupplierOpen=false;
@@ -164,6 +166,7 @@ export default class OptimaDataWidget {
       if(this.controls[key])this.listen(this.controls[key],'change',onFilter);
     }
     if(this.refresh)this.listen(this.refresh,'click',()=>this.load());
+    if(this.productPrint)this.listen(this.productPrint,'click',()=>this.printProducts());
     if(this.productSupplierQuery){
       const query=this.productSupplierQuery;
       const options=this.productSupplierOptions;
@@ -575,6 +578,54 @@ export default class OptimaDataWidget {
     if(isProductTable)this.applyProductColumnWidths();
     if(entries.length>MAX_ROWS)this.results.append(make('p',t('optima.limit',{count:String(MAX_ROWS)}),'optima-hint'));
   }
+  filteredProducts(){
+    if(!this.db)return [];
+    const db=this.db,f=this.filters,q=norm(f.search),branch=f.branch,extra=f.extra;
+    return rows(db.products).filter(x=>x&&
+      (!branch||!rows(x.excludedBranches).some(b=>norm(b)===norm(branch)))&&
+      (!extra||rows(x.orderSuppliers).some(link=>
+        String(link.supplierId)===String(extra)||
+        (!link.supplierId&&norm(link.supplier)===norm(rows(db.suppliers).find(s=>String(s.id)===String(extra))?.name))))
+    ).filter(x=>!q||norm([x.name,x.unit,x.note,rowSupplierNames(x,db),x.id].join(' ')).includes(q))
+     .sort((a,b)=>String(a.name).localeCompare(String(b.name),'ru'));
+  }
+  printProducts(){
+    if(!this.db){window.alert('Сначала подключитесь к базе PRO OPTIMA.');return;}
+    const db=this.db;
+    const sorted=[...this.filteredProducts()];
+    // Sort the complete filtered dataset, not only the first MAX_ROWS in the screen table.
+    const table=this.results.querySelector('table');
+    const headers=[...(table?.tHead?.rows?.[0]?.cells||[])];
+    const sortedColumn=headers.findIndex(th=>['ascending','descending'].includes(th.getAttribute('aria-sort')));
+    if(sortedColumn>=0&&sortedColumn<4){
+      const direction=headers[sortedColumn].getAttribute('aria-sort')==='descending'?-1:1;
+      const colValue=product=>[
+        String(product.id??''),String(product.name||''),String(product.unit||''),
+        rowSupplierNames(product,db)
+      ][sortedColumn].trim();
+      const collator=new Intl.Collator('ru',{numeric:true,sensitivity:'base'});
+      const baseOrder=new Map(sorted.map((row,i)=>[row,i]));
+      sorted.sort((a,b)=>{
+        const aa=colValue(a),bb=colValue(b);
+        if(!aa||aa==='—')return !bb||bb==='—'?baseOrder.get(a)-baseOrder.get(b):1;
+        if(!bb||bb==='—')return -1;
+        return collator.compare(aa,bb)*direction||baseOrder.get(a)-baseOrder.get(b);
+      });
+    }
+    const supplier=rows(db.suppliers).find(s=>String(s.id)===String(this.filters.extra));
+    openOptimaPrintPreview({
+      kind:'products',title:'Наименования сырья',
+      rows:sorted.map(p=>({
+        id:p.id,name:String(p.name||''),unit:String(p.unit||''),
+        suppliers:rowSupplierNames(p,db)||'—'
+      })),
+      filters:[
+        ['Поиск',this.filters.search.trim()],
+        ['Филиал',this.filters.branch||'Все филиалы'],
+        ['Поставщик',supplier?.name||'Все поставщики']
+      ]
+    });
+  }
   render(){
     if(!this.db){
       this.results.replaceChildren();this.summary.textContent='';return;
@@ -584,11 +635,7 @@ export default class OptimaDataWidget {
     const matches=v=>!q||norm(v).includes(q);
     const extra=f.extra;
     if(this.type==='optimaProducts'){
-      const items=total('products').filter(x=>x&&
-        (!branch||!rows(x.excludedBranches).some(b=>norm(b)===norm(branch)))&&
-        (!extra||rows(x.orderSuppliers).some(link=>String(link.supplierId)===String(extra)||(!link.supplierId&&norm(link.supplier)===norm(rows(db.suppliers).find(s=>String(s.id)===String(extra))?.name)))))
-        .filter(x=>matches([x.name,x.unit,x.note,rowSupplierNames(x,db),x.id].join(' ')))
-        .sort((a,b)=>String(a.name).localeCompare(String(b.name),'ru'));
+      const items=this.filteredProducts();
       this.buildTable([
         {key:'id',label:'ID',get:p=>p.id},{key:'name',label:t('optima.product'),get:p=>p.name},
         {key:'unit',label:t('optima.unit'),get:p=>p.unit},
