@@ -2096,3 +2096,68 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
     min-width:18px;
   }
 }
+
+/* Global HTML table column resizing (excluding approved Suppliers and Names' custom mode). */
+#workspace-canvas widget-element table.dx-table-adjustable{
+  table-layout:fixed;
+  min-width:0;
+  max-width:none;
+}
+#workspace-canvas widget-element table.dx-table-adjustable th,
+#workspace-canvas widget-element table.dx-table-adjustable td{
+  min-width:0;
+  max-width:none;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:normal;
+  box-sizing:border-box;
+}
+#workspace-canvas widget-element table.dx-table-adjustable thead th{
+  position:relative;
+  padding-right:18px;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+#workspace-canvas widget-element .optima-grid-table.dx-table-adjustable thead th{
+  position:sticky;
+  top:0;
+}
+#workspace-canvas widget-element table.dx-table-adjustable .dx-table-col-grip{
+  position:absolute;
+  top:0;
+  right:0;
+  bottom:0;
+  width:14px;
+  min-width:14px;
+  height:100%;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  background:transparent;
+  cursor:col-resize;
+  touch-action:none;
+  user-select:none;
+  z-index:2;
+}
+#workspace-canvas widget-element table.dx-table-adjustable .dx-table-col-grip::after{
+  content:"";
+  position:absolute;
+  top:23%;
+  bottom:23%;
+  right:5px;
+  width:2px;
+  border-radius:2px;
+  background:var(--border);
+}
+#workspace-canvas widget-element table.dx-table-adjustable .dx-table-col-grip:is(:hover,:focus-visible)::after{
+  background:var(--dx-accent);
+  width:3px;
+}
+@media(max-width:600px){
+  #workspace-canvas widget-element table.dx-table-adjustable .dx-table-col-grip{
+    width:18px;
+    min-width:18px;
+  }
+}
