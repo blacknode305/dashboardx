@@ -50,7 +50,7 @@ export default class ClientDB {
       state.system.language = ['ru','kz','en'].includes(saved.system?.language) ? saved.system.language : 'ru';
       if (!saved.instances || typeof saved.instances !== 'object' || Array.isArray(saved.instances)) return state;
       for (const [id, instance] of Object.entries(saved.instances)) {
-        if (id !== '__proto__' && instance && instance.id === id && typeof instance.type === 'string' && instance.type !== 'add') {
+        if (id !== '__proto__' && instance && instance.id === id && typeof instance.type === 'string' && instance.type !== 'add' && instance.type !== 'audioBotVk') {
           Object.defineProperty(state.instances, id, {
             value: {
               id, type: instance.type === 'telegramSettings' ? 'dashboardSettings' : instance.type,

@@ -1,6 +1,6 @@
 import eventBus from './module/EventBus.js';
 import ClientDB from './module/ClientDB.js';
-import WidgetElement from './module/WidgetElement.js?v=audiobot-vk-20261031';
+import WidgetElement from './module/WidgetElement.js?v=audiobot-removed-20261031';
 import NavigationBar from './module/NavigationBar.js';
 import { t, widgetTitle, setLanguage, translateElement } from './module/i18n.js';
 
@@ -18,7 +18,6 @@ const WIDGET_CATALOG = Object.freeze({
   wishlistPrice:  {category:'finance',  file:'_wishlistPrice.html'},
   wishlistGames:  {category:'tools',    file:'_wishlistGames.html'},
   audioPlayer:    {category:'media',    file:'_audioPlayer.html'},
-  audioBotVk:     {category:'media',    file:'_audioBotVk.html'},
   videoPlayer:    {category:'media',    file:'_videoPlayer.html'},
   serverConsole:  {category:'system',   file:'_serverConsole.html'},
   telegramBot:    {category:'telegram', file:'_telegramBot.html'},
