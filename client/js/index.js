@@ -3,6 +3,7 @@ import ClientDB from './module/ClientDB.js';
 import WidgetElement from './module/WidgetElement.js?v=optima-names-one-supplier-input-v2-20261031';
 import NavigationBar from './module/NavigationBar.js';
 import installTableColumnResize from './module/TableColumnResize.js';
+import installTableSort from './module/TableSort.js?v=dashboardx-table-sort-20261031';
 import { t, widgetTitle, setLanguage, translateElement } from './module/i18n.js';
 
 // Canonical catalog of ALL original DashboardX widgets and their original categories.
@@ -565,6 +566,7 @@ async function boot() {
     renderWorkspaceTabs();
     renderCanvas();
     installTableColumnResize(document.getElementById('workspace-canvas'),store);
+    installTableSort(document.getElementById('workspace-canvas'),store);
     measureHeader();
     installWorkspaceShortcuts();
     if(typeof ResizeObserver==='function'){
