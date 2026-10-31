@@ -22,6 +22,7 @@ export default class MediaPlayerWidget {
   const state=this.store.getWidgetState(this.id)||{};
   this.playlist=this.isAudio&&Array.isArray(state.playlist)?state.playlist.filter(x=>x?.url&&validUrl(x.url)).slice(0,100):[];
   this.currentIndex=-1;this.objectUrls=new Set();this.listeners=[];this.loop=false;
+  this.radioStations=[];this.radioApi=typeof state.radioApi==='string'?state.radioApi:'';this.radioToken=sessionStorage.getItem('dashboardx.radio.token')||'';
   const on=(el,name,cb)=>{
    el?.addEventListener(name,cb);this.listeners.push(()=>el?.removeEventListener(name,cb));
   };
@@ -123,8 +124,68 @@ export default class MediaPlayerWidget {
   // A click on the video/canvas itself is focusable using the normal widget wrapper.
   // Across audio/video/NES, only the chosen player continues playing.
   on(window,'dashboardx:nes-playing',()=>this.media.pause());
-  if(this.isAudio)this.renderPlaylist();
+  if(this.isAudio){this.renderPlaylist();this.initRadio();}
   else if(validUrl(state.videoUrl))this.openUrl(state.videoUrl);
+ }
+
+ initRadio(){
+  const root=this.widget,api=root.querySelector('[data-role="radio-api"]'),token=root.querySelector('[data-role="radio-token"]');
+  const name=root.querySelector('[data-role="radio-name"]'),url=root.querySelector('[data-role="radio-url"]');
+  api.value=this.radioApi;token.value=this.radioToken;
+  const request=async(method,path,body)=>{
+   const base=validUrl(api.value.trim());
+   if(!base||!base.startsWith('https:'))throw new Error('Укажите HTTPS-адрес Railway');
+   const response=await fetch(base.replace(/\\/$/,'')+path,{method,headers:{Authorization:'Bearer '+token.value.trim(),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
+   const data=await response.json().catch(()=>({}));
+   if(!response.ok)throw new Error(data.error||'Ошибка '+response.status);
+   return data;
+  };
+  this.radioRequest=request;
+  const run=async action=>{
+   try{
+    this.radioApi=api.value.trim();this.persist({radioApi:this.radioApi});
+    sessionStorage.setItem('dashboardx.radio.token',token.value.trim());
+    await action();
+   }catch(e){this.message('Радио: '+e.message)}
+  };
+  this.bind(root.querySelector('[data-action="radio-load"]'),'click',()=>run(async()=>{
+   this.radioStations=(await request('GET','/api/radio/stations')).stations||[];
+   this.renderRadio();this.message('Радиостанции загружены с Railway');
+  }));
+  this.bind(root.querySelector('[data-action="radio-add"]'),'click',()=>run(async()=>{
+   const stream=validUrl(url.value.trim());
+   if(!stream||!name.value.trim())throw new Error('Введите название и прямую ссылку на поток');
+   const data=await request('POST','/api/radio/stations',{name:name.value.trim(),url:stream});
+   this.radioStations.push(data.station);this.renderRadio();name.value='';url.value='';
+   this.message('Радиостанция сохранена на Railway');
+  }));
+  this.renderRadio();
+  if(this.radioApi&&this.radioToken)void run(async()=>{
+   this.radioStations=(await request('GET','/api/radio/stations')).stations||[];this.renderRadio();
+  });
+ }
+ renderRadio(){
+  const list=this.widget.querySelector('[data-role="radio-list"]');if(!list)return;
+  list.replaceChildren();
+  if(!this.radioStations.length){list.textContent='Радиостанций пока нет';return}
+  this.radioStations.forEach(station=>{
+   const row=document.createElement('div');row.className='dx-media-track';
+   const play=document.createElement('button');play.type='button';play.textContent='▶ '+station.name;
+   play.addEventListener('click',()=>{
+    const index=this.playlist.findIndex(x=>x.radioId===station.id);
+    if(index<0){this.playlist.push({name:station.name,url:station.url,radioId:station.id,local:false});this.persistPlaylist();this.renderPlaylist()}
+    this.select(index<0?this.playlist.length-1:index,true);
+   });
+   const remove=document.createElement('button');remove.type='button';remove.textContent='×';remove.title='Удалить станцию с Railway';
+   remove.addEventListener('click',async()=>{
+    if(!confirm('Удалить радиостанцию «'+station.name+'»?'))return;
+    try{
+     await this.radioRequest('DELETE','/api/radio/stations/'+encodeURIComponent(station.id));
+     this.radioStations=this.radioStations.filter(x=>x.id!==station.id);this.renderRadio();this.message('Станция удалена');
+    }catch(e){this.message('Радио: '+e.message)}
+   });
+   row.append(play,remove);list.append(row);
+  });
  }
  persist(change){this.store.updateWidgetState(this.id,change);}
  persistPlaylist(){this.persist({playlist:this.playlist.filter(x=>!x.local).slice(0,100)});}
