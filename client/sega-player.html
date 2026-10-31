@@ -38,13 +38,17 @@
       const progress = document.querySelector('#progress');
       const retry = document.querySelector('#again');
       const gameRoot = document.querySelector('#game');
-      const EJS_STABLE = 'https://cdn.emulatorjs.org/stable/data/';
-      const EJS_FALLBACK = 'https://cdn.emulatorjs.org/latest/data/';
+      // The frontend is hosted with DashboardX to avoid cross-site ES-module loading.
+      // Binary cores and support data remain on the official EmulatorJS CDN.
+      const LOCAL = new URL('./vendor/emulatorjs/data/', location.href).href;
+      const EJS_CORES = 'https://cdn.emulatorjs.org/latest/data/';
+      const EJS_FALLBACK = 'https://cdn.emulatorjs.org/stable/data/';
       let received = false;
       let launched = false;
       let coreReady = false;
       let timeoutId = null;
       let sourceMode = true;
+      let loadingPhase = 'Ожидание файла ROM';
       // EmulatorJS may create its Start button before an external EJS_ready
       // callback is attached. Observe the real UI as a second ready signal.
       const uiObserver = new MutationObserver(() => {
@@ -56,6 +60,7 @@
         parent.postMessage({type, token, ...fields}, expectedOrigin);
       };
       function announce(message) {
+        loadingPhase = message;
         status.textContent = message;
         send('dashboardx:sega-status', {message});
       }
@@ -86,32 +91,52 @@
         // Resource errors do not generate normal window errors. Report the URL
         // for the missing module/style so a black screen is diagnosable.
         const resource = String(event.target?.src || event.target?.href || '');
-        if (resource.includes('emulatorjs.org') && !resource.endsWith('/loader.js')) {
+        if ((resource.includes('emulatorjs.org') || resource.includes('/vendor/emulatorjs/'))
+            && !resource.endsWith('/loader.js')) {
           failed('Не загрузился ресурс EmulatorJS: ' + resource.slice(0,180));
         }
       }, true);
       window.addEventListener('unhandledrejection', event => {
         if (!coreReady) failed('Ошибка загрузки ядра: ' + String(event.reason?.message || event.reason || 'ошибка').slice(0,160));
       });
-      function loadEmulator(base, fallback = false) {
+      function appendLoader(source, base) {
         if (coreReady) return;
-        window.EJS_pathtodata = base;
-        // Prefer the unminified official stable module. It avoids silent failures
-        // when the optimized bundle is blocked or unavailable and reports errors.
-        window.EJS_DEBUG_XX = sourceMode;
         const loader = document.createElement('script');
-        loader.src = base + 'loader.js';
+        loader.src = source;
         loader.onload = () => {
-          if (!coreReady) announce(fallback ? 'Резервный загрузчик подключён · ждём интерфейс…'
-            : 'Загрузчик EmulatorJS подключён · ждём интерфейс…');
+          if (!coreReady) announce('Загрузчик подключён · ожидание интерфейса ('+
+            (source.startsWith(location.origin)?'локально':'CDN')+')…');
         };
-        loader.onerror = () => {
-          if (!fallback) {
-            announce('Основной CDN недоступен · пробуем резервный…');
-            loadEmulator(EJS_FALLBACK, true);
-          } else failed('EmulatorJS CDN недоступен. Проверьте сеть или блокировку CDN в браузере.');
-        };
+        loader.onerror = () => failed('Не удалось загрузить loader.js: '+source);
         document.head.append(loader);
+      }
+      async function loadEmulator() {
+        if (coreReady) return;
+        const moduleURL = LOCAL + 'src/emulator.js';
+        window.EJS_DEBUG_XX = true;
+        window.EJS_pathtodata = EJS_CORES;
+        window.EJS_paths = {
+          'emulator.js': moduleURL,
+          'emulator.css': LOCAL + 'emulator.css'
+        };
+        announce('Подключение локального интерфейса EmulatorJS…');
+        try {
+          // Imports same-origin modules before loader.js. Errors are now observable,
+          // instead of being swallowed by EmulatorJS' generic filesMissing fallback.
+          const engine = await import(moduleURL);
+          if (!engine?.default) throw Error('В локальном модуле нет класса EmulatorJS');
+          announce('Локальный интерфейс загружен · запускаем EmulatorJS…');
+          appendLoader(LOCAL + 'loader.js');
+        } catch (error) {
+          // Last resort: bundled stable frontend; binary cores still use stable CDN.
+          if (coreReady) return;
+          announce('Локальный интерфейс недоступен: '+
+            String(error?.message||error).slice(0,130)+' · пробуем CDN…');
+          window.EJS_DEBUG_XX = false;
+          window.EJS_pathtodata = EJS_FALLBACK;
+          delete window.EJS_paths;
+          appendLoader(EJS_FALLBACK + 'loader.js');
+        }
       }
       window.EJS_ready = () => onInterfaceReady('event');
       window.EJS_onGameStart = () => {
@@ -142,9 +167,10 @@
         announce('ROM получен: ' + file.name + ' · подключение EmulatorJS (stable source)…');
         send('dashboardx:sega-received',{name:file.name,size:file.size});
         timeoutId = setTimeout(() => {
-          if (!coreReady) failed('EmulatorJS не запустился за 30 секунд. Возможна блокировка загрузчика, CSS или ядра WebAssembly.');
+          if (!coreReady) failed('Не появился интерфейс EmulatorJS. Последний этап: '+
+            loadingPhase+'. Откройте консоль браузера (F12) для подробностей.');
         },30000);
-        loadEmulator(EJS_STABLE);
+        loadEmulator();
       });
       if (token) send('dashboardx:sega-ready');
       else failed('Ошибка запуска: отсутствует идентификатор сессии.');
