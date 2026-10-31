@@ -2007,3 +2007,15 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas .dx-product-supplier-links{display:flex;flex-wrap:wrap;align-items:center;gap:3px;min-width:0}
 #workspace-canvas .dx-product-supplier-links .dx-product-supplier-link{appearance:none;border:0;background:transparent;color:var(--dx-accent,var(--text-main));padding:1px 2px;margin:0;font:inherit;font-size:inherit;line-height:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;cursor:pointer}
 #workspace-canvas .dx-product-supplier-links .dx-product-supplier-link:hover{color:var(--text-main);background:var(--dx-accent-soft,transparent);border-radius:3px}
+
+/* DashboardX header reload action, adjacent to language selection. */
+#app-toolbar .toolbar-controls > #dashboard-reload {
+  width:36px;
+  min-width:36px;
+  height:36px;
+  padding:0;
+  color:var(--dx-accent);
+  font-size:21px;
+  font-weight:500;
+  line-height:1;
+}

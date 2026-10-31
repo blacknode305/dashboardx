@@ -458,6 +458,7 @@ async function boot() {
       languageSwitch.dispatchEvent(new Event('change', { bubbles: true }));
     }));
     syncLanguageButtons();
+    document.getElementById('dashboard-reload').addEventListener('click',reload);
     const spatialButton=document.getElementById('spatial-toggle');
     const arStyles=document.getElementById('dashboardx-ar-styles');
     spatialButton.addEventListener('click',async()=>{
