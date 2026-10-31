@@ -5,8 +5,9 @@
     <div class="dx-product-search"><button type="button" data-role="product-add" title="Добавить наименование" aria-label="Добавить наименование">+</button><input type="search" data-role="data-search" data-i18n-placeholder="optima.searchSimple" placeholder="Поиск…"></div>
     <select data-role="data-branch" data-i18n-aria="optima.branch" aria-label="Филиал"></select>
     <div class="dx-product-supplier-picker">
-      <input type="search" data-role="data-supplier-query" aria-label="Поиск поставщика в списке" placeholder="Найти поставщика…" autocomplete="off" spellcheck="false">
-      <select data-role="data-extra" data-i18n-aria="optima.supplier" aria-label="Выбрать поставщика"></select>
+      <input type="search" data-role="data-supplier-query" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-label="Поставщик" placeholder="Все поставщики" autocomplete="off" spellcheck="false">
+      <input type="hidden" data-role="data-extra" value="">
+      <div class="dx-product-supplier-options" data-role="data-supplier-options" role="listbox" aria-label="Подходящие поставщики" hidden></div>
     </div>
     <input type="date" data-role="data-date" data-i18n-aria="optima.date" aria-label="Дата">
     <select data-role="data-mode" data-i18n-aria="optima.mode" aria-label="Режим"></select>

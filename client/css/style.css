@@ -2228,28 +2228,70 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 }
 
 
-/* Search by name within the Names widget supplier dropdown, without affecting Suppliers. */
+/* Optima Names only: one searchable supplier combobox with its own suggestion list. */
 #workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker{
-  display:flex;flex:1 1 265px;min-width:0;gap:6px;align-items:stretch;
+  position:relative;
+  flex:1 1 185px;
+  min-width:150px;
+  z-index:5;
 }
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker input,
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker select{
-  box-sizing:border-box;min-height:38px;min-width:0;width:0;
-  padding:8px 10px;border:1px solid var(--border);border-radius:8px;
-  background:var(--bg-panel-inside);color:var(--text-main);
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker [data-role="data-supplier-query"]{
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  min-height:38px;
+  padding:8px 12px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--bg-panel-inside);
+  color:var(--text-main);
   font:550 11px/1.4 var(--f-family-inter);
 }
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker input{
-  flex:1 1 120px;
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker [data-role="data-supplier-query"]:focus-visible{
+  outline:2px solid var(--dx-accent);
+  outline-offset:1px;
 }
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker select{
-  flex:1 1 145px;
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-options{
+  position:absolute;
+  top:calc(100% + 4px);
+  left:0;
+  right:0;
+  display:grid;
+  gap:2px;
+  max-height:215px;
+  overflow-y:auto;
+  padding:4px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--bg-panel-inside);
+  box-shadow:0 8px 24px rgba(0,0,0,.32);
+  z-index:20;
 }
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker :is(input,select):focus-visible{
-  outline:2px solid var(--dx-accent);outline-offset:1px;
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-options[hidden]{display:none!important}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-option{
+  display:block;
+  width:100%;
+  padding:8px 10px;
+  border:0;
+  border-radius:5px;
+  text-align:left;
+  background:transparent;
+  color:var(--text-main);
+  font:inherit;
+  cursor:pointer;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-option:is(:hover,:focus-visible,.is-active){
+  background:var(--bg-panel-light);
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-option[aria-selected="true"]{
+  color:var(--dx-accent);
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-empty{
+  padding:9px 10px;
+  font-size:11px;
+  color:var(--text-muted);
 }
 @media(max-width:440px){
-  #workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker{
-    flex:1 1 100%;
-  }
+  #workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker{flex:1 1 100%}
 }
+

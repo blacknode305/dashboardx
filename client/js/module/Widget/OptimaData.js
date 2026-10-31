@@ -128,6 +128,11 @@ export default class OptimaDataWidget {
     this.productAdd=this.type==='optimaProducts'?widget.querySelector('[data-role="product-add"]'):null;
     this.productDraft=this.type==='optimaProducts'?widget.querySelector('[data-role="product-draft"]'):null;
     this.productSupplierQuery=this.type==='optimaProducts'?widget.querySelector('[data-role="data-supplier-query"]'):null;
+    this.productSupplierOptions=this.type==='optimaProducts'?widget.querySelector('[data-role="data-supplier-options"]'):null;
+    this.productSupplierOpen=false;
+    this.productSupplierEditing=false;
+    this.productSupplierChoices=[];
+    this.productSupplierActive=-1;
     this.filters={
       search:typeof saved.search==='string'?saved.search:'',
       branch:typeof saved.branch==='string'?saved.branch:'',
@@ -160,17 +165,89 @@ export default class OptimaDataWidget {
     }
     if(this.refresh)this.listen(this.refresh,'click',()=>this.load());
     if(this.productSupplierQuery){
-      // Filter supplier dropdown options while typing; selecting an option applies the existing table filter.
-      this.listen(this.productSupplierQuery,'input',()=>{
+      const query=this.productSupplierQuery;
+      const options=this.productSupplierOptions;
+      const picker=widget.querySelector('.dx-product-supplier-picker');
+      const listId='dx-product-suppliers-'+String(this.id).replace(/[^a-zA-Z0-9_-]/g,'-');
+      options.id=listId;
+      query.setAttribute('aria-controls',listId);
+      const close=(restore=true)=>{
+        this.productSupplierOpen=false;
+        this.productSupplierActive=-1;
+        options.hidden=true;
+        query.setAttribute('aria-expanded','false');
+        query.removeAttribute('aria-activedescendant');
+        if(restore){
+          this.productSupplierEditing=false;
+          const selected=rows(this.db?.suppliers).find(s=>String(s.id)===String(this.filters.extra));
+          query.value=selected?.name||'';
+        }
+      };
+      const choose=item=>{
+        this.productSupplierEditing=false;
+        this.filters.extra=String(item.id??'');
+        this.controls.extra.value=this.filters.extra;
+        query.value=item.id?String(item.name):'';
+        close(false);
+        onFilter();
+        query.focus({preventScroll:true});
+      };
+      this.chooseProductSupplier=choose;
+      this.listen(query,'focus',()=>{
+        this.productSupplierOpen=true;
+        this.productSupplierEditing=false;
+        this.configureProductSupplierOptions();
+        if(this.filters.extra)query.select();
+      });
+      this.listen(query,'click',()=>{
+        if(this.productSupplierOpen)return;
+        this.productSupplierOpen=true;
+        this.configureProductSupplierOptions();
+      });
+      this.listen(query,'input',()=>{
+        this.productSupplierEditing=true;
+        this.controls.extra.value='';
         this.filters.extra='';
+        this.productSupplierOpen=true;
         this.configureProductSupplierOptions();
         onFilter();
       });
-      this.listen(this.productSupplierQuery,'keydown',event=>{
-        if(event.key!=='ArrowDown')return;
-        event.preventDefault();
-        this.controls.extra.focus();
-        try{this.controls.extra.showPicker?.();}catch{}
+      this.listen(query,'keydown',event=>{
+        if(event.key==='Escape'&&this.productSupplierOpen){
+          event.preventDefault();event.stopPropagation();close();return;
+        }
+        if(event.key==='ArrowDown'||event.key==='ArrowUp'){
+          event.preventDefault();
+          if(!this.productSupplierOpen){
+            this.productSupplierOpen=true;this.configureProductSupplierOptions();
+          }
+          const choices=this.productSupplierChoices;
+          if(!choices.length)return;
+          const direction=event.key==='ArrowDown'?1:-1;
+          const count=choices.length;
+          this.productSupplierActive=this.productSupplierActive<0?
+            (direction===1?0:count-1):(this.productSupplierActive+direction+count)%count;
+          options.querySelectorAll('[role="option"]').forEach((el,i)=>{
+            el.classList.toggle('is-active',i===this.productSupplierActive);
+          });
+          const active=options.querySelectorAll('[role="option"]')[this.productSupplierActive];
+          if(active){
+            query.setAttribute('aria-activedescendant',active.id);
+            active.scrollIntoView({block:'nearest'});
+          }
+          return;
+        }
+        if(event.key==='Enter'&&this.productSupplierOpen){
+          const choice=this.productSupplierChoices[this.productSupplierActive]||
+            (this.productSupplierEditing&&this.productSupplierChoices.length===1?this.productSupplierChoices[0]:null);
+          if(choice){event.preventDefault();choose(choice);}
+        }
+      });
+      const onOutside=event=>{if(!picker.contains(event.target)&&this.productSupplierOpen)close();};
+      document.addEventListener('pointerdown',onOutside);
+      this.listeners.push(()=>document.removeEventListener('pointerdown',onOutside));
+      this.listen(picker,'focusout',event=>{
+        if(!picker.contains(event.relatedTarget)&&this.productSupplierOpen)close();
       });
     }
     if(this.productAdd){
@@ -320,17 +397,43 @@ export default class OptimaDataWidget {
   saveFilters(){this.store?.updateWidgetState(this.id,{...this.filters});}
   configureProductSupplierOptions(){
     if(this.type!=='optimaProducts')return;
-    const query=norm(this.productSupplierQuery?.value||'').replace(/\s+/g,' ');
-    const options=rows(this.db?.suppliers)
-      .filter(s=>!query||norm(s.name).replace(/\s+/g,' ').includes(query))
-      .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ru'))
-      .map(s=>[s.id,s.name]);
-    select(this.controls.extra,[['',t('optima.allSuppliers')],...options],this.filters.extra);
-    if(query&&!options.length){
-      const empty=new Option('Совпадений нет','');
-      empty.disabled=true;
-      this.controls.extra.append(empty);
+    const suppliers=rows(this.db?.suppliers);
+    const selected=suppliers.find(s=>String(s.id)===String(this.filters.extra));
+    this.controls.extra.value=this.filters.extra;
+    this.productSupplierQuery.placeholder=t('optima.allSuppliers');
+    if(!this.productSupplierEditing)this.productSupplierQuery.value=selected?.name||'';
+    const list=this.productSupplierOptions;
+    if(!this.productSupplierOpen){
+      list.hidden=true;
+      this.productSupplierQuery.setAttribute('aria-expanded','false');
+      return;
     }
+    const typed=this.productSupplierEditing?norm(this.productSupplierQuery.value).replace(/\s+/g,' '):'';
+    const matching=suppliers
+      .filter(s=>!typed||norm(s.name).replace(/\s+/g,' ').includes(typed))
+      .sort((a,b)=>{
+        const prefix=Number(norm(b.name).startsWith(typed))-Number(norm(a.name).startsWith(typed));
+        return prefix||String(a.name).localeCompare(String(b.name),'ru');
+      })
+      .map(s=>({id:String(s.id),name:String(s.name)}));
+    this.productSupplierChoices=typed?matching:[{id:'',name:t('optima.allSuppliers')},...matching];
+    this.productSupplierActive=-1;
+    this.productSupplierQuery.removeAttribute('aria-activedescendant');
+    list.replaceChildren();
+    for(const [index,item] of this.productSupplierChoices.entries()){
+      const option=make('button',item.name,'dx-product-supplier-option');
+      option.type='button';
+      option.id=list.id+'-'+index;
+      option.setAttribute('role','option');
+      option.setAttribute('aria-selected',String(String(item.id)===String(this.filters.extra)));
+      option.addEventListener('click',()=>this.chooseProductSupplier?.(item));
+      list.append(option);
+    }
+    if(!this.productSupplierChoices.length){
+      list.append(make('div','Совпадений нет','dx-product-supplier-empty'));
+    }
+    list.hidden=false;
+    this.productSupplierQuery.setAttribute('aria-expanded','true');
   }
   configureSelects(){
     const f=this.filters;
