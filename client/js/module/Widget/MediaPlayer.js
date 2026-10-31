@@ -1,3 +1,4 @@
+import {getCredential} from '../CredentialStore.js';
 const validUrl=text=>{
  try{
   const u=new URL(text);
@@ -22,7 +23,7 @@ export default class MediaPlayerWidget {
   const state=this.store.getWidgetState(this.id)||{};
   this.playlist=this.isAudio&&Array.isArray(state.playlist)?state.playlist.filter(x=>x?.url&&validUrl(x.url)).slice(0,100):[];
   this.currentIndex=-1;this.objectUrls=new Set();this.listeners=[];this.loop=false;
-  this.radioStations=[];this.radioApi=typeof state.radioApi==='string'?state.radioApi:'';this.radioToken=sessionStorage.getItem('dashboardx.radio.token')||'';
+  this.radioStations=[];
   const on=(el,name,cb)=>{
    el?.addEventListener(name,cb);this.listeners.push(()=>el?.removeEventListener(name,cb));
   };
@@ -129,40 +130,34 @@ export default class MediaPlayerWidget {
  }
 
  initRadio(){
-  const root=this.widget,api=root.querySelector('[data-role="radio-api"]'),token=root.querySelector('[data-role="radio-token"]');
+  const root=this.widget;
   const name=root.querySelector('[data-role="radio-name"]'),url=root.querySelector('[data-role="radio-url"]');
-  api.value=this.radioApi;token.value=this.radioToken;
+  const base='https://pro-optima-production.up.railway.app';
   const request=async(method,path,body)=>{
-   const base=validUrl(api.value.trim());
-   if(!base||!base.startsWith('https:'))throw new Error('Укажите HTTPS-адрес Railway');
-   const response=await fetch((base.endsWith('/')?base.slice(0,-1):base)+path,{method,headers:{Authorization:'Bearer '+token.value.trim(),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
+   const token=getCredential('optima');
+   if(!token)throw new Error('Сначала укажите Admin Token OPTIMA в настройках DashboardX');
+   const response=await fetch(base+path,{method,headers:{Authorization:'Bearer '+token,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
    const data=await response.json().catch(()=>({}));
    if(!response.ok)throw new Error(data.error||'Ошибка '+response.status);
    return data;
   };
   this.radioRequest=request;
-  const run=async action=>{
-   try{
-    this.radioApi=api.value.trim();this.persist({radioApi:this.radioApi});
-    sessionStorage.setItem('dashboardx.radio.token',token.value.trim());
-    await action();
-   }catch(e){this.message('Радио: '+e.message)}
+  const load=async()=>{
+   try{this.radioStations=(await request('GET','/api/dashboardx/radio/stations')).stations||[];this.renderRadio();this.message('Радиостанции загружены из базы DashboardX')}
+   catch(e){this.message('Радио: '+e.message)}
   };
-  this.bind(root.querySelector('[data-action="radio-load"]'),'click',()=>run(async()=>{
-   this.radioStations=(await request('GET','/api/radio/stations')).stations||[];
-   this.renderRadio();this.message('Радиостанции загружены с Railway');
-  }));
-  this.bind(root.querySelector('[data-action="radio-add"]'),'click',()=>run(async()=>{
-   const stream=validUrl(url.value.trim());
-   if(!stream||!name.value.trim())throw new Error('Введите название и прямую ссылку на поток');
-   const data=await request('POST','/api/radio/stations',{name:name.value.trim(),url:stream});
-   this.radioStations.push(data.station);this.renderRadio();name.value='';url.value='';
-   this.message('Радиостанция сохранена на Railway');
-  }));
-  this.renderRadio();
-  if(this.radioApi&&this.radioToken)void run(async()=>{
-   this.radioStations=(await request('GET','/api/radio/stations')).stations||[];this.renderRadio();
+  this.bind(root.querySelector('[data-action="radio-load"]'),'click',()=>void load());
+  this.bind(window,'dashboardx:credential-changed',e=>{if(e.detail?.service==='optima')void load()});
+  this.bind(root.querySelector('[data-action="radio-add"]'),'click',async()=>{
+   try{
+    const stream=validUrl(url.value.trim());
+    if(!stream||!name.value.trim())throw new Error('Введите название и прямую ссылку на поток');
+    const data=await request('POST','/api/dashboardx/radio/stations',{name:name.value.trim(),url:stream});
+    this.radioStations.push(data.station);this.renderRadio();name.value='';url.value='';
+    this.message('Радиостанция сохранена в базе DashboardX');
+   }catch(e){this.message('Радио: '+e.message)}
   });
+  this.renderRadio();if(getCredential('optima'))void load();
  }
  renderRadio(){
   const list=this.widget.querySelector('[data-role="radio-list"]');if(!list)return;
@@ -180,7 +175,7 @@ export default class MediaPlayerWidget {
    remove.addEventListener('click',async()=>{
     if(!confirm('Удалить радиостанцию «'+station.name+'»?'))return;
     try{
-     await this.radioRequest('DELETE','/api/radio/stations/'+encodeURIComponent(station.id));
+     await this.radioRequest('DELETE','/api/dashboardx/radio/stations/'+encodeURIComponent(station.id));
      this.radioStations=this.radioStations.filter(x=>x.id!==station.id);this.renderRadio();this.message('Станция удалена');
     }catch(e){this.message('Радио: '+e.message)}
    });
