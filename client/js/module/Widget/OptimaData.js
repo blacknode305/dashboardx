@@ -6,7 +6,7 @@ import {
 } from '../OptimaAPI.js';
 
 const CONFIG={
-  optimaProducts:{branch:true,status:['all'],extra:true,date:false,mode:false},
+  optimaProducts:{branch:true,status:false,extra:true,date:false,mode:false},
   optimaProposals:{branch:false,status:['all','linked','unlinked'],extra:true,date:false,mode:['catalog','proposals']},
   optimaOffers:{branch:true,status:['all','enabled','disabled','auto'],extra:true,date:false,mode:false},
   optimaCompare:{branch:true,status:['all','allPrices','different'],extra:true,date:false,mode:false},
@@ -107,7 +107,7 @@ export default class OptimaDataWidget {
     this.filters={
       search:typeof saved.search==='string'?saved.search:'',
       branch:typeof saved.branch==='string'?saved.branch:'',
-      status:typeof saved.status==='string'?saved.status:'all',
+      status:this.type==='optimaProducts'?'all':(typeof saved.status==='string'?saved.status:'all'),
       extra:typeof saved.extra==='string'?saved.extra:'',
       date:typeof saved.date==='string'?saved.date:(this.type==='optimaStocks'?dateISO():''),
       mode:typeof saved.mode==='string'?saved.mode:(this.cfg.mode?.[0]||'')
@@ -116,7 +116,7 @@ export default class OptimaDataWidget {
     this.controls.search.value=this.filters.search;
     this.controls.date.value=this.filters.date;
     this.controls.branch.hidden=!this.cfg.branch;
-    this.controls.status.hidden=this.type==='optimaProducts'||!this.cfg.status;
+    if(this.controls.status)this.controls.status.hidden=!this.cfg.status;
     this.controls.extra.hidden=!this.cfg.extra;
     this.controls.date.hidden=!this.cfg.date;
     this.controls.mode.hidden=!this.cfg.mode;
@@ -125,7 +125,7 @@ export default class OptimaDataWidget {
       el.addEventListener(event,fn);this.listeners.push(()=>el.removeEventListener(event,fn));
     };
     const onFilter=()=>{
-      for(const [key,control] of Object.entries(this.controls))this.filters[key]=control.value;
+      for(const [key,control] of Object.entries(this.controls))if(control)this.filters[key]=control.value;
       this.render();
       this.updateProductFilterReset?.();
       clearTimeout(this.saveTimer);
@@ -133,7 +133,7 @@ export default class OptimaDataWidget {
     };
     this.listen(this.controls.search,'input',onFilter);
     for(const key of ['branch','status','extra','date','mode']){
-      this.listen(this.controls[key],'change',onFilter);
+      if(this.controls[key])this.listen(this.controls[key],'change',onFilter);
     }
     if(this.refresh)this.listen(this.refresh,'click',()=>this.load());
     if(this.productAdd){
@@ -196,14 +196,13 @@ export default class OptimaDataWidget {
         const name=draftForm.elements.namedItem('name').value.trim();
         const unit=draftForm.elements.namedItem('unit').value.trim();
         const note=draftForm.elements.namedItem('note').value.trim();
-        const catalogStatus=draftForm.elements.namedItem('catalogStatus').value==='proposal'?'proposal':'used';
         const excludedBranches=[...branchContainer.querySelectorAll('input:checked')].map(x=>x.value);
         if(!Number.isSafeInteger(id)||id<=0){info.textContent='Укажите положительный целый ID.';return;}
         if(!name){info.textContent='Введите наименование сырья.';return;}
         const products=rows(this.db.products);
         if(products.some(p=>Number(p.id)===id)){info.textContent='Этот ID уже используется.';return;}
         if(products.some(p=>norm(p.name)===norm(name))){info.textContent='Такое наименование уже существует.';return;}
-        const entry={id,name,unit,note,catalogStatus,excludedBranches,source:'manual',orderSuppliers:[]};
+        const entry={id,name,unit,note,catalogStatus:'used',excludedBranches,source:'manual',orderSuppliers:[]};
         saveButton.disabled=true;info.textContent='Сохранение наименования…';
         try{
           await patchOptima({products:[...products,entry]},this.revision);
@@ -232,7 +231,7 @@ export default class OptimaDataWidget {
   saveFilters(){this.store?.updateWidgetState(this.id,{...this.filters});}
   configureSelects(){
     const f=this.filters;
-    select(this.controls.status,this.cfg.status.map(x=>[x,t('optima.filter.'+x)]),f.status);
+    if(this.controls.status&&this.cfg.status)select(this.controls.status,this.cfg.status.map(x=>[x,t('optima.filter.'+x)]),f.status);
     if(this.cfg.mode)select(this.controls.mode,this.cfg.mode.map(x=>[x,t('optima.mode.'+x)]),f.mode);
     else select(this.controls.mode,[['','—']],'');
     const db=this.db||{};
@@ -246,7 +245,7 @@ export default class OptimaDataWidget {
     this.controls.search.value=f.search;
     for(const key of ['branch','status','extra','mode']){
       if(!this.db && (key==='branch'||key==='extra'))continue;
-      f[key]=this.controls[key].value;
+      if(this.controls[key])f[key]=this.controls[key].value;
     }
     this.updateProductFilterReset?.();
   }
@@ -381,9 +380,7 @@ export default class OptimaDataWidget {
     if(this.type==='optimaProducts'){
       const items=total('products').filter(x=>x&&
         (!branch||!rows(x.excludedBranches).some(b=>norm(b)===norm(branch)))&&
-        (!extra||rows(x.orderSuppliers).some(link=>String(link.supplierId)===String(extra)||(!link.supplierId&&norm(link.supplier)===norm(rows(db.suppliers).find(s=>String(s.id)===String(extra))?.name))))&&
-        (f.status==='all'||(f.status==='used'&&x.catalogStatus!=='proposal')||
-        (f.status==='proposal'&&x.catalogStatus==='proposal')))
+        (!extra||rows(x.orderSuppliers).some(link=>String(link.supplierId)===String(extra)||(!link.supplierId&&norm(link.supplier)===norm(rows(db.suppliers).find(s=>String(s.id)===String(extra))?.name)))))
         .filter(x=>matches([x.name,x.unit,x.note,rowSupplierNames(x,db),x.id].join(' ')))
         .sort((a,b)=>String(a.name).localeCompare(String(b.name),'ru'));
       this.buildTable([
