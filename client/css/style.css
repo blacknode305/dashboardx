@@ -2161,3 +2161,51 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
     min-width:18px;
   }
 }
+
+
+/* Names only: readable excluded-branch choices in the add-name form. */
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-branches{
+  padding:12px;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-branches legend{
+  padding:0 6px;
+  font-size:12px;
+  font-weight:650;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-branches>div{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-branches label{
+  box-sizing:border-box;
+  min-width:0;
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:8px 9px;
+  border:1px solid var(--border);
+  border-radius:7px;
+  background:var(--bg-panel);
+  color:var(--text-main);
+  font-size:13px;
+  line-height:1.3;
+  cursor:pointer;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-branches input[type="checkbox"]{
+  flex:0 0 17px;
+  width:17px;
+  height:17px;
+  margin:0;
+  accent-color:var(--dx-accent);
+  cursor:pointer;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-branches label:has(input:checked){
+  border-color:var(--dx-accent);
+}
+@media(max-width:460px){
+  #workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-branches>div{
+    grid-template-columns:minmax(0,1fr);
+  }
+}
