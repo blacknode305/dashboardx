@@ -17,5 +17,13 @@
   <button type="button" data-action="clear">Очистить</button>
  </div>
  <div data-role="playlist" class="dx-media-playlist"></div>
+ <details class="dx-radio-section"><summary>📻 Радиостанции · Railway</summary>
+ <div class="dx-experience-toolbar"><input type="url" data-role="radio-api" placeholder="HTTPS-адрес Radio API на Railway" aria-label="Radio API"></div>
+ <div class="dx-experience-toolbar"><input type="password" data-role="radio-token" placeholder="Токен Radio API" aria-label="Токен Radio API" autocomplete="off"><button type="button" data-action="radio-load">↻ Обновить</button></div>
+ <div class="dx-experience-toolbar"><input type="text" data-role="radio-name" maxlength="120" placeholder="Название радиостанции"></div>
+ <div class="dx-experience-toolbar"><input type="url" data-role="radio-url" placeholder="Прямая ссылка на радиопоток"><button type="button" data-action="radio-add">＋ Сохранить</button></div>
+ <div data-role="radio-list" class="dx-media-playlist"></div>
+ <p class="dx-muted">Станции сохраняются на Railway. Токен хранится только в текущей сессии браузера. Для воспроизведения нужен доступный аудиопоток.</p>
+ </details>
  <p class="dx-muted">Файлы воспроизводятся локально, не загружаются на сервер. HTTPS-ссылки сохраняются между запусками. Пробел — пауза при активном окне.</p>
  </section></template></body></html>
