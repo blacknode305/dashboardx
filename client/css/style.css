@@ -2209,3 +2209,20 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
     grid-template-columns:minmax(0,1fr);
   }
 }
+
+/* Optima Names: compact row actions; existing Suppliers UI is unchanged. */
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-row-actions{
+  display:flex;align-items:center;flex-wrap:wrap;gap:5px;min-width:0;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-row-actions button{
+  min-height:29px;padding:4px 7px;border:1px solid var(--border);border-radius:6px;
+  background:var(--bg-panel);color:var(--text-main);font:inherit;line-height:1.2;
+  cursor:pointer;white-space:normal;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-row-actions button:hover,
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-row-actions button:focus-visible{
+  border-color:var(--dx-accent);background:var(--bg-panel-light);
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-row-actions .dx-product-action-delete:hover{
+  border-color:#cb6d78;color:#f3a1a9;
+}

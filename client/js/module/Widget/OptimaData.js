@@ -14,7 +14,7 @@ const CONFIG={
   optimaOrders:{branch:true,status:['all','received','sent','expected','today','overdue','done','pending','approved','rejected'],extra:false,date:true,mode:['history','requests']}
 };
 const MAX_ROWS=400;
-const PRODUCT_COL_DEFAULTS=Object.freeze({id:64,name:225,unit:88,supplier:245});
+const PRODUCT_COL_DEFAULTS=Object.freeze({id:64,name:225,unit:88,supplier:245,actions:170});
 const PRODUCT_COL_KEYS=Object.keys(PRODUCT_COL_DEFAULTS);
 const PRODUCT_COL_MIN=48;
 const PRODUCT_COL_MAX=720;
@@ -58,6 +58,29 @@ const supplierLinks=(product,db)=>{
   }
   if(!container.childNodes.length){container.textContent='—';container.title='Поставщик пока не привязан';}
   return container;
+};
+const productDeletionReferences=(db,product)=>{
+  const id=String(product.id);
+  const scalarKeys=new Set(['productId','linkedProductId','matchedProductId','analogProductId','sourceProductId','targetProductId','product_id']);
+  const arrayKeys=new Set(['productIds','analogProductIds','linkedProductIds']);
+  const references=(value,depth=0)=>{
+    if(!value||typeof value!=='object'||depth>12)return false;
+    if(Array.isArray(value))return value.some(item=>references(item,depth+1));
+    for(const [key,item] of Object.entries(value)){
+      if(scalarKeys.has(key)&&item!=null&&String(item)===id)return true;
+      if(arrayKeys.has(key)&&rows(item).some(v=>String(v)===id))return true;
+      if(item&&typeof item==='object'&&references(item,depth+1))return true;
+    }
+    return false;
+  };
+  const names={offers:'Цены и предложения',stocks:'Остатки',history:'История заявок',dateRequests:'Заявки',transfers:'Перемещения',supplierCatalog:'Каталог поставщиков'};
+  const found=[];
+  for(const [key,value] of Object.entries(db||{})){
+    if(key==='products')continue;
+    if(references(value))found.push(names[key]||key);
+  }
+  if(rows(db?.products).some(other=>String(other.id)!==id&&references(other)))found.push('Связи с другими наименованиями');
+  return found;
 };
 const select=(element,items,selected)=>{
   element.replaceChildren();
@@ -127,7 +150,6 @@ export default class OptimaDataWidget {
     const onFilter=()=>{
       for(const [key,control] of Object.entries(this.controls))if(control)this.filters[key]=control.value;
       this.render();
-      this.updateProductFilterReset?.();
       clearTimeout(this.saveTimer);
       this.saveTimer=setTimeout(()=>this.saveFilters(),220);
     };
@@ -137,81 +159,133 @@ export default class OptimaDataWidget {
     }
     if(this.refresh)this.listen(this.refresh,'click',()=>this.load());
     if(this.productAdd){
-      const searchShell=widget.querySelector('.dx-product-search');
-      const resetFilters=make('button','×');
-      resetFilters.type='button';
-      resetFilters.title='Сбросить поиск и фильтры';
-      resetFilters.setAttribute('aria-label','Сбросить поиск и фильтры');
-      resetFilters.hidden=true;
-      searchShell.append(resetFilters);
-      this.updateProductFilterReset=()=>{
-        resetFilters.hidden=!Boolean(this.controls.search.value.trim()||this.controls.branch.value||this.controls.extra.value);
-      };
-      this.listen(resetFilters,'click',()=>{
-        for(const key of ['search','branch','extra']){
-          this.filters[key]='';
-          this.controls[key].value='';
-        }
-        this.render();this.saveFilters();this.updateProductFilterReset();
-        this.controls.search.focus();
-      });
       const draftForm=widget.querySelector('[data-role="product-draft-form"]');
       const branchContainer=widget.querySelector('[data-role="product-draft-branches"]');
+      const title=widget.querySelector('[data-role="product-draft-title"]');
       const info=widget.querySelector('[data-role="product-draft-info"]');
+      const saveButton=widget.querySelector('[data-role="product-draft-save"]');
       const defaultInfo=info.textContent;
-      this.productAdd.setAttribute('aria-expanded','false');
       const branchList=['Анжерская','Горняк','Ермекова','Лободы','Нуркена','Пришахтинск','Сарань'];
+      this.productEditId=null;
+      this.productFormBaseRevision=null;
+      this.productBusy=false;
+      this.productAdd.setAttribute('aria-expanded','false');
       for(const branchName of branchList){
         const label=document.createElement('label');
-        const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.name='excludedBranches';checkbox.value=branchName;
-        label.append(checkbox,document.createTextNode(branchName));branchContainer.append(label);
+        const checkbox=document.createElement('input');
+        checkbox.type='checkbox';checkbox.name='excludedBranches';checkbox.value=branchName;
+        label.append(checkbox,document.createTextNode(branchName));
+        branchContainer.append(label);
       }
       const closeDraft=()=>{
         this.productDraft.hidden=true;
+        this.productEditId=null;
+        this.productFormBaseRevision=null;
         this.productAdd.setAttribute('aria-expanded','false');
       };
-      this.listen(this.productAdd,'click',()=>{
-        if(!this.productDraft.hidden){closeDraft();return;}
+      this.openProductEditor=product=>{
+        if(this.productBusy)return;
+        if(!this.db){
+          window.alert('Сначала подключитесь к базе PRO OPTIMA.');
+          return;
+        }
+        const current=product?rows(this.db.products).find(item=>String(item.id)===String(product.id)):null;
+        if(product&&!current){window.alert('Наименование больше не найдено. Обновите данные.');return;}
+        draftForm.reset();
+        this.productEditId=current?String(current.id):null;
+        this.productFormBaseRevision=Number(this.revision);
+        title.textContent=current?'Изменить наименование':'Добавить наименование';
+        saveButton.textContent=current?'Сохранить изменения':'Сохранить';
+        draftForm.elements.namedItem('name').value=String(current?.name||'');
+        draftForm.elements.namedItem('unit').value=String(current?.unit||'');
+        draftForm.elements.namedItem('note').value=String(current?.note||'');
+        for(const checkbox of branchContainer.querySelectorAll('input[type="checkbox"]')){
+          checkbox.checked=rows(current?.excludedBranches).some(b=>norm(b)===norm(checkbox.value));
+        }
+        info.textContent=current?'ID '+current.id+' сохранится. Связи с поставщиками останутся прежними.':defaultInfo;
         this.productDraft.hidden=false;
         this.productAdd.setAttribute('aria-expanded','true');
-        info.textContent=this.db?defaultInfo:'Сначала подключитесь к базе PRO OPTIMA.';
-        const ids=rows(this.db?.products).map(p=>Number(p.id)).filter(Number.isSafeInteger);
-        const idField=draftForm.elements.namedItem('id');
-        if(this.db&&idField&&!idField.value)idField.value=String(Math.max(0,...ids)+1);
-        draftForm.elements.namedItem('name')?.focus({preventScroll:true});
+        this.productDraft.scrollIntoView({behavior:'smooth',block:'nearest'});
+        draftForm.elements.namedItem('name').focus({preventScroll:true});
+      };
+      this.listen(this.productAdd,'click',()=>{
+        if(!this.productDraft.hidden&&this.productEditId===null){closeDraft();return;}
+        this.openProductEditor(null);
       });
       this.listen(widget.querySelector('[data-role="product-draft-cancel"]'),'click',closeDraft);
       this.listen(widget,'keydown',event=>{
-        if(event.key!=='Escape'||this.productDraft.hidden)return;
+        if(event.key!=='Escape'||this.productDraft.hidden||this.productBusy)return;
         event.preventDefault();closeDraft();this.productAdd.focus();
       });
       this.listen(draftForm,'submit',async event=>{
         event.preventDefault();
-        const saveButton=draftForm.querySelector('[type="submit"]');
-        if(saveButton.disabled)return;
+        if(this.productBusy)return;
         if(!this.db||!Number.isFinite(Number(this.revision))){
           info.textContent='Сначала подключитесь к базе PRO OPTIMA.';return;
         }
-        const id=Number(draftForm.elements.namedItem('id').value);
+        if(this.productFormBaseRevision!==Number(this.revision)){
+          info.textContent='Данные изменились после открытия формы. Закройте её и откройте наименование заново.';return;
+        }
         const name=draftForm.elements.namedItem('name').value.trim();
         const unit=draftForm.elements.namedItem('unit').value.trim();
         const note=draftForm.elements.namedItem('note').value.trim();
-        const excludedBranches=[...branchContainer.querySelectorAll('input:checked')].map(x=>x.value);
-        if(!Number.isSafeInteger(id)||id<=0){info.textContent='Укажите положительный целый ID.';return;}
         if(!name){info.textContent='Введите наименование сырья.';return;}
         const products=rows(this.db.products);
-        if(products.some(p=>Number(p.id)===id)){info.textContent='Этот ID уже используется.';return;}
-        if(products.some(p=>norm(p.name)===norm(name))){info.textContent='Такое наименование уже существует.';return;}
-        const entry={id,name,unit,note,catalogStatus:'used',excludedBranches,source:'manual',orderSuppliers:[]};
-        saveButton.disabled=true;info.textContent='Сохранение наименования…';
+        const editId=this.productEditId;
+        const old=editId===null?null:products.find(item=>String(item.id)===editId);
+        if(editId!==null&&!old){info.textContent='Наименование больше не найдено. Обновите данные.';return;}
+        if(products.some(item=>String(item.id)!==String(editId)&&norm(item.name)===norm(name))){
+          info.textContent='Такое наименование уже существует.';return;
+        }
+        const selected=[...branchContainer.querySelectorAll('input:checked')].map(el=>el.value);
+        const retained=rows(old?.excludedBranches).filter(value=>!branchList.some(b=>norm(b)===norm(value)));
+        const excludedBranches=[...retained,...selected];
+        const id=old?old.id:products.reduce((max,item)=>{
+          const value=Number(item.id);
+          return Number.isSafeInteger(value)&&value>max?value:max;
+        },0)+1;
+        if(!Number.isSafeInteger(Number(id))||Number(id)<=0){
+          info.textContent='Не удалось назначить ID. Проверьте справочник.';return;
+        }
+        const entry=old?{...old,name,unit,note,excludedBranches}:
+          {id,name,unit,note,catalogStatus:'used',excludedBranches,source:'manual',orderSuppliers:[]};
+        const next=old?products.map(item=>String(item.id)===editId?entry:item):[...products,entry];
+        this.productBusy=true;saveButton.disabled=true;
+        info.textContent=old?'Сохранение изменений…':'Сохранение наименования…';
         try{
-          await patchOptima({products:[...products,entry]},this.revision);
+          await patchOptima({products:next},this.productFormBaseRevision);
           draftForm.reset();closeDraft();
           await this.load();
         }catch(error){
-          info.textContent=error.status===409?'База была изменена другим пользователем. Закройте форму, обновите данные и повторите создание.':(error.message||'Не удалось сохранить наименование.');
-        }finally{saveButton.disabled=false;}
+          info.textContent=error.status===409?'База изменена другим пользователем. Закройте форму, обновите данные и повторите действие.':(error.message||'Не удалось сохранить наименование.');
+        }finally{
+          this.productBusy=false;saveButton.disabled=false;
+        }
       });
+      this.deleteProduct=async product=>{
+        if(this.productBusy||!this.db)return;
+        const products=rows(this.db.products);
+        const current=products.find(item=>String(item.id)===String(product.id));
+        if(!current){window.alert('Наименование больше не найдено. Обновите список.');return;}
+        const blockers=productDeletionReferences(this.db,current);
+        if(blockers.length){
+          window.alert('Нельзя удалить «'+current.name+'»: существуют связанные данные ('+blockers.join(', ')+'). Сначала нужно безопасно разобраться с этими связями.');
+          return;
+        }
+        if(!window.confirm('Удалить наименование «'+current.name+'» (ID '+current.id+') из PRO OPTIMA? Это действие нельзя отменить.'))return;
+        const before=Number(this.revision);
+        if(!Number.isFinite(before)){window.alert('Не удалось определить версию базы.');return;}
+        this.productBusy=true;
+        try{
+          await patchOptima({products:products.filter(item=>String(item.id)!==String(current.id))},before);
+          if(this.productEditId===String(current.id))closeDraft();
+          await this.load();
+        }catch(error){
+          window.alert(error.status===409?'База уже изменилась. Обновите список и повторите удаление.':(error.message||'Не удалось удалить наименование.'));
+        }finally{
+          this.productBusy=false;
+        }
+      };
     }
     const onCredential=event=>{
       if(event.detail?.service!=='optima')return;
@@ -247,7 +321,6 @@ export default class OptimaDataWidget {
       if(!this.db && (key==='branch'||key==='extra'))continue;
       if(this.controls[key])f[key]=this.controls[key].value;
     }
-    this.updateProductFilterReset?.();
   }
   setState(key,values={}){this.statusText.textContent=t('optima.'+key,values);}
   async load(){
@@ -386,7 +459,18 @@ export default class OptimaDataWidget {
       this.buildTable([
         {key:'id',label:'ID',get:p=>p.id},{key:'name',label:t('optima.product'),get:p=>p.name},
         {key:'unit',label:t('optima.unit'),get:p=>p.unit},
-        {key:'supplier',label:t('optima.supplier'),get:p=>supplierLinks(p,db)}
+        {key:'supplier',label:t('optima.supplier'),get:p=>supplierLinks(p,db)},
+        {key:'actions',label:'Действия',get:p=>{
+          const buttons=make('div',undefined,'dx-product-row-actions');
+          const edit=make('button','Изменить','dx-product-action-edit');
+          edit.type='button';edit.title='Изменить «'+p.name+'»';
+          edit.addEventListener('click',()=>this.openProductEditor?.(p));
+          const remove=make('button','Удалить','dx-product-action-delete');
+          remove.type='button';remove.title='Удалить «'+p.name+'»';
+          remove.addEventListener('click',()=>this.deleteProduct?.(p));
+          buttons.append(edit,remove);
+          return buttons;
+        }}
       ],items);
       this.summary.textContent=t('optima.found',{count:String(items.length),total:String(total('products').length)});
     }

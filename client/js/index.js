@@ -1,6 +1,6 @@
 import eventBus from './module/EventBus.js';
 import ClientDB from './module/ClientDB.js';
-import WidgetElement from './module/WidgetElement.js?v=optima-names-no-status-20261031';
+import WidgetElement from './module/WidgetElement.js?v=optima-names-crud-20261031';
 import NavigationBar from './module/NavigationBar.js';
 import installTableColumnResize from './module/TableColumnResize.js';
 import { t, widgetTitle, setLanguage, translateElement } from './module/i18n.js';
@@ -74,7 +74,7 @@ async function loadTemplates() {
     const embedded=document.querySelector('template[data-widget][data-id="'+id+'"]');
     if(embedded) return {id,template:embedded};
     const url=new URL('../'+entry.file,import.meta.url);
-    if(id==='optimaProducts')url.searchParams.set('v','names-no-status-branch-size-20261031');
+    if(id==='optimaProducts')url.searchParams.set('v','names-crud-20261031');
     const response=await fetch(url,{cache:id==='optimaProducts'?'no-store':'default'});
     if(!response.ok)throw Error(entry.file+': HTTP '+response.status);
     const doc=new DOMParser().parseFromString(await response.text(),'text/html');
