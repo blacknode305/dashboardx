@@ -2229,13 +2229,13 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 
 
 /* Optima Names only: one searchable supplier combobox with its own suggestion list. */
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker{
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-picker{
   position:relative;
   flex:1 1 185px;
   min-width:150px;
   z-index:5;
 }
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker [data-role="data-supplier-query"]{
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-picker [data-role="data-supplier-query"]{
   box-sizing:border-box;
   width:100%;
   min-width:0;
@@ -2247,11 +2247,11 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   color:var(--text-main);
   font:550 11px/1.4 var(--f-family-inter);
 }
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker [data-role="data-supplier-query"]:focus-visible{
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-picker [data-role="data-supplier-query"]:focus-visible{
   outline:2px solid var(--dx-accent);
   outline-offset:1px;
 }
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-options{
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-options{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
@@ -2267,8 +2267,8 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   box-shadow:0 8px 24px rgba(0,0,0,.32);
   z-index:20;
 }
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-options[hidden]{display:none!important}
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-option{
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-options[hidden]{display:none!important}
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-option{
   display:block;
   width:100%;
   padding:8px 10px;
@@ -2280,19 +2280,19 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   font:inherit;
   cursor:pointer;
 }
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-option:is(:hover,:focus-visible,.is-active){
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-option:is(:hover,:focus-visible,.is-active){
   background:var(--bg-panel-light);
 }
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-option[aria-selected="true"]{
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-option[aria-selected="true"]{
   color:var(--dx-accent);
 }
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-empty{
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-empty{
   padding:9px 10px;
   font-size:11px;
   color:var(--text-muted);
 }
 @media(max-width:440px){
-  #workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker{flex:1 1 100%}
+  #workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-picker{flex:1 1 100%}
 }
 
 
@@ -2440,4 +2440,48 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 /* Keep supplier schedule cards 5 px from the vertical scroll bar. */
 #workspace-canvas [data-widget-type="optimaSuppliers"] .optima-supplier-scroll{
   padding-right:5px;
+}
+
+/* Catalog price list: filters and print remain fixed; only table scrolls. */
+#workspace-canvas .widget--element[data-widget-type="optimaProposals"]{
+  height:min(76vh,680px);min-height:min(325px,80vh);
+}
+#workspace-canvas .widget--element[data-widget-type="optimaProposals"]>.widget--element--body{
+  display:flex;flex-direction:column;flex:1 1 auto;min-width:0;min-height:0;overflow:hidden;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProposals"]{
+  display:flex;flex-direction:column;flex:1 1 auto;height:100%;min-width:0;min-height:0;overflow:hidden;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProposals"]>.optima-data-filters,
+#workspace-canvas .optima-data[data-optima-module="optimaProposals"]>.optima-status,
+#workspace-canvas .optima-data[data-optima-module="optimaProposals"]>.dx-optima-print-row{
+  flex:0 0 auto;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProposals"]>.optima-table-scroll{
+  flex:1 1 auto;min-width:0;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProposals"] .dx-product-supplier-picker{
+  position:relative;z-index:5;
+}
+#workspace-canvas [data-widget-type="optimaProposals"] .dx-optima-print-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:30px;min-width:0;
+}
+#workspace-canvas [data-widget-type="optimaProposals"] .dx-optima-print-row .optima-summary{
+  flex:1 1 auto;min-width:0;margin:0;
+}
+#workspace-canvas [data-widget-type="optimaProposals"] .dx-optima-print-button{
+  flex:0 0 30px;display:grid;place-items:center;width:30px;min-width:30px;height:30px;
+  padding:0;border:1px solid var(--border);border-radius:7px;background:var(--bg-panel-inside);
+  color:var(--text-main);font-size:15px;cursor:pointer;
+}
+#workspace-canvas [data-widget-type="optimaProposals"] .dx-optima-print-button:hover{
+  border-color:var(--dx-accent);background:var(--bg-panel-light);
+}
+#workspace-canvas [data-widget-type="optimaProposals"] .dx-optima-print-button:focus-visible{
+  outline:2px solid var(--dx-accent);outline-offset:2px;
+}
+@media(max-width:510px){
+  #workspace-canvas .widget--element[data-widget-type="optimaProposals"]{
+    height:min(80vh,700px);min-height:min(390px,85vh);
+  }
 }

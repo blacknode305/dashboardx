@@ -1,5 +1,5 @@
 import { t } from '../i18n.js';
-import { openOptimaPrintPreview } from '../OptimaPrint.js?v=optima-print-20261031';
+import { openOptimaPrintPreview } from '../OptimaPrint.js?v=optima-catalog-refresh-20261031';
 import { getCredential } from '../CredentialStore.js';
 import {
   loadOptima, patchOptima, OPTIMA_POLL_MS, norm, rows, branchNames, money,
@@ -8,7 +8,7 @@ import {
 
 const CONFIG={
   optimaProducts:{branch:true,status:false,extra:true,date:false,mode:false},
-  optimaProposals:{branch:false,status:['all','linked','unlinked'],extra:true,date:false,mode:['catalog','proposals']},
+  optimaProposals:{branch:false,status:['all','linked','unlinked'],extra:true,date:false,mode:['catalog']},
   optimaOffers:{branch:true,status:['all','enabled','disabled','auto'],extra:true,date:false,mode:false},
   optimaCompare:{branch:true,status:['all','allPrices','different'],extra:true,date:false,mode:false},
   optimaStocks:{branch:true,status:['all','unknown','zero','known'],extra:true,date:true,mode:false},
@@ -129,8 +129,9 @@ export default class OptimaDataWidget {
     this.productAdd=this.type==='optimaProducts'?widget.querySelector('[data-role="product-add"]'):null;
     this.productDraft=this.type==='optimaProducts'?widget.querySelector('[data-role="product-draft"]'):null;
     this.productPrint=this.type==='optimaProducts'?widget.querySelector('[data-role="product-print"]'):null;
-    this.productSupplierQuery=this.type==='optimaProducts'?widget.querySelector('[data-role="data-supplier-query"]'):null;
-    this.productSupplierOptions=this.type==='optimaProducts'?widget.querySelector('[data-role="data-supplier-options"]'):null;
+    this.catalogPrint=this.type==='optimaProposals'?widget.querySelector('[data-role="catalog-print"]'):null;
+    this.productSupplierQuery=['optimaProducts','optimaProposals'].includes(this.type)?widget.querySelector('[data-role="data-supplier-query"]'):null;
+    this.productSupplierOptions=['optimaProducts','optimaProposals'].includes(this.type)?widget.querySelector('[data-role="data-supplier-options"]'):null;
     this.productSupplierOpen=false;
     this.productSupplierEditing=false;
     this.productSupplierChoices=[];
@@ -141,7 +142,7 @@ export default class OptimaDataWidget {
       status:this.type==='optimaProducts'?'all':(typeof saved.status==='string'?saved.status:'all'),
       extra:typeof saved.extra==='string'?saved.extra:'',
       date:typeof saved.date==='string'?saved.date:(this.type==='optimaStocks'?dateISO():''),
-      mode:typeof saved.mode==='string'?saved.mode:(this.cfg.mode?.[0]||'')
+      mode:this.type==='optimaProposals'?'catalog':(typeof saved.mode==='string'?saved.mode:(this.cfg.mode?.[0]||''))
     };
     this.db=null;this.revision=null;this.destroyed=false;this.seq=0;
     this.controls.search.value=this.filters.search;
@@ -150,7 +151,7 @@ export default class OptimaDataWidget {
     if(this.controls.status)this.controls.status.hidden=!this.cfg.status;
     this.controls.extra.hidden=!this.cfg.extra;
     this.controls.date.hidden=!this.cfg.date;
-    this.controls.mode.hidden=!this.cfg.mode;
+    this.controls.mode.hidden=this.type==='optimaProposals'||!this.cfg.mode;
     this.listeners=[];
     this.listen=(el,event,fn)=>{
       el.addEventListener(event,fn);this.listeners.push(()=>el.removeEventListener(event,fn));
@@ -167,6 +168,7 @@ export default class OptimaDataWidget {
     }
     if(this.refresh)this.listen(this.refresh,'click',()=>this.load());
     if(this.productPrint)this.listen(this.productPrint,'click',()=>this.printProducts());
+    if(this.catalogPrint)this.listen(this.catalogPrint,'click',()=>this.printCatalog());
     if(this.productSupplierQuery){
       const query=this.productSupplierQuery;
       const options=this.productSupplierOptions;
@@ -399,7 +401,7 @@ export default class OptimaDataWidget {
   }
   saveFilters(){this.store?.updateWidgetState(this.id,{...this.filters});}
   configureProductSupplierOptions(){
-    if(this.type!=='optimaProducts')return;
+    if(!['optimaProducts','optimaProposals'].includes(this.type))return;
     const suppliers=rows(this.db?.suppliers);
     const selected=suppliers.find(s=>String(s.id)===String(this.filters.extra));
     this.controls.extra.value=this.filters.extra;
@@ -448,7 +450,7 @@ export default class OptimaDataWidget {
     const chosenBranch=this.type==='optimaProducts'?displayBranch(f.branch):f.branch;
     select(this.controls.branch,[['',t('optima.allBranches')],...branches.map(x=>[x,x])],chosenBranch);
     if(this.cfg.extra){
-      if(this.type==='optimaProducts')this.configureProductSupplierOptions();
+      if(['optimaProducts','optimaProposals'].includes(this.type))this.configureProductSupplierOptions();
       else select(this.controls.extra,[['',t('optima.allSuppliers')],...rows(db.suppliers).map(s=>[s.id,s.name])],f.extra);
     }else select(this.controls.extra,[['','—']],'');
     this.controls.date.value=f.date;
@@ -578,6 +580,56 @@ export default class OptimaDataWidget {
     if(isProductTable)this.applyProductColumnWidths();
     if(entries.length>MAX_ROWS)this.results.append(make('p',t('optima.limit',{count:String(MAX_ROWS)}),'optima-hint'));
   }
+  filteredCatalogRows(){
+    if(!this.db)return [];
+    const db=this.db,f=this.filters,q=norm(f.search),extra=f.extra;
+    const products=new Map(rows(db.products).map(item=>[String(item.id),item]));
+    const suppliers=new Map(rows(db.suppliers).map(item=>[String(item.id),item]));
+    return rows(db.supplierCatalog).filter(row=>{
+      if(!row)return false;
+      const linked=products.has(String(row.productId||row.linkedProductId||''));
+      if(f.status==='linked'&&!linked)return false;
+      if(f.status==='unlinked'&&linked)return false;
+      if(extra&&String(row.supplierId)!==String(extra))return false;
+      return !q||norm([row.name,row.unit,row.price,suppliers.get(String(row.supplierId))?.name].join(' ')).includes(q);
+    }).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ru'));
+  }
+  printCatalog(){
+    if(!this.db){window.alert('Сначала подключитесь к базе PRO OPTIMA.');return;}
+    const db=this.db,items=[...this.filteredCatalogRows()];
+    const headers=[...(this.results.querySelector('table')?.tHead?.rows?.[0]?.cells||[])];
+    const column=headers.findIndex(th=>['ascending','descending'].includes(th.getAttribute('aria-sort')));
+    const names=new Map(rows(db.suppliers).map(s=>[String(s.id),String(s.name||'')]));
+    const vals=x=>[String(x.name||''),names.get(String(x.supplierId))||'',String(x.unit||''),money(x.price)];
+    if(column>=0&&column<4){
+      const factor=headers[column].getAttribute('aria-sort')==='descending'?-1:1;
+      const collator=new Intl.Collator('ru',{numeric:true,sensitivity:'base'});
+      const order=new Map(items.map((x,i)=>[x,i]));
+      const missing=v=>!v||v==='—';
+      items.sort((a,b)=>{
+        const av=vals(a)[column],bv=vals(b)[column];
+        if(missing(av)!==missing(bv))return missing(av)?1:-1;
+        const diff=column===3&&Number.isFinite(Number(a.price))&&Number.isFinite(Number(b.price))?
+          Number(a.price)-Number(b.price):collator.compare(av,bv);
+        return diff*factor||order.get(a)-order.get(b);
+      });
+    }
+    const supplier=rows(db.suppliers).find(s=>String(s.id)===String(this.filters.extra));
+    openOptimaPrintPreview({
+      kind:'catalog',title:'Каталог прайс-листов',
+      rows:items.map(item=>({
+        name:String(item.name||'—'),
+        supplier:names.get(String(item.supplierId))||'—',
+        unit:String(item.unit||'—'),
+        price:money(item.price)
+      })),
+      filters:[
+        ['Поиск',this.filters.search.trim()],
+        ['Связь',this.filters.status==='linked'?'Связанные':this.filters.status==='unlinked'?'Несвязанные':'Все позиции'],
+        ['Поставщик',supplier?.name||'Все поставщики']
+      ]
+    });
+  }
   filteredProducts(){
     if(!this.db)return [];
     const db=this.db,f=this.filters,q=norm(f.search),branch=f.branch,extra=f.extra;
@@ -655,31 +707,15 @@ export default class OptimaDataWidget {
       this.summary.textContent=t('optima.found',{count:String(items.length),total:String(total('products').length)});
     }
     if(this.type==='optimaProposals'){
-      const catalog=f.mode==='catalog';
-      const src=catalog?total('supplierCatalog'):total('products').filter(p=>p.catalogStatus==='proposal');
-      const productsById=new Map(total('products').map(p=>[String(p.id),p]));
+      const entries=this.filteredCatalogRows();
       const suppliersById=new Map(total('suppliers').map(s=>[String(s.id),s]));
-      let entries=src.filter(row=>{
-        const linked=!!productsById.get(String(row.productId||row.linkedProductId||'')) || !!productsById.get(String(row.id))&&!catalog;
-        if(f.status==='linked'&&!linked)return false;
-        if(f.status==='unlinked'&&linked)return false;
-        if(extra&&catalog&&String(row.supplierId)!==extra)return false;
-        if(extra&&!catalog&&!total('offers').some(o=>String(o.productId)===String(row.id)&&String(o.supplierId)===extra))return false;
-        return matches([row.name,row.unit,row.price,suppliersById.get(String(row.supplierId))?.name].join(' '));
-      });
-      entries=entries.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ru'));
-      this.buildTable(catalog?[
+      this.buildTable([
         {label:t('optima.product'),get:x=>x.name},
         {label:t('optima.supplier'),get:x=>suppliersById.get(String(x.supplierId))?.name},
         {label:t('optima.unit'),get:x=>x.unit},
-        {label:t('optima.price'),get:x=>money(x.price)},
-        {label:t('optima.status'),get:x=>x.availability||'—'}
-      ]:[
-        {label:'ID',get:x=>x.id},{label:t('optima.product'),get:x=>x.name},
-        {label:t('optima.unit'),get:x=>x.unit},
-        {label:t('optima.notes'),get:x=>x.note}
+        {label:t('optima.price'),get:x=>money(x.price)}
       ],entries);
-      this.summary.textContent=t('optima.found',{count:String(entries.length),total:String(src.length)});
+      this.summary.textContent=t('optima.found',{count:String(entries.length),total:String(total('supplierCatalog').length)});
     }
     if(this.type==='optimaOffers'){
       const products=new Map(total('products').map(p=>[String(p.id),p]));

@@ -34,6 +34,8 @@ html,body{margin:0;background:#e9edef;color:#20252a;font:12px/1.45 Arial,Helveti
 .print-grid th{background:#e9eef0;font-weight:700}
 .print-names th:nth-child(1){width:10%}.print-names th:nth-child(2){width:39%}
 .print-names th:nth-child(3){width:14%}.print-names th:nth-child(4){width:37%}
+.print-catalog th:nth-child(1){width:37%}.print-catalog th:nth-child(2){width:34%}
+.print-catalog th:nth-child(3){width:12%}.print-catalog th:nth-child(4){width:17%}
 .print-grid tbody tr:nth-child(even){background:#f7f8f9}
 .print-grid thead{display:table-header-group}
 .print-grid tr{break-inside:avoid;page-break-inside:avoid}
@@ -80,7 +82,7 @@ export function openOptimaPrintPreview({kind,title,filters=[],rows=[]}){
   const preview=append(doc.body,'main',undefined,'print-preview');
   const sheet=append(preview,'article',undefined,'print-sheet');
   const syncPage=()=>{
-    const actualDirection=direction.value==='auto'?(kind==='products'?'landscape':'portrait'):direction.value;
+    const actualDirection=direction.value==='auto'?(['products','catalog'].includes(kind)?'landscape':'portrait'):direction.value;
     sheet.className='print-sheet '+paper.value.toLowerCase()+' '+actualDirection;
     dynamicCSS.textContent='@page{size:'+paper.value+' '+actualDirection+';margin:12mm}';
   };
@@ -116,6 +118,15 @@ export function openOptimaPrintPreview({kind,title,filters=[],rows=[]}){
           const tr=append(body,'tr');
           [schedule.branch,schedule.order,schedule.delivery,schedule.note].forEach(v=>append(tr,'td',v||'—'));
         }
+      }
+    }else if(kind==='catalog'){
+      const table=append(sheet,'table',undefined,'print-grid print-catalog');
+      const hr=append(append(table,'thead'),'tr');
+      ['Наименование','Поставщик','Единица','Цена'].forEach(h=>append(hr,'th',h));
+      const body=append(table,'tbody');
+      for(const item of rows){
+        const tr=append(body,'tr');
+        [item.name,item.supplier,item.unit,item.price].forEach(v=>append(tr,'td',v??'—'));
       }
     }else{
       const table=append(sheet,'table',undefined,'print-grid print-names');
