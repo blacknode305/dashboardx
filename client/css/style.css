@@ -2226,3 +2226,30 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-row-actions .dx-product-action-delete:hover{
   border-color:#cb6d78;color:#f3a1a9;
 }
+
+
+/* Search by name within the Names widget supplier dropdown, without affecting Suppliers. */
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker{
+  display:flex;flex:1 1 265px;min-width:0;gap:6px;align-items:stretch;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker input,
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker select{
+  box-sizing:border-box;min-height:38px;min-width:0;width:0;
+  padding:8px 10px;border:1px solid var(--border);border-radius:8px;
+  background:var(--bg-panel-inside);color:var(--text-main);
+  font:550 11px/1.4 var(--f-family-inter);
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker input{
+  flex:1 1 120px;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker select{
+  flex:1 1 145px;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker :is(input,select):focus-visible{
+  outline:2px solid var(--dx-accent);outline-offset:1px;
+}
+@media(max-width:440px){
+  #workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-supplier-picker{
+    flex:1 1 100%;
+  }
+}

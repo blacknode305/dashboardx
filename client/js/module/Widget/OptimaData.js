@@ -127,6 +127,7 @@ export default class OptimaDataWidget {
     this.refresh=widget.querySelector('[data-role="data-refresh"]');
     this.productAdd=this.type==='optimaProducts'?widget.querySelector('[data-role="product-add"]'):null;
     this.productDraft=this.type==='optimaProducts'?widget.querySelector('[data-role="product-draft"]'):null;
+    this.productSupplierQuery=this.type==='optimaProducts'?widget.querySelector('[data-role="data-supplier-query"]'):null;
     this.filters={
       search:typeof saved.search==='string'?saved.search:'',
       branch:typeof saved.branch==='string'?saved.branch:'',
@@ -158,6 +159,20 @@ export default class OptimaDataWidget {
       if(this.controls[key])this.listen(this.controls[key],'change',onFilter);
     }
     if(this.refresh)this.listen(this.refresh,'click',()=>this.load());
+    if(this.productSupplierQuery){
+      // Filter supplier dropdown options while typing; selecting an option applies the existing table filter.
+      this.listen(this.productSupplierQuery,'input',()=>{
+        this.filters.extra='';
+        this.configureProductSupplierOptions();
+        onFilter();
+      });
+      this.listen(this.productSupplierQuery,'keydown',event=>{
+        if(event.key!=='ArrowDown')return;
+        event.preventDefault();
+        this.controls.extra.focus();
+        try{this.controls.extra.showPicker?.();}catch{}
+      });
+    }
     if(this.productAdd){
       const draftForm=widget.querySelector('[data-role="product-draft-form"]');
       const branchContainer=widget.querySelector('[data-role="product-draft-branches"]');
@@ -303,6 +318,20 @@ export default class OptimaDataWidget {
     this.poll=setInterval(()=>{if(!document.hidden)this.load();},OPTIMA_POLL_MS);
   }
   saveFilters(){this.store?.updateWidgetState(this.id,{...this.filters});}
+  configureProductSupplierOptions(){
+    if(this.type!=='optimaProducts')return;
+    const query=norm(this.productSupplierQuery?.value||'').replace(/\\s+/g,' ');
+    const options=rows(this.db?.suppliers)
+      .filter(s=>!query||norm(s.name).replace(/\\s+/g,' ').includes(query))
+      .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ru'))
+      .map(s=>[s.id,s.name]);
+    select(this.controls.extra,[['',t('optima.allSuppliers')],...options],this.filters.extra);
+    if(query&&!options.length){
+      const empty=new Option('Совпадений нет','');
+      empty.disabled=true;
+      this.controls.extra.append(empty);
+    }
+  }
   configureSelects(){
     const f=this.filters;
     if(this.controls.status&&this.cfg.status)select(this.controls.status,this.cfg.status.map(x=>[x,t('optima.filter.'+x)]),f.status);
@@ -313,7 +342,8 @@ export default class OptimaDataWidget {
     const chosenBranch=this.type==='optimaProducts'?displayBranch(f.branch):f.branch;
     select(this.controls.branch,[['',t('optima.allBranches')],...branches.map(x=>[x,x])],chosenBranch);
     if(this.cfg.extra){
-      select(this.controls.extra,[['',t('optima.allSuppliers')],...rows(db.suppliers).map(s=>[s.id,s.name])],f.extra);
+      if(this.type==='optimaProducts')this.configureProductSupplierOptions();
+      else select(this.controls.extra,[['',t('optima.allSuppliers')],...rows(db.suppliers).map(s=>[s.id,s.name])],f.extra);
     }else select(this.controls.extra,[['','—']],'');
     this.controls.date.value=f.date;
     this.controls.search.value=f.search;
