@@ -14,6 +14,7 @@ import LocalCollectionWidget from './Widget/LocalCollection.js?v=nes-interaction
 import MediaPlayerWidget from './Widget/MediaPlayer.js?v=nes-interactions-20261026';
 import ServerConsoleWidget from './Widget/ServerConsole.js?v=nes-interactions-20261026';
 import TelegramBotWidget from './Widget/TelegramBot.js?v=nes-interactions-20261026';
+import AudioBotVkWidget from './Widget/AudioBotVk.js';
 import DashboardSettingsWidget from './Widget/DashboardSettings.js';
 import OptimaSuppliersWidget from './Widget/OptimaSuppliers.js?v=optima-supplier-links-20261030';
 import OptimaDataWidget from './Widget/OptimaData.js?v=optima-supplier-links-20261030';
@@ -41,6 +42,7 @@ const WidgetLogic = {
   BinanceApiWidget,
   CalculatorWidget,
   AudioPlayerWidget: MediaPlayerWidget,
+  AudioBotVkWidget,
   VideoPlayerWidget: MediaPlayerWidget,
   WishlistPriceWidget: LocalCollectionWidget,
   WishlistGamesWidget: LocalCollectionWidget,
