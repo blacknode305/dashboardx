@@ -1,0 +1,75 @@
+/* Sega Mega Drive / Genesis · urban console shell. Scoped; NES untouched. */
+#workspace-canvas .dx-sega{gap:10px;min-width:0}
+#workspace-canvas .dx-sega-meta{
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  color:var(--text-muted);font:650 10px/1.3 var(--f-family-inter);
+  letter-spacing:.07em;
+}
+#workspace-canvas .dx-sega-led{color:#9ba6b2}
+#workspace-canvas .dx-sega-led.is-running{color:#7dc6a7}
+#workspace-canvas .dx-sega-screen{
+  position:relative;display:grid;place-items:center;isolation:isolate;
+  width:100%;min-height:235px;aspect-ratio:4/3;
+  overflow:hidden;border:1px solid var(--border);
+  border-radius:11px;background:#080b11;
+  box-shadow:inset 0 0 0 7px rgba(17,22,29,.68),0 9px 23px rgba(0,0,0,.21);
+}
+#workspace-canvas .dx-sega-screen:focus-visible{outline:2px solid var(--dx-accent);outline-offset:2px}
+#workspace-canvas widget-element.is-focus .dx-sega-screen{border-color:var(--dx-accent)}
+#workspace-canvas .dx-sega-screen.is-drop-target{border-color:var(--dx-accent);box-shadow:0 0 0 2px var(--dx-accent)}
+#workspace-canvas .dx-sega-screen iframe{
+  display:block;width:100%;height:100%;position:absolute;inset:0;
+  border:0;border-radius:inherit;background:#080b11;
+}
+#workspace-canvas .dx-sega-screen iframe[hidden],
+#workspace-canvas .dx-sega-placeholder[hidden]{display:none!important}
+#workspace-canvas .dx-sega-screen.is-crt::after{
+  content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0 1px,transparent 1px 4px);
+}
+#workspace-canvas .dx-sega-placeholder{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:9px;padding:24px;text-align:center;color:#b9c4d0;min-width:0;
+}
+#workspace-canvas .dx-sega-placeholder strong{
+  font:800 clamp(15px,3vw,22px)/1.2 var(--f-family-inter);
+  letter-spacing:.13em;color:#e2e6ed;
+}
+#workspace-canvas .dx-sega-placeholder>span:not(.dx-sega-symbol){font-size:11px}
+#workspace-canvas .dx-sega-symbol{
+  display:flex;align-items:baseline;gap:4px;
+  font:bold 43px/1 var(--f-family-inter);
+  letter-spacing:-.07em;color:#a9b4c2;
+}
+#workspace-canvas .dx-sega-symbol span{font-size:15px;letter-spacing:0}
+#workspace-canvas .dx-sega-controller{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;
+}
+#workspace-canvas .dx-sega-controls-side{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;min-width:0;min-height:75px;padding:9px 7px;border:1px solid var(--border);
+  border-radius:9px;background:var(--bg-panel-light);text-align:center;
+}
+#workspace-canvas .dx-sega-controls-side strong{font-size:12px;white-space:nowrap}
+#workspace-canvas .dx-sega-controls-side small{font-size:10px;color:var(--text-muted)}
+#workspace-canvas .dx-sega-control-label{
+  color:var(--text-muted);font-size:9px;font-weight:750;letter-spacing:.06em;
+}
+#workspace-canvas .dx-sega-keycaps{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+#workspace-canvas .dx-sega kbd{
+  display:inline-grid;place-items:center;min-width:23px;min-height:23px;padding:1px 4px;
+  border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;
+  color:var(--text-main);font:bold 11px/1 var(--f-family-inter);background:var(--bg-panel);
+}
+#workspace-canvas .dx-sega .dx-sega-checkbox{display:flex;gap:6px;align-items:center}
+#workspace-canvas .dx-sega-checkbox input{accent-color:var(--dx-accent);margin:0}
+#workspace-canvas .dx-sega-screen:fullscreen{
+  width:100vw;height:100vh;aspect-ratio:auto;border:0;border-radius:0;
+}
+@media(max-width:540px){
+ #workspace-canvas .dx-sega-controller{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #workspace-canvas .dx-sega-screen{min-height:190px}
+}
+@media(prefers-reduced-motion:reduce){
+ #workspace-canvas .dx-sega-screen{transition:none}
+}

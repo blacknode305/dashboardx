@@ -19,6 +19,7 @@ import OptimaSuppliersWidget from './Widget/OptimaSuppliers.js?v=optima-print-20
 import OptimaDataWidget from './Widget/OptimaData.js?v=optima-price-upload-20261031';
 import OptimaOrdersWidget from './Widget/OptimaOrders.js';
 import NesEmulatorWidget from './Widget/NesEmulator.js?v=nes-interactions-20261026';
+import SegaEmulatorWidget from './Widget/SegaEmulator.js?v=sega-emulator-20261101';
 import {
   GithubControlWidgetView,
   ServerMonitorWidgetView,
@@ -56,6 +57,7 @@ const WidgetLogic = {
   OptimaOrdersWidget,
   TorrentTrackerWidget: LocalCollectionWidget,
   NesEmulatorWidget,
+  SegaEmulatorWidget,
   GithubControlWidget: GithubControlWidgetView,
   ServerMonitorWidget: ServerMonitorWidgetView,
   SmartContactsWidget: SmartContactsWidgetView,

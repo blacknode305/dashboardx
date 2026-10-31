@@ -1,6 +1,6 @@
 import eventBus from './module/EventBus.js';
 import ClientDB from './module/ClientDB.js';
-import WidgetElement from './module/WidgetElement.js?v=optima-price-upload-20261031';
+import WidgetElement from './module/WidgetElement.js?v=sega-emulator-20261101';
 import NavigationBar from './module/NavigationBar.js';
 import installTableColumnResize from './module/TableColumnResize.js?v=optima-price-upload-20261031';
 import installTableSort from './module/TableSort.js?v=optima-price-upload-20261031';
@@ -36,7 +36,8 @@ const WIDGET_CATALOG = Object.freeze({
   smartContacts:{category:'tools',file:'_smartContacts.html'},
   dashboardAi:{category:'tools',file:'_dashboardAi.html'},
   torrentTracker: {category:'tools',    file:'_torrentTracker.html'},
-  nesEmulator:    {category:'games',    file:'_nesEmulator.html'}
+  nesEmulator:    {category:'games',    file:'_nesEmulator.html'},
+  segaEmulator:   {category:'games',    file:'_segaEmulator.html'}
 });
 window.dashboardxCatalog=WIDGET_CATALOG;
 const CATALOG_ENTRIES = Object.entries(WIDGET_CATALOG);
@@ -77,6 +78,7 @@ async function loadTemplates() {
     const url=new URL('../'+entry.file,import.meta.url);
     if(id==='optimaProducts')url.searchParams.set('v','names-optima-print-20261031');
     if(id==='optimaProposals')url.searchParams.set('v','catalog-upload-20261031');
+    if(id==='segaEmulator')url.searchParams.set('v','sega-emulator-20261101');
     if(id==='optimaSuppliers')url.searchParams.set('v','suppliers-optima-print-20261031');
     const response=await fetch(url,{cache:(id==='optimaProducts'||id==='optimaSuppliers'||id==='optimaProposals')?'no-store':'default'});
     if(!response.ok)throw Error(entry.file+': HTTP '+response.status);
