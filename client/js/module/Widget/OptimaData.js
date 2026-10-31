@@ -188,9 +188,9 @@ export default class OptimaDataWidget {
         this.filters.extra=String(item.id??'');
         this.controls.extra.value=this.filters.extra;
         query.value=item.id?String(item.name):'';
+        query.focus({preventScroll:true});
         close(false);
         onFilter();
-        query.focus({preventScroll:true});
       };
       this.chooseProductSupplier=choose;
       this.listen(query,'focus',()=>{
