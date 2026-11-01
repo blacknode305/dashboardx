@@ -44,6 +44,7 @@ export function normalizeListing(src){
     url,title,address,description,tab,kind,rooms,area,price,priceUnit,
     sellerType,postedAt:date(src.postedAt),firstSeen:date(src.firstSeen)||new Date().toISOString(),
     lastSeen:date(src.lastSeen)||new Date().toISOString(),
+    missing:src.missing===true,previousPrice:money(src.previousPrice)||null,
     rentToOwn:tab==='buyout'||src.rentToOwn===true,downPayment:money(src.downPayment)||null,
     purchasePrice:money(src.purchasePrice)||null,contractPayment:money(src.contractPayment)||null};
 }
