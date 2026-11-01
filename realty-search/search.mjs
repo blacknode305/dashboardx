@@ -11,11 +11,18 @@ export function makePlan(rotation=0,limit=16){
   const add=(category,site,query)=>items.push({category,site,query});
   // Round-robin between street pairs on successive daily scans.
   const pair=rotation%2===0?STREETS.slice(0,2):STREETS.slice(2);
-  for(const [name,source] of Object.entries(SITES)){
-    for(const street of pair)add('monthly',name,'site:'+source.host+' Караганда аренда квартира помесячно '+street);
+  for(const street of pair)for(const [name,source] of Object.entries(SITES))
+    add('monthly',name,'site:'+source.host+' Караганда аренда квартира помесячно '+street);
+  for(const [name,source] of Object.entries(SITES))
     add('buyout',name,'site:'+source.host+' Караганда квартира аренда с последующим выкупом');
+  for(const [name,source] of Object.entries(SITES))
     add('short',name,'site:'+source.host+' Караганда квартира посуточно почасово');
+  for(const [name,source] of Object.entries(SITES))
     add('sale',name,'site:'+source.host+' Караганда продажа квартиры недорого');
+  // Rotate land source so low-budget runs still cover all portals over time.
+  const entries=Object.entries(SITES);
+  for(let j=0;j<entries.length;j++){
+    const [name,source]=entries[(j+rotation)%entries.length];
     add('sale',name,'site:'+source.host+' Караганда продажа земельный участок');
   }
   return items.slice(0,Math.max(1,Math.min(20,Number(limit)||16)));
@@ -58,8 +65,8 @@ export function parseSearchHit(hit,task){
   if(!/квартир|комнат|аренд|сда[её]т|недвижим|земел|участок|прода[её]т|жилой\s+дом/.test(searchable))return null;
   if(task.category==='buyout'&&!/(?:выкуп|рассрочк|аренд.{0,40}куп)/iu.test(searchable))return null;
   if(task.category==='short'&&!/(?:сутки|посуточ|почас|часов|ночь|дней)/iu.test(searchable))return null;
-  const kind=/\b(участок|земля|земельн)/iu.test(searchable)?'land':
-    /\bдом\b|\bкоттедж\b/iu.test(searchable)?'house':'apartment';
+  const kind=/(?:^|[^\p{L}])(участок|земля|земельн)/iu.test(searchable)?'land':
+    /(?:^|[^\p{L}])(?:дом|коттедж)(?:$|[^\p{L}])/iu.test(searchable)?'house':'apartment';
   const price=parsePrice(title)||parsePrice(snippet);
   const rooms=kind==='apartment'?parseRooms(title+' '+snippet):null;
   const area=parseArea(title+' '+snippet);
