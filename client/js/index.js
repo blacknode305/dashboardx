@@ -17,6 +17,7 @@ const WIDGET_CATALOG = Object.freeze({
   moneyConvertApi:{category:'finance',  file:'_moneyConvertApi.html'},
   binanceApi:     {category:'finance',  file:'_binanceApi.html'},
   calculator:     {category:'tools',    file:'_calculator.html'},
+  englishLanguage:{category:'learning', file:'_englishLanguage.html'},
   wishlistPrice:  {category:'finance',  file:'_wishlistPrice.html'},
   wishlistGames:  {category:'tools',    file:'_wishlistGames.html'},
   audioPlayer:    {category:'media',    file:'_audioPlayer.html'},
@@ -79,6 +80,7 @@ async function loadTemplates() {
     if(id==='optimaProducts')url.searchParams.set('v','names-optima-print-20261031');
     if(id==='optimaProposals')url.searchParams.set('v','catalog-upload-20261031');
     if(id==='segaEmulator')url.searchParams.set('v','sega-local-runtime-20261101');
+    if(id==='englishLanguage')url.searchParams.set('v','english-grammar-20261101');
     if(id==='optimaSuppliers')url.searchParams.set('v','suppliers-optima-print-20261031');
     const response=await fetch(url,{cache:(id==='optimaProducts'||id==='optimaSuppliers'||id==='optimaProposals')?'no-store':'default'});
     if(!response.ok)throw Error(entry.file+': HTTP '+response.status);
