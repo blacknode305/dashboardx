@@ -2,7 +2,7 @@
 // Импорт класса для работы с DOM-элементами виджета
 // Импорт глобальной шины событий (EventBus)
 // Импорт виджетов
-import AddWidget from './Widget/Add.js?v=study-course-20261101';
+import AddWidget from './Widget/Add.js?v=study-expanded-20261101d';
 import BinanceApiWidget from './Widget/BinanceApi.js';
 import DatetimeWidget from './Widget/Datetime.js';
 import DayBalanceWidget from './Widget/DayBalance.js';
@@ -11,7 +11,7 @@ import FinanceTableWidget from './Widget/FinanceTable.js';
 import MoneyConvertApiWidget from './Widget/MoneyConvertApi.js';
 import CalculatorWidget from './Widget/Calculator.js';
 import EnglishLanguageWidget from './Widget/EnglishLanguage.js?v=english-study-20261101c';
-import StudyCourseWidget from './Widget/StudyCourse.js?v=study-expanded-20261101c';
+import StudyCourseWidget from './Widget/StudyCourse.js?v=study-expanded-20261101d';
 import LocalCollectionWidget from './Widget/LocalCollection.js?v=nes-interactions-20261026';
 import MediaPlayerWidget from './Widget/MediaPlayer.js?v=nes-interactions-20261026';
 import ServerConsoleWidget from './Widget/ServerConsole.js?v=nes-interactions-20261026';
