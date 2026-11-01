@@ -14,6 +14,8 @@ function inferredTab(source){
   if(['buyout','rent_to_own','rent-to-own'].includes(value)||source.rentToOwn===true)return 'buyout';
   if(['short','daily','hourly','short_term'].includes(value))return 'short';
   if(['sale','buy','purchase','sell'].includes(value))return 'sale';
+  const phrase=fold([source.title,source.description].join(' '));
+  if(/(?:аренда.{0,25}выкуп|с последующим выкупом|под выкуп|аренда с правом выкупа)/.test(phrase))return 'buyout';
   return 'monthly';
 }
 function cleanPriceUnit(src,tab){
