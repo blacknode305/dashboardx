@@ -317,8 +317,8 @@ export default class OptimaDataWidget {
       editorDialog.append(editorClose,this.productDraft);
       widget.body.append(editorDialog);
       this.productEditorModal=editorDialog;
-      const closeDraft=()=>{
-        if(this.productBusy)return;
+      const closeDraft=(force=false)=>{
+        if(this.productBusy&&force!==true)return;
         if(editorDialog.open)editorDialog.close();
         this.productDraft.hidden=true;
         this.productEditId=null;
@@ -405,7 +405,7 @@ export default class OptimaDataWidget {
         info.textContent=old?'Сохранение изменений…':'Сохранение наименования…';
         try{
           await patchOptima({products:next},this.productFormBaseRevision);
-          draftForm.reset();closeDraft();
+          draftForm.reset();closeDraft(true);
           await this.load();
         }catch(error){
           info.textContent=error.status===409?'База изменена другим пользователем. Закройте форму, обновите данные и повторите действие.':(error.message||'Не удалось сохранить наименование.');
@@ -429,7 +429,7 @@ export default class OptimaDataWidget {
         this.productBusy=true;
         try{
           await patchOptima({products:products.filter(item=>String(item.id)!==String(current.id))},before);
-          if(this.productEditId===String(current.id))closeDraft();
+          if(this.productEditId===String(current.id))closeDraft(true);
           await this.load();
         }catch(error){
           window.alert(error.status===409?'База уже изменилась. Обновите список и повторите удаление.':(error.message||'Не удалось удалить наименование.'));
