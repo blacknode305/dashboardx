@@ -23,6 +23,7 @@ export default class WidgetElement extends WidgetBase {
     catch (error) {
       console.error('Widget failed:',this.templateId,error);
       this.body.textContent = error?.message || String(error);
+      console.error('Widget initialization stack:',error?.stack);
     }
   }
   disconnectedCallback() {
