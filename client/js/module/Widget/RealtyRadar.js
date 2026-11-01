@@ -174,11 +174,16 @@ export default class RealtyRadarWidget {
       if(!data||!Array.isArray(data.items))throw Error('Ожидается JSON с массивом items');
       const normalized=normalizeListings(data.items);
       if(data.items.length&&!normalized.length)throw Error('Не найдено корректных объявлений в ленте');
+      if(data.status==='configuration_required'){
+        this.say('Сервер найден, но поисковый API пока не подключён. Нужны учётные данные DataForSEO на сервере.',true);
+        return;
+      }
       this.merge(normalized,true);
-      this.lastUpdated=(typeof data.generatedAt==='string'&&!Number.isNaN(Date.parse(data.generatedAt)))?new Date(data.generatedAt).toISOString():new Date().toISOString();
+      if(typeof data.generatedAt==='string'&&!Number.isNaN(Date.parse(data.generatedAt)))this.lastUpdated=new Date(data.generatedAt).toISOString();
       const age=Date.now()-Date.parse(this.lastUpdated);
       this.persist();this.render();
-      this.say('Источник загружен: '+normalized.length+' объявлений. '+(age>2*86400000?'Внимание: данные источника старше 48 часов.':'Обновление '+new Date(this.lastUpdated).toLocaleString('ru-RU')+'.'));
+      const sourceInfo=data.status==='updating'?' Поисковый робот обновляет данные.':data.status==='search_error'?' Не удалось выполнить последние поисковые запросы.':'';
+      this.say('Поиск: '+normalized.length+' объявлений в ленте. '+(this.lastUpdated&&age>2*86400000?'Данные старше 48 часов.':this.lastUpdated?'Проверено '+new Date(this.lastUpdated).toLocaleString('ru-RU')+'.':'Данных ещё нет.')+sourceInfo);
     }catch(error){
       this.say('Источник недоступен: '+(error?.name==='AbortError'?'тайм-аут':error?.message||'CORS или соединение')+'. Сохранённые объявления доступны.',true);
     }finally{clearTimeout(timer);this.busy=false;}
@@ -237,7 +242,7 @@ export default class RealtyRadarWidget {
     names.append(node('h3','',row.title),node('small','',row.address||'Адрес не указан'));
     head.append(names,node('small','',row.source));
     card.append(head);
-    const price=node('div','dx-realty-price',nfmt(row.price)+' ₸'+priceLabel(row));
+    const price=node('div','dx-realty-price',row.price?nfmt(row.price)+' ₸'+priceLabel(row):'Цена не распознана');
     card.append(price);
     const pills=node('div','dx-realty-card-pills');
     if(row.rooms)pills.append(this.pill(row.rooms+' комн.'));
@@ -249,6 +254,8 @@ export default class RealtyRadarWidget {
       if(row.contractPayment)pills.append(this.pill('Платёж по выкупу: '+nfmt(row.contractPayment)+' ₸','warn'));
       if(row.purchasePrice)pills.append(this.pill('Выкуп: '+nfmt(row.purchasePrice)+' ₸'));
     }
+    if(row.sourceConfidence==='search_index')pills.append(this.pill('Поисковый индекс · проверьте на сайте','warn'));
+    if(!row.price)pills.append(this.pill('Без подтверждённой цены','warn'));
     if(row.discount!==null&&row.discount>=12)pills.append(this.pill('−'+row.discount+'% к медиане','good'));
     else if(row.discount!==null&&row.discount<=-15)pills.append(this.pill('+'+Math.abs(row.discount)+'% к медиане','warn'));
     if(row.firstSeen&&Date.parse(row.firstSeen)>this.lastOpenedBefore&&this.lastOpenedBefore)pills.append(this.pill('Новое','good'));

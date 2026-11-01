@@ -1,0 +1,1 @@
+{"name":"dashboardx-realty-search","private":true,"type":"module","version":"1.0.0","scripts":{"start":"node server.mjs","test":"node --test ../tests/realty-search.test.js"},"engines":{"node":">=22"}}
