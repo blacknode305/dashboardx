@@ -20,7 +20,7 @@ import OptimaSuppliersWidget from './Widget/OptimaSuppliers.js?v=widget-inline-e
 import OptimaDataWidget from './Widget/OptimaData.js?v=widget-inline-editors-20261101b';
 import OptimaOrdersWidget from './Widget/OptimaOrders.js';
 import NesEmulatorWidget from './Widget/NesEmulator.js?v=nes-interactions-20261026';
-import SegaEmulatorWidget from './Widget/SegaEmulator.js?v=sega-local-runtime-20261101';
+import SegaEmulatorWidget from './Widget/SegaEmulator.js?v=sega-rom-compat-20261101';
 import {
   GithubControlWidgetView,
   ServerMonitorWidgetView,
