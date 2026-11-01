@@ -286,7 +286,8 @@ export class EnglishReadingInspector{
     if(target.dataset.inspect==='save'){
       const word=readingWordInfo(this.text);
       const grammar=readingGrammarHint(this.text)||readingWordGrammar(word);
-      this.onSave?.(this.text,{translation:word?.meaning||'',kind:word?.kind||'',grammarId:grammar?.id||''});
+      this.onSave?.(this.text,{translation:this.cache.get(this.text)||word?.meaning||'',
+        kind:word?.kind||'',grammarId:grammar?.id||''});
       target.textContent='★ В избранном';
       return;
     }
