@@ -284,3 +284,43 @@
   #workspace-canvas .dx-study-article-reading{padding:12px}
   #workspace-canvas .dx-study-article-reading p{font-size:12px;line-height:1.8}
 }
+
+
+/* Pragmatic communication / facial context exercises. */
+#workspace-canvas .dx-study-social{max-width:850px}
+#workspace-canvas .dx-study-social-topics{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;align-items:stretch
+}
+#workspace-canvas .dx-study button.dx-study-social-topic{
+  display:block;min-width:0;min-height:43px;padding:10px 12px;
+  border:1px solid var(--border);border-radius:8px;
+  background:var(--bg-panel-inside);color:var(--text-main);
+  font:650 11px/1.4 var(--f-family-inter,system-ui);
+  text-align:left;cursor:pointer;overflow-wrap:anywhere
+}
+#workspace-canvas .dx-study button.dx-study-social-topic:hover{
+  border-color:var(--text-muted)
+}
+#workspace-canvas .dx-study button.dx-study-social-topic[aria-pressed="true"]{
+  background:var(--dx-accent-soft,var(--bg-panel-light));
+  border-color:var(--dx-accent,var(--blue))
+}
+#workspace-canvas .dx-study-social-case{
+  gap:13px;padding:16px
+}
+#workspace-canvas .dx-study-social-case>h4{
+  font-size:17px!important;line-height:1.4
+}
+#workspace-canvas .dx-study-social-description{
+  font-size:13px!important;line-height:1.85!important;
+  padding:12px 13px;border-left:3px solid var(--dx-accent,var(--blue));
+  background:var(--bg-panel);border-radius:6px
+}
+#workspace-canvas .dx-study-social-question{font-weight:750;font-size:12px!important}
+#workspace-canvas .dx-study-social-case .dx-study-actions{flex-wrap:wrap}
+#workspace-canvas .dx-study-social-case .dx-study-panel{background:var(--bg-panel)}
+@media(max-width:520px){
+  #workspace-canvas .dx-study-social-topics{grid-template-columns:minmax(0,1fr)}
+  #workspace-canvas .dx-study-social-case{padding:11px}
+}
