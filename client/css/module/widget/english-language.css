@@ -532,3 +532,110 @@
   border-color:var(--dx-accent,var(--blue));
   background:var(--dx-hover-soft);
 }
+
+
+/* Two dated, topic-selectable English reading essays with nonblocking native TTS. */
+#workspace-canvas .dx-english.is-reading .dx-english-layout{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+#workspace-canvas .dx-english.is-reading .dx-english-sidebar{display:none!important}
+#workspace-canvas .dx-english.is-reading .dx-english-content{padding:17px 22px 26px}
+#workspace-canvas .dx-english-reading{
+  box-sizing:border-box;max-width:840px;margin:0 auto;
+  display:grid;gap:15px;align-content:start;
+  font:500 12px/1.6 var(--f-family-inter);min-width:0;
+}
+#workspace-canvas .dx-english-reading-header{display:grid;gap:4px}
+#workspace-canvas .dx-english-reading-header h3{
+  margin:4px 0 0;font-size:20px;line-height:1.25;font-weight:750;letter-spacing:-.025em
+}
+#workspace-canvas .dx-english-reading-header p{margin:0}
+#workspace-canvas .dx-english-reading-toolbar{
+  display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;
+  gap:10px;padding:12px;border:1px solid var(--border);border-radius:9px;
+  background:var(--bg-panel-inside)
+}
+#workspace-canvas .dx-english-reading-theme{display:grid;gap:5px;flex:1 1 230px;max-width:330px}
+#workspace-canvas .dx-english-reading-theme>span,
+#workspace-canvas .dx-english-reading-speed>span{font-size:10px;font-weight:680;color:var(--text-muted)}
+#workspace-canvas .dx-english-reading-theme select,
+#workspace-canvas .dx-english-reading-speed select{
+  width:100%;min-height:35px;padding:6px 10px;border:1px solid var(--border);
+  border-radius:6px;color:var(--text-main);background:var(--bg-panel);cursor:pointer;
+}
+#workspace-canvas .dx-english-reading-switcher{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#workspace-canvas .dx-english-reading-tab{
+  display:grid;gap:3px;align-content:start;
+  min-width:0;min-height:60px;padding:10px 12px;border:1px solid var(--border);
+  border-radius:8px;background:var(--bg-panel-inside);color:var(--text-main);
+  font-size:12px;font-weight:650;text-align:left;cursor:pointer
+}
+#workspace-canvas .dx-english-reading-tab span{
+  font-size:10px;font-weight:450;color:var(--text-muted);
+  white-space:normal;overflow-wrap:anywhere
+}
+#workspace-canvas .dx-english-reading-tab:hover{background:var(--dx-hover-soft)}
+#workspace-canvas .dx-english-reading-tab.is-active{
+  border-color:var(--dx-accent,var(--blue));background:var(--dx-accent-soft)
+}
+#workspace-canvas .dx-english-reading-title{
+  margin:0;font-size:23px;font-weight:750;letter-spacing:-.02em;line-height:1.3
+}
+#workspace-canvas .dx-english-reading-intro{margin:0;color:var(--text-muted);line-height:1.6}
+#workspace-canvas .dx-english-reading-audio{
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px;
+  padding:12px;border:1px solid var(--border);border-radius:9px;background:var(--bg-panel-inside)
+}
+#workspace-canvas .dx-english-reading-audio button,
+#workspace-canvas .dx-english-reading-draft button,
+#workspace-canvas .dx-english-reading>.dx-english-lesson-actions button{
+  min-height:35px;padding:7px 12px;border:1px solid var(--border);
+  border-radius:7px;color:var(--text-main);background:var(--bg-panel-light);
+  font-size:11px;font-weight:680;cursor:pointer
+}
+#workspace-canvas .dx-english-reading-audio button:hover:not(:disabled){
+  border-color:var(--dx-accent,var(--blue));background:var(--dx-hover-soft)
+}
+#workspace-canvas .dx-english-reading-audio button.dx-english-primary,
+#workspace-canvas .dx-english-reading>.dx-english-lesson-actions button.dx-english-primary{
+  border-color:var(--dx-accent,var(--blue));background:var(--dx-accent-soft)
+}
+#workspace-canvas .dx-english-reading-audio button:disabled{opacity:.45;cursor:default}
+#workspace-canvas .dx-english-reading-speed{display:grid;gap:5px;max-width:110px;margin-left:auto}
+#workspace-canvas .dx-english-reading-text{
+  display:grid;gap:15px;padding:22px 25px;
+  border:1px solid var(--border);border-radius:11px;
+  background:var(--bg-panel-inside);min-width:0;
+}
+#workspace-canvas .dx-english-reading-text p{
+  margin:0;font:470 14px/1.85 var(--f-family-inter);
+  letter-spacing:.005em;overflow-wrap:break-word;
+}
+#workspace-canvas .dx-english-reading-draft{
+  display:grid;gap:7px;padding:15px;border:1px solid var(--border);
+  border-radius:10px;background:var(--bg-panel-inside)
+}
+#workspace-canvas .dx-english-reading-draft h4{
+  margin:0;font-size:14px;line-height:1.4;font-weight:700
+}
+#workspace-canvas .dx-english-reading-draft>p{margin:0}
+#workspace-canvas .dx-english-reading-draft textarea{
+  display:block;box-sizing:border-box;width:100%;min-height:158px;
+  padding:13px;border:1px solid var(--border);border-radius:7px;
+  background:var(--bg-panel);color:var(--text-main);
+  font:500 12px/1.7 var(--f-family-inter);resize:vertical;
+}
+#workspace-canvas .dx-english-reading-draft textarea:focus{
+  outline:2px solid var(--dx-accent,var(--blue));outline-offset:1px
+}
+#workspace-canvas .dx-english-reading-check{margin:0}
+#workspace-canvas .dx-english-reading>.dx-english-lesson-actions{padding-bottom:10px}
+#workspace-canvas .dx-english-reading-check .dx-english-feedback{margin:0}
+@media(max-width:680px){
+  #workspace-canvas .dx-english.is-reading .dx-english-content{padding:12px}
+  #workspace-canvas .dx-english-reading-header h3{font-size:17px}
+  #workspace-canvas .dx-english-reading-title{font-size:18px}
+  #workspace-canvas .dx-english-reading-text{padding:14px 15px;gap:12px}
+  #workspace-canvas .dx-english-reading-text p{font-size:13px;line-height:1.8}
+  #workspace-canvas .dx-english-reading-tab{padding:8px}
+  #workspace-canvas .dx-english-reading-audio{gap:6px}
+  #workspace-canvas .dx-english-reading-speed{margin-left:0;max-width:none}
+}
