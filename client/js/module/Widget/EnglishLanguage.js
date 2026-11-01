@@ -1,5 +1,6 @@
 import { GRAMMAR_GROUPS, GRAMMAR_LESSONS, GRAMMAR_LEVELS } from './EnglishGrammarData.js?v=english-grammar-20261101';
 import { GRAMMAR_EXPANDED, GRAMMAR_CHAPTER_GUIDES, GRAMMAR_COMPARISONS } from './EnglishGrammarExpanded.js?v=english-extended-20261101';
+import { READING_THEMES, READING_ESSAYS, readingDayKey, readingPairForDay } from './EnglishReadingData.js?v=daily-reading-20261101';
 
 const byId=new Map(GRAMMAR_LESSONS.map(item=>[item.id,item]));
 const make=(tag,className='',text='')=>{
@@ -52,7 +53,7 @@ export default class EnglishLanguageWidget{
       .filter(([id,count])=>validIds.has(id)&&Number.isInteger(count)&&count>0)
       .map(([id,count])=>[id,Math.min(5,count)]));
     this.selected=validIds.has(old.selected)?old.selected:GRAMMAR_LESSONS[0].id;
-    this.view=['grammar','practice','saved'].includes(old.view)?old.view:'grammar';
+    this.view=['grammar','practice','saved','reading'].includes(old.view)?old.view:'grammar';
     this.level=GRAMMAR_LEVELS.includes(old.level)?old.level:'all';
     this.searchTerm='';
     this.openGroups=new Set([byId.get(this.selected).groupId]);
@@ -63,6 +64,23 @@ export default class EnglishLanguageWidget{
     this.builderFeedback=null;
     this.builderId=null;
     this.builderOrder=[];
+    this.readingTheme=['all',...READING_THEMES.map(item=>item.id)].includes(old.readingTheme)?old.readingTheme:'all';
+    this.readingDrafts=Object.fromEntries(Object.entries(old.readingDrafts||{})
+      .filter(([id,value])=>READING_ESSAYS.some(item=>item.id===id)&&typeof value==='string')
+      .map(([id,value])=>[id,value.slice(0,7000)]));
+    this.readingDone=new Set(Array.isArray(old.readingDone)?old.readingDone.filter(
+      id=>READING_ESSAYS.some(item=>item.id===id)):[]);
+    this.readingChecks=Object.fromEntries(Object.entries(old.readingChecks||{})
+      .filter(([id,value])=>READING_ESSAYS.some(item=>item.id===id)&&
+        (value===true||value===false)));
+    this.readingIndex=0;
+    this.readingDate=readingDayKey();
+    this.readingRate=.9;
+    this.readingAnswer=null;
+    this.readingFeedback=null;
+    this.readingAudio=null;
+    this.readingSpeechToken=0;
+    this.readingAudioStatus='';
     this.destroyed=false;
 
     this.onClick=event=>{
@@ -72,9 +90,27 @@ export default class EnglishLanguageWidget{
       }
       const tab=event.target.closest('[data-view]');
       if(tab&&this.root.contains(tab)){
+        if(this.view==='reading'&&tab.dataset.view!=='reading')this.stopReading();
         this.view=tab.dataset.view;
         this.choice=null;this.feedback=null;
         this.persist();this.render();
+        return;
+      }
+      const story=event.target.closest('[data-reading-story]');
+      if(story&&this.content.contains(story)){
+        const list=this.dailyReadings();
+        const index=list.findIndex(item=>item.id===story.dataset.readingStory);
+        if(index>=0){
+          this.stopReading();this.readingIndex=index;this.readingAnswer=null;
+          this.readingFeedback=null;this.renderContent();
+        }
+        return;
+      }
+      const readOption=event.target.closest('[data-reading-answer]');
+      if(readOption&&this.view==='reading'&&this.content.contains(readOption)){
+        this.readingAnswer=Number(readOption.dataset.readingAnswer);
+        this.readingFeedback=null;
+        this.renderContent(true);
         return;
       }
       const word=event.target.closest('[data-build-add]');
@@ -110,6 +146,11 @@ export default class EnglishLanguageWidget{
       const action=event.target.closest('[data-action]');
       if(!action||!this.root.contains(action))return;
       switch(action.dataset.action){
+        case 'reading-play':this.playReading();break;
+        case 'reading-pause':this.pauseReading();break;
+        case 'reading-stop':this.stopReading();break;
+        case 'reading-check':this.checkReadingAnswer();break;
+        case 'reading-done':this.toggleReadingDone();break;
         case 'check': this.checkAnswer();break;
         case 'builder-check':this.checkBuilder();break;
         case 'builder-reset':
@@ -129,6 +170,39 @@ export default class EnglishLanguageWidget{
         default:break;
       }
     };
+    this.onReadingChange=event=>{
+      if(event.target.matches('[data-role="reading-theme"]')){
+        this.stopReading();
+        this.readingTheme=event.target.value;
+        this.readingIndex=0;
+        this.readingAnswer=null;this.readingFeedback=null;
+        this.persist();this.renderContent();
+      }
+      if(event.target.matches('[data-role="reading-speed"]')){
+        const speed=Number(event.target.value);
+        if(Number.isFinite(speed)&&speed>=.6&&speed<=1.5){
+          this.stopReading();
+          this.readingRate=speed;
+          this.updateReadingAudio();
+        }
+      }
+    };
+    this.onReadingInput=event=>{
+      if(!event.target.matches('[data-role="reading-draft"]'))return;
+      const storyId=event.target.dataset.storyId;
+      if(!READING_ESSAYS.some(item=>item.id===storyId))return;
+      this.readingDrafts[storyId]=event.target.value.slice(0,7000);
+      const indicator=this.content.querySelector('[data-role="reading-draft-status"]');
+      if(indicator)indicator.textContent='Черновик сохраняется автоматически';
+      clearTimeout(this.readingPersistTimer);
+      this.readingPersistTimer=setTimeout(()=>this.persist(),500);
+    };
+    this.onReadingBlur=event=>{
+      if(event.target.matches('[data-role="reading-draft"]')){
+        clearTimeout(this.readingPersistTimer);
+        this.persist();
+      }
+    };
     this.onSearch=()=>{
       this.searchTerm=this.search.value;
       this.renderChapters();
@@ -145,6 +219,9 @@ export default class EnglishLanguageWidget{
       else this.openGroups.delete(group.dataset.groupId);
     };
     this.root.addEventListener('click',this.onClick);
+    this.content.addEventListener('change',this.onReadingChange);
+    this.content.addEventListener('input',this.onReadingInput);
+    this.content.addEventListener('focusout',this.onReadingBlur);
     this.search.addEventListener('input',this.onSearch);
     this.levelSelect.addEventListener('change',this.onLevel);
     this.chapterList.addEventListener('toggle',this.onChapterToggle,true);
@@ -161,7 +238,11 @@ export default class EnglishLanguageWidget{
         level:this.level,
         done:[...this.done],
         bookmarks:[...this.bookmarks],
-        weak:this.weak
+        weak:this.weak,
+        readingTheme:this.readingTheme,
+        readingDone:[...this.readingDone],
+        readingDrafts:this.readingDrafts,
+        readingChecks:this.readingChecks
       }
     });
   }
@@ -290,6 +371,7 @@ export default class EnglishLanguageWidget{
   }
   render(){
     if(this.destroyed)return;
+    this.root.classList.toggle('is-reading',this.view==='reading');
     this.root.querySelectorAll('[data-view]').forEach(tab=>{
       const chosen=tab.dataset.view===this.view;
       tab.setAttribute('aria-pressed',String(chosen));
@@ -352,6 +434,7 @@ export default class EnglishLanguageWidget{
     this.content.replaceChildren();
     if(this.view==='practice')this.renderReview();
     else if(this.view==='saved')this.renderSaved();
+    else if(this.view==='reading')this.renderDailyReading();
     else this.renderLesson();
     this.content.scrollTop=previousScroll;
   }
@@ -582,9 +665,15 @@ export default class EnglishLanguageWidget{
     frame.append(list);this.content.append(frame);
   }
   destroy(){
+    this.stopReading();
+    clearTimeout(this.readingPersistTimer);
+    this.persist();
     this.destroyed=true;
     if('speechSynthesis' in window)window.speechSynthesis.cancel();
     this.root?.removeEventListener('click',this.onClick);
+    this.content?.removeEventListener('change',this.onReadingChange);
+    this.content?.removeEventListener('input',this.onReadingInput);
+    this.content?.removeEventListener('focusout',this.onReadingBlur);
     this.search?.removeEventListener('input',this.onSearch);
     this.levelSelect?.removeEventListener('change',this.onLevel);
     this.chapterList?.removeEventListener('toggle',this.onChapterToggle,true);
