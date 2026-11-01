@@ -159,6 +159,23 @@ export default class EnglishLanguageWidget{
       if(!action||!this.root.contains(action))return;
       switch(action.dataset.action){
         case 'word-remove':learning.removeWord(action.dataset.term);break;
+        case 'word-edit':{
+          const card=action.closest('.dx-english-word-card');
+          const editor=card?.querySelector('[data-role="word-meaning-edit"]');
+          if(editor){editor.hidden=false;editor.focus();editor.select();}
+          break;
+        }
+        case 'word-save':{
+          const card=action.closest('.dx-english-word-card');
+          const editor=card?.querySelector('[data-role="word-meaning-edit"]');
+          const term=action.dataset.term;
+          const existing=(learning.data.savedWords||[]).find(item=>item.term===term);
+          if(editor&&existing){
+            learning.saveWord(term,{...existing,translation:editor.value.trim()});
+            this.renderContent(true);
+          }
+          break;
+        }
         case 'word-check':this.checkVocabulary();break;
         case 'word-next':this.nextVocabulary();break;
         case 'word-audio':this.sayText(action.dataset.term,'en-US');break;
@@ -1022,11 +1039,20 @@ export default class EnglishLanguageWidget{
           item.translation||'Перевод не указан — уточните в онлайн-переводчике'));
         details.append(make('small','',
           (item.kind||'Слово / выражение')+' · проверки: '+(item.correct||0)+'/'+(item.attempts||0)));
+        const edit=make('input','dx-english-word-edit');
+        edit.type='text';edit.maxLength=400;edit.value=item.translation||'';
+        edit.placeholder='Укажите перевод для повторения';
+        edit.dataset.role='word-meaning-edit';edit.hidden=true;
+        edit.setAttribute('aria-label','Перевод: '+item.term);
+        details.append(edit);
         const actions=make('div','dx-english-word-actions');
         const audio=button('▶','word-audio');audio.dataset.term=item.term;
         const deleteBtn=button('×','word-remove');deleteBtn.dataset.term=item.term;
         deleteBtn.setAttribute('aria-label','Удалить из избранного: '+item.term);
-        actions.append(audio,deleteBtn);
+        const editBtn=button('✎','word-edit');editBtn.dataset.term=item.term;
+        editBtn.title='Изменить перевод';
+        const saveBtn=button('Сохранить перевод','word-save');saveBtn.dataset.term=item.term;
+        actions.append(audio,editBtn,saveBtn,deleteBtn);
         if(item.grammarId&&byId.has(item.grammarId)){
           const grammar=button('Правило →','','dx-english-related');
           grammar.removeAttribute('data-action');grammar.dataset.lesson=item.grammarId;
