@@ -11,7 +11,7 @@ import FinanceTableWidget from './Widget/FinanceTable.js';
 import MoneyConvertApiWidget from './Widget/MoneyConvertApi.js';
 import CalculatorWidget from './Widget/Calculator.js';
 import EnglishLanguageWidget from './Widget/EnglishLanguage.js?v=english-study-20261101c';
-import StudyCourseWidget from './Widget/StudyCourse.js?v=study-expanded-20261101d';
+import StudyCourseWidget from './Widget/StudyCourse.js?v=articles-economics-20261101';
 import LocalCollectionWidget from './Widget/LocalCollection.js?v=nes-interactions-20261026';
 import MediaPlayerWidget from './Widget/MediaPlayer.js?v=nes-interactions-20261026';
 import ServerConsoleWidget from './Widget/ServerConsole.js?v=nes-interactions-20261026';
@@ -49,6 +49,7 @@ const WidgetLogic = {
   PsychologyWidget:StudyCourseWidget,
   LogicWidget:StudyCourseWidget,
   MimicWidget:StudyCourseWidget,
+  EconomicsWidget:StudyCourseWidget,
   AudioPlayerWidget: MediaPlayerWidget,
   VideoPlayerWidget: MediaPlayerWidget,
   WishlistPriceWidget: LocalCollectionWidget,
