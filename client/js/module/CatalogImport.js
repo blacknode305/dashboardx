@@ -121,6 +121,7 @@ const make=(tag,text,className)=>{
 
 export function attachCatalogImporter({widget,getDatabase,getRevision,getSupplierFilter,onSaved}){
   const root=widget.querySelector('[data-role="catalog-import-panel"]');
+  if(!root)return {destroy:()=>{}};
   const trigger=widget.querySelector('[data-role="catalog-upload"]');
   const fileInput=root.querySelector('[data-role="catalog-import-file"]');
   const supplierSelect=root.querySelector('[data-role="catalog-import-supplier"]');
