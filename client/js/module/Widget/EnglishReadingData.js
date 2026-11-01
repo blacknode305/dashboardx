@@ -36,7 +36,8 @@ export const READING_ESSAYS = Object.freeze([
       "For many years, my mornings looked exactly the same. I woke up late, checked messages on my phone, and hurried to get ready for work. Breakfast usually meant a cup of coffee and a piece of bread. By the time I left the house, I already felt tired. I often blamed my busy schedule, although I had never really tried to change my habits.",
       "One Monday, the electricity went off before my alarm rang. My phone had almost no battery, so I couldn't waste time looking at it. Instead, I opened the window and noticed how quiet the street was. A neighbour was walking a dog, and someone was carrying fresh bread from the bakery. I decided to go outside for ten minutes. The air was cool, and the short walk made me feel surprisingly awake.",
       "The next morning, I put my phone in another room before going to bed. I prepared my clothes in the evening and started waking up twenty minutes earlier. At first, the changes seemed too small to matter. However, after two weeks, I was arriving at work calmly and eating a proper breakfast.",
-      "I still have busy days, and sometimes I return to my old habits. Yet I have learned that a good routine does not need to be perfect. A few minutes of quiet attention can change the way an entire day begins."
+      "I still have busy days, and sometimes I return to my old habits. Yet I have learned that a good routine does not need to be perfect. A few minutes of quiet attention can change the way an entire day begins.",
+      "Since then, I have tried to notice how I feel before changing a habit. If I am tired, I ask whether I need rest, better food, or a more realistic plan. I no longer promise myself that tomorrow will be completely different. Instead, I choose one practical action and repeat it until it becomes familiar. This approach may look slow, but it has made my mornings more peaceful. It has also helped me understand that lasting improvement often begins with attention rather than strict rules."
     ],
     "question": "Почему герой сначала чувствовал усталость?",
     "options": [
@@ -45,7 +46,7 @@ export const READING_ESSAYS = Object.freeze([
       "Он поздно возвращался из путешествий"
     ],
     "answer": 0,
-    "wordCount": 229
+    "wordCount": 314
   },
   {
     "id": "reading-02",
@@ -56,7 +57,8 @@ export const READING_ESSAYS = Object.freeze([
       "There is a small wooden box near the entrance to our apartment building. It looks like a birdhouse, but instead of birds, it contains books. A retired teacher built it with his grandson and painted a simple message on the door: “Take a book, leave a book.” At first, people walked past without paying much attention. Some thought the box would disappear within a week.",
       "One Saturday, I borrowed a novel that I had wanted to read for years. A few days later, I returned it and left a travel guide in its place. Soon, I noticed that the collection was changing almost every evening. Children brought picture books, students shared language textbooks, and older neighbours added detective stories. Sometimes someone left a handwritten note describing why a particular book mattered to them.",
       "The little library became more than a place to exchange reading material. People who had lived in the same building for years finally began talking to each other. We organised a weekend meeting where everyone could recommend a favourite story. Nobody needed to pay, register, or prove that they belonged.",
-      "Last month, heavy rain damaged the wooden roof. Before the teacher could repair it, several neighbours offered tools and materials. Watching them work together reminded me that community often grows from very ordinary ideas. Sometimes a small box of books can open a much larger conversation."
+      "Last month, heavy rain damaged the wooden roof. Before the teacher could repair it, several neighbours offered tools and materials. Watching them work together reminded me that community often grows from very ordinary ideas. Sometimes a small box of books can open a much larger conversation.",
+      "Our little library now has a notebook where visitors can leave recommendations. Sometimes the notes are only a few words long, but they give a personal voice to the books on the shelves. Last week, a child wrote that a story had helped him feel less afraid of starting school. Nobody knew who had left the book, yet the connection felt real. I sometimes imagine the number of small conversations that have happened because someone decided to share something they had already read. That thought makes the wooden box seem even more valuable."
     ],
     "question": "Что произошло после появления книжного домика?",
     "options": [
@@ -65,7 +67,7 @@ export const READING_ESSAYS = Object.freeze([
       "Все перестали читать"
     ],
     "answer": 0,
-    "wordCount": 229
+    "wordCount": 322
   },
   {
     "id": "reading-03",
@@ -76,7 +78,8 @@ export const READING_ESSAYS = Object.freeze([
       "When I moved into my first apartment, I could prepare only a few simple meals. I followed recipes carefully, measuring every ingredient and setting a timer for each step. If a recipe mentioned a vegetable that I did not have, I usually gave up and ordered food. I believed that good cooking required special equipment and perfect instructions.",
       "One evening, a friend arrived unexpectedly. The shops were already closed, and my refrigerator contained only some potatoes, carrots, eggs, and a little cheese. My friend suggested making dinner from whatever was available. We cut the vegetables into small pieces, cooked them slowly, and tasted the mixture as it changed. We added salt, noticed that something was missing, and tried a little lemon juice.",
       "The meal was not beautiful, but it was delicious. More importantly, I began to understand why recipes work. Heat changes texture, salt brings out flavour, and a small amount of acidity can balance a rich dish. Over the following weeks, I experimented with different vegetables and wrote down what I learned.",
-      "Now I still use recipes when I want to discover a new dish. But I no longer feel helpless when an ingredient is missing. Cooking has become a way to practise observation, patience, and decision-making. Mistakes are still possible, of course, but they usually teach me more than a perfect dinner does."
+      "Now I still use recipes when I want to discover a new dish. But I no longer feel helpless when an ingredient is missing. Cooking has become a way to practise observation, patience, and decision-making. Mistakes are still possible, of course, but they usually teach me more than a perfect dinner does.",
+      "These days, I occasionally invite friends to cook without checking a recipe. We choose a few ingredients, discuss possible flavours, and decide what to try. Not every experiment works; once we made a soup that was much too salty. But even that evening became a funny memory rather than a disaster. I have discovered that learning a practical skill is easier when I stop treating mistakes as evidence of failure. The kitchen gives me a place to practise confidence, creativity, and the ability to adapt when the original plan changes."
     ],
     "question": "Что помогло герою стать увереннее на кухне?",
     "options": [
@@ -85,7 +88,7 @@ export const READING_ESSAYS = Object.freeze([
       "Отказ от домашних блюд"
     ],
     "answer": 0,
-    "wordCount": 225
+    "wordCount": 315
   },
   {
     "id": "reading-04",
@@ -96,7 +99,8 @@ export const READING_ESSAYS = Object.freeze([
       "Last Friday, I turned off notifications on my phone for an entire weekend. It was not a dramatic decision. I had simply noticed that my attention was becoming fragmented. Every small sound interrupted whatever I was doing, and even when there were no messages, I kept checking the screen. I was present in many conversations online but strangely absent from the room around me.",
       "On Saturday morning, I visited a local market. Normally, I would have photographed colourful fruit or compared prices on several apps. This time, I spoke with a woman who had been selling vegetables there for twenty years. She told me how the market had changed and why she still enjoyed meeting familiar customers. Later, I sat in a café and read a newspaper from beginning to end.",
       "The quiet was uncomfortable at first. I worried that I might miss an important message. But when I finally checked my phone that evening, almost everything could have waited. I had not become unreachable; I had simply created a little distance between incoming information and my attention.",
-      "By Sunday night, I understood that technology itself was not the problem. The problem was the expectation that every message required an immediate reaction. I turned notifications back on for calls from family members, but left most others disabled. The experiment did not change my life completely. It did, however, remind me that attention is something worth protecting."
+      "By Sunday night, I understood that technology itself was not the problem. The problem was the expectation that every message required an immediate reaction. I turned notifications back on for calls from family members, but left most others disabled. The experiment did not change my life completely. It did, however, remind me that attention is something worth protecting.",
+      "The following week, I noticed another benefit of limiting notifications. Conversations became easier because I could listen without thinking about the next message. When I needed to concentrate, I finished tasks more quickly and had fewer reasons to feel anxious. Of course, I still use my phone for work, navigation, and staying in touch with friends. The difference is that I now make those choices more deliberately. My weekend experiment did not teach me to reject technology. It taught me to decide when technology deserves my attention and when it can simply wait."
     ],
     "question": "Какой вывод сделал герой?",
     "options": [
@@ -105,7 +109,7 @@ export const READING_ESSAYS = Object.freeze([
       "Важно самому управлять своим вниманием"
     ],
     "answer": 2,
-    "wordCount": 236
+    "wordCount": 329
   },
   {
     "id": "reading-05",
@@ -116,7 +120,8 @@ export const READING_ESSAYS = Object.freeze([
       "It was my first visit to the city, and I wanted the journey to feel like an adventure. Instead of taking a plane, I bought a train ticket. The trip would last six hours, which seemed long at first. I packed a book, a small notebook, and some sandwiches. When the train left the station, the buildings slowly disappeared and fields began to fill the windows.",
       "A woman sitting opposite me asked whether I had visited the city before. She was travelling to see her sister and knew the area very well. We talked about local food, parks, and museums. She recommended a small historical street that was not included in my guidebook. I wrote the name in my notebook and decided to visit it on my first afternoon.",
       "When we arrived, the station was noisy and crowded. I felt nervous because everything was unfamiliar. However, I followed the directions on a map and found my hotel without difficulty. After leaving my bag, I walked to the street the woman had mentioned. It was full of old houses, quiet cafés, and people enjoying the evening.",
-      "The train journey taught me that travel is not only about reaching a destination. The conversations and unexpected suggestions along the way can become the most memorable part of the trip. Sometimes a slower journey offers a richer experience."
+      "The train journey taught me that travel is not only about reaching a destination. The conversations and unexpected suggestions along the way can become the most memorable part of the trip. Sometimes a slower journey offers a richer experience.",
+      "On the final day of my visit, I returned to the railway station with a bag full of souvenirs and a notebook full of observations. I was tired, but I felt more confident than I had when I arrived. I had learned how to navigate unfamiliar streets, ask strangers for help, and enjoy moments when plans changed unexpectedly. As the train began moving, I looked out of the window and watched the city disappear. I realised that the journey had given me more than new photographs. It had changed the way I approached situations that initially seemed unfamiliar."
     ],
     "question": "Как герой узнал об интересной улице?",
     "options": [
@@ -125,7 +130,7 @@ export const READING_ESSAYS = Object.freeze([
       "От сотрудника отеля"
     ],
     "answer": 1,
-    "wordCount": 224
+    "wordCount": 322
   },
   {
     "id": "reading-06",
@@ -136,7 +141,8 @@ export const READING_ESSAYS = Object.freeze([
       "On my second day in a coastal town, I woke up early and walked towards the old market. A travel website had described it as an excellent place for breakfast, but the photographs had not prepared me for the atmosphere. The air smelled of fresh bread, coffee, and herbs. Fishermen were arranging their morning catch while families chose vegetables for lunch.",
       "I stopped at a stall selling handmade baskets. The owner spoke slowly, allowing me to understand his English despite my limited vocabulary. He explained that his father had taught him the craft and that each basket took several hours to complete. I wanted to buy one, but I had very little space in my suitcase. Instead, I asked whether I could watch him work.",
       "For fifteen minutes, I stood beside the stall and learned how thin pieces of wood were woven together. Other visitors were rushing from one famous attraction to another, but I felt no desire to leave. The market was giving me something more valuable than a photograph: a chance to understand ordinary life in another place.",
-      "Before returning to my hotel, I bought warm bread and a piece of fruit. I sat near the harbour and watched the boats come and go. I realised that a good journey does not have to be full of impressive events. Sometimes the best memory is a simple morning when nobody seems to be in a hurry."
+      "Before returning to my hotel, I bought warm bread and a piece of fruit. I sat near the harbour and watched the boats come and go. I realised that a good journey does not have to be full of impressive events. Sometimes the best memory is a simple morning when nobody seems to be in a hurry.",
+      "When I told my friends about the market, I discovered that my favourite part of the trip was difficult to describe. There had been no dramatic event, no famous landmark, and no unusual adventure. I remembered the sound of baskets being moved, the smell of warm bread, and the patient way the owner answered my questions. These details would probably mean little in a travel advertisement. Yet they were the details that made the town feel real to me. Since then, I have tried to leave free time in every travel plan."
     ],
     "question": "Почему герой остался у продавца корзин?",
     "options": [
@@ -145,7 +151,7 @@ export const READING_ESSAYS = Object.freeze([
       "Чтобы найти дорогу к музею"
     ],
     "answer": 0,
-    "wordCount": 237
+    "wordCount": 329
   },
   {
     "id": "reading-07",
@@ -156,7 +162,8 @@ export const READING_ESSAYS = Object.freeze([
       "My friends and I were hiking in the mountains when the weather changed unexpectedly. The morning had been sunny, and the trail seemed easy to follow. We had a digital map, warm clothes, and enough food for the day. After lunch, however, thick clouds covered the valley, and a light rain made the stones slippery. Suddenly the path looked less familiar.",
       "We stopped at a crossing where two narrow trails went in different directions. The map showed only one of them. Instead of guessing, we checked the small signs attached to a wooden post. Unfortunately, the writing had faded. My friend suggested continuing uphill, but I remembered that the official route was supposed to follow a stream.",
       "We decided to return to the last clear marker. It took an extra forty minutes, yet it was a much safer choice. From there, we found a wider path that led towards a mountain village. An older man working near his house confirmed that we were going the right way. He also advised us to leave the mountains before the rain became heavier.",
-      "We reached the village tired but relieved. The experience changed how I think about travel planning. Technology is useful, but it cannot replace careful observation or the ability to change a plan. A successful adventure is not always the one that takes you furthest. Sometimes it is the one that brings you home safely."
+      "We reached the village tired but relieved. The experience changed how I think about travel planning. Technology is useful, but it cannot replace careful observation or the ability to change a plan. A successful adventure is not always the one that takes you furthest. Sometimes it is the one that brings you home safely.",
+      "Before our next hike, we met to review what we could improve. We agreed to check weather forecasts more carefully, carry a paper map, and tell someone our intended route. We also decided that turning back should never be treated as a failure. One of my friends said that confidence and caution do not have to be opposites. I think she was right. A person can enjoy uncertainty while still taking responsibility for safety. Looking back, our most important achievement that day was not reaching a particular viewpoint; it was making a thoughtful decision together."
     ],
     "question": "Что сделала группа, потеряв уверенность в маршруте?",
     "options": [
@@ -165,7 +172,7 @@ export const READING_ESSAYS = Object.freeze([
       "Решила остаться на ночь без укрытия"
     ],
     "answer": 1,
-    "wordCount": 234
+    "wordCount": 329
   },
   {
     "id": "reading-08",
@@ -176,7 +183,8 @@ export const READING_ESSAYS = Object.freeze([
       "During a trip abroad, I visited a museum that displayed nothing especially rare or expensive. There were old umbrellas, kitchen tools, school notebooks, telephone cards, and photographs of ordinary streets. At first, I wondered whether I had chosen the wrong place to spend an afternoon. I had expected impressive paintings or famous historical treasures.",
       "A guide explained that the museum was dedicated to everyday life during the previous century. Each object had been donated by a local family, together with a short story. A worn suitcase had belonged to a woman who moved to the city to become a nurse. A small radio had kept three generations informed during difficult times. Even a simple teacup had a story about friendship and hospitality.",
       "I spent nearly two hours reading the descriptions. What surprised me most was how closely the stories resembled those in my own family. The details were different, yet the emotions were familiar: hope, fear, ambition, and the desire to belong. I started thinking about which objects from my own home might one day deserve a place in such a collection.",
-      "When I left the museum, I noticed the city differently. Apartment windows, bus stops, and local shops no longer looked unimportant. Each of them was part of somebody's personal history. The visit reminded me that culture is not made only by famous artists and leaders. It is also created by millions of ordinary people living their everyday lives."
+      "When I left the museum, I noticed the city differently. Apartment windows, bus stops, and local shops no longer looked unimportant. Each of them was part of somebody's personal history. The visit reminded me that culture is not made only by famous artists and leaders. It is also created by millions of ordinary people living their everyday lives.",
+      "Back at home, I opened a drawer containing old letters, broken watches, and family photographs. I had considered most of these things useless, but after visiting the museum, I saw them as possible connections to people and experiences. I asked my parents about a photograph I had never understood and learned a story about their first apartment. The conversation lasted an entire evening. It made me realise that preserving history does not always require an institution. Sometimes it begins when we ask an older relative what an ordinary object means to them."
     ],
     "question": "Что объединяло экспонаты музея?",
     "options": [
@@ -185,7 +193,7 @@ export const READING_ESSAYS = Object.freeze([
       "Каждый предмет хранил историю обычных людей"
     ],
     "answer": 2,
-    "wordCount": 240
+    "wordCount": 332
   },
   {
     "id": "reading-09",
@@ -196,7 +204,8 @@ export const READING_ESSAYS = Object.freeze([
       "I arrived at the office twenty minutes early because I did not want to be late on my first day. The building was larger than I expected, and I spent several minutes looking for the correct entrance. At reception, a friendly employee showed me the way to my department. Everyone seemed busy, which made me even more nervous.",
       "My manager introduced me to the team and explained what we were working on. I received a laptop, a list of useful contacts, and several documents to read. At first, I tried to remember everything without writing it down. Soon I realised that this was impossible. I opened a notebook and started recording important instructions.",
       "During lunch, two colleagues invited me to sit with them. We discussed our interests and the best places to eat near the office. They told me that nobody expected a new employee to understand every process immediately. One of them said that asking questions was a sign of attention, not weakness.",
-      "By the end of the day, I had learned only a small part of my new responsibilities. Still, I felt much more comfortable than I had that morning. I understood that a good start does not mean knowing everything. It means being willing to listen, take notes, and slowly become part of the team."
+      "By the end of the day, I had learned only a small part of my new responsibilities. Still, I felt much more comfortable than I had that morning. I understood that a good start does not mean knowing everything. It means being willing to listen, take notes, and slowly become part of the team.",
+      "A few weeks later, I found the notebook from my first day and read the questions I had written. Some seemed incredibly simple, but others reminded me of how much I had learned. I noticed that I was no longer afraid to ask for clarification. Instead of pretending to understand a complicated instruction, I could explain what I knew and identify what was missing. My manager later told me that this habit had helped the entire team communicate more clearly. The experience showed me that becoming independent does not mean refusing help; it means learning how to use it well."
     ],
     "question": "Какой совет помог новичку?",
     "options": [
@@ -205,7 +214,7 @@ export const READING_ESSAYS = Object.freeze([
       "Работать без перерывов"
     ],
     "answer": 1,
-    "wordCount": 218
+    "wordCount": 318
   },
   {
     "id": "reading-10",
@@ -216,7 +225,8 @@ export const READING_ESSAYS = Object.freeze([
       "Our team had three weeks to prepare a presentation for an important client. At the beginning, everyone was enthusiastic. We divided the work into several parts and promised to finish ahead of schedule. Unfortunately, we did not agree on how the different parts should fit together. Each person followed a slightly different idea of what the final result should look like.",
       "One week before the deadline, we compared our work and discovered the problem. The design was inconsistent, the numbers did not match, and several sections repeated the same information. People became frustrated and started blaming one another. Our manager interrupted the discussion and asked a simple question: “What can we change today?”",
       "We spent an hour deciding which information was essential. Then we created one shared outline and assigned clear responsibilities. Every evening, we reviewed the progress together. These short meetings were sometimes uncomfortable because they revealed mistakes quickly. However, they also prevented us from wasting time on unnecessary details.",
-      "We finished the presentation only a few hours before the meeting. It was not perfect, but the client understood our proposal and asked thoughtful questions. Afterwards, we discussed what had gone wrong. We agreed that enthusiasm was valuable, yet communication was even more important. A strong team is not one that never makes mistakes. It is one that notices them early enough to respond."
+      "We finished the presentation only a few hours before the meeting. It was not perfect, but the client understood our proposal and asked thoughtful questions. Afterwards, we discussed what had gone wrong. We agreed that enthusiasm was valuable, yet communication was even more important. A strong team is not one that never makes mistakes. It is one that notices them early enough to respond.",
+      "After the project, we created a short checklist for future work. It included a shared outline, clear deadlines, and a moment to review information before it reached the final presentation. We also agreed to raise concerns earlier, even when the issue seemed small. The checklist was not exciting, but it made the next project noticeably calmer. I learned that a good process does not remove creativity. It gives people enough structure to use their creative energy well. Without that structure, even talented individuals may spend too much time solving problems they could have prevented."
     ],
     "question": "Почему возникли проблемы с проектом?",
     "options": [
@@ -225,7 +235,7 @@ export const READING_ESSAYS = Object.freeze([
       "Команда не получила компьютеры"
     ],
     "answer": 0,
-    "wordCount": 225
+    "wordCount": 319
   },
   {
     "id": "reading-11",
@@ -236,7 +246,8 @@ export const READING_ESSAYS = Object.freeze([
       "At the beginning of each year, I used to write a long list of ambitious goals. I wanted to become fluent in another language, exercise every day, read dozens of books, and learn a completely new profession. The list made me feel excited for a few days. Then ordinary responsibilities returned, and most of those goals disappeared from my attention.",
       "Last year, I tried a different approach. Instead of asking what I wanted to achieve in twelve months, I asked what useful action I could repeat during one week. My first goal was to study English for fifteen minutes on five evenings. I chose one grammar topic, read a short article, and wrote three sentences using a new structure.",
       "After a month, I could see real progress. More importantly, the routine felt manageable. I gradually added new activities, but I avoided changing everything at once. When I missed a day, I simply returned to the plan the next evening instead of declaring the whole week a failure.",
-      "I still believe that big dreams matter. They give direction and make difficult work meaningful. But a dream is easier to reach when it becomes a series of small actions. I have learned to celebrate consistency rather than dramatic beginnings. A modest goal completed many times can produce a surprising result."
+      "I still believe that big dreams matter. They give direction and make difficult work meaningful. But a dream is easier to reach when it becomes a series of small actions. I have learned to celebrate consistency rather than dramatic beginnings. A modest goal completed many times can produce a surprising result.",
+      "I sometimes compare my weekly notes with the ambitious lists I wrote several years ago. Those lists were full of exciting possibilities, but they rarely explained how to make progress on an ordinary Tuesday evening. My current system is less impressive on paper. It contains specific tasks that fit into the life I actually have. When circumstances change, I adjust the plan instead of abandoning it. This flexibility has helped me continue learning through busy periods. I now believe that discipline is not about forcing every day to be identical; it is about returning to something meaningful."
     ],
     "question": "Что изменилось в подходе героя к целям?",
     "options": [
@@ -245,7 +256,7 @@ export const READING_ESSAYS = Object.freeze([
       "Он сосредоточился на небольших повторяемых действиях"
     ],
     "answer": 2,
-    "wordCount": 218
+    "wordCount": 315
   },
   {
     "id": "reading-12",
@@ -256,7 +267,8 @@ export const READING_ESSAYS = Object.freeze([
       "I once worked with a colleague who always delivered excellent individual results but rarely shared information with the rest of our team. As a consequence, several tasks were completed twice, and important details were sometimes discovered too late. People complained privately, yet nobody wanted to address the situation directly. We were afraid that an honest discussion might damage our working relationship.",
       "Eventually, our project leader invited us to a short meeting. She did not begin by accusing anyone. Instead, she described two recent situations in which communication had failed and explained how they affected the project. Then she asked us what obstacles prevented regular updates. My colleague admitted that he worried frequent meetings would interrupt his concentration.",
       "We agreed on a compromise. Instead of daily long meetings, each person would share a written summary twice a week. Urgent questions would be discussed immediately, but other issues could wait until the scheduled update. The solution was simple and respected different working styles.",
-      "Over the following month, mistakes became less frequent, and the atmosphere improved. I realised that avoiding difficult conversations does not necessarily protect relationships. Sometimes silence allows frustration to grow. A respectful discussion requires preparation, attention, and the willingness to listen to an answer that may surprise you. It also offers the opportunity to solve a problem before it becomes a conflict."
+      "Over the following month, mistakes became less frequent, and the atmosphere improved. I realised that avoiding difficult conversations does not necessarily protect relationships. Sometimes silence allows frustration to grow. A respectful discussion requires preparation, attention, and the willingness to listen to an answer that may surprise you. It also offers the opportunity to solve a problem before it becomes a conflict.",
+      "The experience also changed the way I listen during meetings. When someone behaves in a way I do not understand, I try to ask what problem they are attempting to solve. Their explanation may reveal a concern that nobody else has considered. Of course, not every disagreement ends in a perfect compromise. Sometimes difficult decisions remain necessary. But a respectful process makes those decisions easier to accept because people know their perspectives were considered. I have come to see communication as a practical skill that requires regular practice, not merely a pleasant personality trait."
     ],
     "question": "Как руководитель начала сложный разговор?",
     "options": [
@@ -265,7 +277,7 @@ export const READING_ESSAYS = Object.freeze([
       "С отмены всех встреч"
     ],
     "answer": 1,
-    "wordCount": 222
+    "wordCount": 316
   },
   {
     "id": "reading-13",
@@ -276,7 +288,8 @@ export const READING_ESSAYS = Object.freeze([
       "When my brother bought several smart devices for his apartment, he was very excited. The lights could change colour, the heating could follow a schedule, and a small speaker could answer questions. He imagined that his home would become more comfortable and that he would save both time and electricity.",
       "During the first week, everything worked well. He turned on the lights with his voice and checked the temperature from his phone. Then the internet connection stopped working one evening. Some devices continued using their saved settings, but others did not respond at all. He could not remember where he had put the original light switches.",
       "The next day, he spent several hours reading the instructions. He learned how to create manual controls and what to do when a device lost its connection. He also discovered that some functions collected more information than he expected. He changed several privacy settings and removed features that were not useful.",
-      "His apartment is still full of technology, but he now uses it differently. He no longer tries to automate every small action. Instead, he chooses tools that solve real problems and keeps simple alternatives available. The experience taught him that a device is not truly smart if it makes an ordinary task impossible when something goes wrong."
+      "His apartment is still full of technology, but he now uses it differently. He no longer tries to automate every small action. Instead, he chooses tools that solve real problems and keeps simple alternatives available. The experience taught him that a device is not truly smart if it makes an ordinary task impossible when something goes wrong.",
+      "My brother now teaches friends how to set up similar devices. Before recommending anything, he asks what they actually want to improve. Some people need help controlling heating costs; others simply want a light that switches on automatically at night. He warns them about privacy settings and shows them how to operate the equipment manually. His advice is usually less exciting than an advertisement, but far more useful. He believes that good technology should disappear into the background of everyday life rather than constantly demand our attention. I think that is a sensible definition of convenience."
     ],
     "question": "Что понял герой о «умном доме»?",
     "options": [
@@ -285,7 +298,7 @@ export const READING_ESSAYS = Object.freeze([
       "Интернет никогда не отключается"
     ],
     "answer": 0,
-    "wordCount": 214
+    "wordCount": 310
   },
   {
     "id": "reading-14",
@@ -296,7 +309,8 @@ export const READING_ESSAYS = Object.freeze([
       "A small robot arrived at our school library at the beginning of the autumn term. It was not shaped like a person. It looked more like a low table with wheels and a screen on top. Its main job was to carry returned books from the front desk to different shelves. Students immediately surrounded it, hoping to see something extraordinary.",
       "For the first few days, the robot moved very slowly. It stopped whenever someone walked in front of it, and it occasionally took a longer route around a chair. Some students laughed and said that a human assistant would do the job faster. But the librarian explained that the purpose of the machine was not to replace people. It was designed to help with repetitive tasks.",
       "After a month, the robot had become an ordinary part of the library. While it carried heavy stacks, the librarian spent more time recommending books and helping students with research. The students also became interested in how the robot made decisions. A science teacher organised a workshop to explain sensors, maps, and basic programming.",
-      "The robot could not understand why someone loved a particular story, and it could not encourage a nervous student as a good teacher could. However, it was useful when given a clear, limited task. Watching it work helped us understand that technology is most valuable when it supports human skills rather than pretending to replace every human interaction."
+      "The robot could not understand why someone loved a particular story, and it could not encourage a nervous student as a good teacher could. However, it was useful when given a clear, limited task. Watching it work helped us understand that technology is most valuable when it supports human skills rather than pretending to replace every human interaction.",
+      "One afternoon, the robot stopped beside a bookshelf because a student had left a backpack in its path. Instead of becoming annoyed, several children gathered around to discuss how it could recognise obstacles. They compared the problem with the way humans notice people, furniture, and changing light. The librarian turned the small delay into a learning opportunity. That conversation would not have happened if the machine had worked perfectly all the time. It reminded us that useful technology can teach people not only through success but also through the questions raised by its limitations."
     ],
     "question": "В чём была главная польза робота?",
     "options": [
@@ -305,7 +319,7 @@ export const READING_ESSAYS = Object.freeze([
       "Он освобождал время библиотекаря для общения"
     ],
     "answer": 2,
-    "wordCount": 238
+    "wordCount": 332
   },
   {
     "id": "reading-15",
@@ -316,7 +330,8 @@ export const READING_ESSAYS = Object.freeze([
       "A local hospital introduced a computer system that helped doctors organise appointments. The program could predict which hours were likely to be busy, recognise repeated administrative tasks, and suggest more efficient schedules. At first, many employees welcomed the change. They had spent too much time moving information between forms and answering the same questions.",
       "Problems appeared when the system suggested postponing an appointment for a patient who had difficulty travelling. The recommendation made sense if the only goal was to reduce waiting times. However, it ignored an important fact: the patient could visit the hospital only on one particular day. A nurse noticed the situation and changed the appointment manually.",
       "The hospital decided that every automatic recommendation should be easy to review and correct. Employees were encouraged to explain mistakes instead of hiding them. The software team collected feedback, and the system became more flexible. Some decisions continued to be automated, while others required a person to consider the circumstances.",
-      "This experience raised a question that applies far beyond hospitals. When a computer offers an answer quickly, it can be tempting to accept it without thinking. Yet efficiency is only one part of a good decision. Fairness, context, and individual needs matter as well. Technology can analyse information at impressive speed, but responsibility should remain clearly connected to the people who use it."
+      "This experience raised a question that applies far beyond hospitals. When a computer offers an answer quickly, it can be tempting to accept it without thinking. Yet efficiency is only one part of a good decision. Fairness, context, and individual needs matter as well. Technology can analyse information at impressive speed, but responsibility should remain clearly connected to the people who use it.",
+      "The hospital later invited patients to describe their experiences with the new appointment system. Some appreciated shorter waiting times, while others worried about receiving messages they did not understand. The staff discovered that clearer explanations mattered as much as faster scheduling. They created a simple way for patients to request human assistance. The changes were not technically impressive, but they made the service more trustworthy. This is why I believe that evaluating a system should involve people affected by its decisions. A program can produce excellent statistics and still overlook a difficult human experience."
     ],
     "question": "Почему рекомендацию системы изменили?",
     "options": [
@@ -325,7 +340,7 @@ export const READING_ESSAYS = Object.freeze([
       "В больнице не было интернета"
     ],
     "answer": 1,
-    "wordCount": 223
+    "wordCount": 317
   },
   {
     "id": "reading-16",
@@ -336,7 +351,8 @@ export const READING_ESSAYS = Object.freeze([
       "When people discuss the future of technology, they often imagine faster computers, larger screens, and more intelligent software. Speed and power are impressive, but they are not the only qualities that determine whether a product is useful. Sometimes an excellent design begins with a much simpler question: who will struggle to use this?",
       "A team of students developed an application to help residents report damaged streetlights. Their first version included many features, colourful charts, and a detailed map. During testing, however, several older residents could not complete a report. The text was too small, important buttons were difficult to find, and the process required too many steps.",
       "The students redesigned the application. They introduced clearer labels, larger controls, and a simpler form. They also allowed people to submit a report without creating an account. The new version looked less complicated, but it worked for a larger number of people. The students discovered that accessibility was not an optional decoration added at the end of a project. It was part of the project's basic purpose.",
-      "A truly useful digital world should give people more freedom, not more obstacles. This means considering privacy, different abilities, unreliable internet connections, and the right to understand how a system works. The most successful technology may not be the one that attracts the most attention. It may be the one that quietly makes daily life easier for everyone."
+      "A truly useful digital world should give people more freedom, not more obstacles. This means considering privacy, different abilities, unreliable internet connections, and the right to understand how a system works. The most successful technology may not be the one that attracts the most attention. It may be the one that quietly makes daily life easier for everyone.",
+      "The students eventually published a short report describing their design mistakes. They included screenshots of the first version and explained why they had changed each part. Other teams found the report useful because it was honest about failure. One group used the ideas to improve a local transport website, while another applied them to a learning application. The original project therefore helped more people than its creators had expected. It also showed that an accessible design is not necessarily expensive or complicated. The most important step is often inviting different users into the process early enough."
     ],
     "question": "Почему студенты упростили приложение?",
     "options": [
@@ -345,7 +361,7 @@ export const READING_ESSAYS = Object.freeze([
       "Они больше не хотели заниматься проектом"
     ],
     "answer": 0,
-    "wordCount": 232
+    "wordCount": 328
   },
   {
     "id": "reading-17",
@@ -356,7 +372,8 @@ export const READING_ESSAYS = Object.freeze([
       "Behind our apartment building there was an empty piece of land where people sometimes left old furniture. In spring, one neighbour suggested turning it into a small garden. At first, the idea seemed unrealistic. The soil was dry, the space was narrow, and nobody knew who would look after the plants.",
       "A few residents met on Saturday morning to clear the area. We collected rubbish, moved stones, and added fresh soil. Then we planted flowers, tomatoes, and several young trees. A grandmother from the next building explained which plants needed shade and which could grow in direct sunlight. Two children painted signs with the names of the vegetables.",
       "During the summer, we took turns watering the garden. Some plants died, but others grew quickly. In August, we picked our first tomatoes and shared them among the neighbours. The harvest was small, yet everyone felt proud of it. People who had rarely spoken before now met regularly to discuss the plants.",
-      "The garden changed the view from our windows, but its greatest effect was on the people living nearby. It gave us a shared responsibility and a reason to spend time outdoors. We learned that improving a place does not always require a large budget. Often it begins with a few willing hands and a plan that people can follow together."
+      "The garden changed the view from our windows, but its greatest effect was on the people living nearby. It gave us a shared responsibility and a reason to spend time outdoors. We learned that improving a place does not always require a large budget. Often it begins with a few willing hands and a plan that people can follow together.",
+      "In the following spring, we made a few improvements to the garden. We installed a container to collect rainwater and planted flowers that attracted insects. Someone suggested building a bench so that older neighbours could rest while watching the plants. The bench quickly became a popular meeting place. Every season brought new challenges, but we no longer expected every decision to be perfect. We learned together, adjusted our plans, and celebrated small signs of progress. The garden had become a shared project that helped our neighbourhood feel less anonymous and more welcoming."
     ],
     "question": "Что оказалось самым важным результатом сада?",
     "options": [
@@ -365,7 +382,7 @@ export const READING_ESSAYS = Object.freeze([
       "Новая парковка"
     ],
     "answer": 1,
-    "wordCount": 220
+    "wordCount": 312
   },
   {
     "id": "reading-18",
@@ -376,7 +393,8 @@ export const READING_ESSAYS = Object.freeze([
       "When I was a child, the river near our town was a place where families spent summer afternoons. People walked along its banks, and children watched small fish moving through the clear water. Years later, the river looked very different. Plastic waste collected near bridges, and the water became cloudy after heavy rain. Many residents stopped visiting it.",
       "A group of volunteers began organising monthly clean-up days. At first, only a few people joined. They collected rubbish and talked to local businesses about keeping the riverbank clean. Later, teachers brought students to study the plants and animals that lived near the water. The students recorded what they found and compared the results over time.",
       "The work was slow. Cleaning the banks once could not solve every problem because waste continued arriving from other places. The volunteers worked with the local council to place bins near popular paths and improve information signs. Several shops agreed to use less disposable packaging during outdoor events.",
-      "After two years, the river had not returned completely to its childhood condition, but the change was visible. Families came back, birds appeared more often, and people started treating the area with greater care. The project showed that environmental improvement rarely happens in a single dramatic moment. It depends on patient cooperation and many repeated decisions."
+      "After two years, the river had not returned completely to its childhood condition, but the change was visible. Families came back, birds appeared more often, and people started treating the area with greater care. The project showed that environmental improvement rarely happens in a single dramatic moment. It depends on patient cooperation and many repeated decisions.",
+      "Some volunteers still visit the river every month, even when the banks look clean. They collect information about water conditions and explain the project to new residents. Schools now include a short visit to the river in their environmental lessons. The children learn to recognise local birds and understand why rubbish can affect animals far beyond the point where it was dropped. These activities may not produce dramatic headlines, yet they create lasting habits. I think that is one of the most encouraging parts of the project: people are gradually learning to care for the place before serious damage appears."
     ],
     "question": "Как добились улучшений у реки?",
     "options": [
@@ -385,7 +403,7 @@ export const READING_ESSAYS = Object.freeze([
       "Запретили людям приближаться к воде"
     ],
     "answer": 0,
-    "wordCount": 218
+    "wordCount": 318
   },
   {
     "id": "reading-19",
@@ -396,7 +414,8 @@ export const READING_ESSAYS = Object.freeze([
       "Last autumn, my friends and I drove away from the city to watch the stars. We had read that the night sky would be especially clear, but none of us knew much about astronomy. We brought warm clothes, a thermos of tea, and a simple map showing the brightest constellations. After an hour on the road, we stopped in a quiet area far from streetlights.",
       "At first, our eyes were not used to the darkness. We could see only a few stars, and the cold wind made us wonder whether the journey was worth it. Then, little by little, more points of light appeared. We noticed a bright planet near the horizon and a pale band stretching across the sky. Someone explained that the band was part of our galaxy.",
       "For a long time, we spoke very little. The view made ordinary problems seem smaller, not because those problems had disappeared, but because we were looking at something much larger than ourselves. We took a few photographs, although the camera could not capture exactly what we saw.",
-      "On the way home, we discussed why people rarely notice the sky above their own neighbourhoods. City lights make many stars difficult to see, and busy schedules keep us looking down at screens. That evening reminded us that curiosity does not always require expensive equipment. Sometimes it requires only time, patience, and the willingness to look up."
+      "On the way home, we discussed why people rarely notice the sky above their own neighbourhoods. City lights make many stars difficult to see, and busy schedules keep us looking down at screens. That evening reminded us that curiosity does not always require expensive equipment. Sometimes it requires only time, patience, and the willingness to look up.",
+      "A week later, I borrowed a beginner's astronomy book from the library. I wanted to understand the names of the stars and why different constellations appear at different times of year. The explanations were more complicated than I had expected, but the memory of that dark sky kept me interested. Sometimes learning feels difficult because the subject exists only as words on a page. Seeing something with your own eyes can create a reason to keep studying. That night connected science with wonder and made the enormous distance between stars feel strangely personal."
     ],
     "question": "Почему за городом было видно больше звёзд?",
     "options": [
@@ -405,7 +424,7 @@ export const READING_ESSAYS = Object.freeze([
       "Городское освещение меньше мешало наблюдению"
     ],
     "answer": 2,
-    "wordCount": 234
+    "wordCount": 327
   },
   {
     "id": "reading-20",
@@ -416,7 +435,8 @@ export const READING_ESSAYS = Object.freeze([
       "A science teacher once asked our class to investigate a very ordinary question: why does bread become stale? Most students were disappointed. We had expected experiments involving dramatic chemical reactions, not a piece of bread sitting on a table. Yet the teacher insisted that scientific curiosity often begins with something familiar.",
       "We placed slices of bread in different conditions. Some were kept in paper bags, others in sealed containers, and a few in the refrigerator. Each day, we recorded changes in texture and moisture. Our results were not perfectly consistent, which led to several debates. Had we measured the slices correctly? Were the temperatures really the same? Had someone opened a container too often?",
       "The experiment introduced us to the importance of careful observation and fair comparisons. We discovered that a good explanation requires more than a confident guess. When our results contradicted our predictions, we had to rethink our assumptions rather than change the numbers to fit them.",
-      "By the end of the project, the bread was no longer interesting only as food. It had become a lesson about evidence, uncertainty, and honest disagreement. The teacher had shown us that science is not a collection of finished answers. It is a way of asking questions, testing possible explanations, and remaining open to being wrong."
+      "By the end of the project, the bread was no longer interesting only as food. It had become a lesson about evidence, uncertainty, and honest disagreement. The teacher had shown us that science is not a collection of finished answers. It is a way of asking questions, testing possible explanations, and remaining open to being wrong.",
+      "Since that experiment, I have become more careful when someone presents a surprising fact as absolute truth. I try to ask how it was measured, what alternative explanations might exist, and whether someone else could repeat the observation. These questions do not make life less interesting. On the contrary, they give ordinary experiences a new depth. A loaf of bread, a growing plant, or a changing shadow can become the starting point for useful investigation. Our class learned that being curious is important, but being willing to test an idea is what makes curiosity productive."
     ],
     "question": "Какой главный урок получили ученики?",
     "options": [
@@ -425,7 +445,7 @@ export const READING_ESSAYS = Object.freeze([
       "Наука существует только в лабораториях"
     ],
     "answer": 1,
-    "wordCount": 215
+    "wordCount": 310
   },
   {
     "id": "reading-21",
@@ -436,7 +456,8 @@ export const READING_ESSAYS = Object.freeze([
       "I had lived in my apartment for almost a year before I spoke to the person next door. We sometimes met in the lift and smiled, but our conversations never lasted longer than a few seconds. I knew that my neighbour had a bicycle and usually left home early. That was almost all I knew about him.",
       "One evening, I returned from the supermarket carrying several heavy bags. The lift was not working, and I had to climb four flights of stairs. My neighbour saw me near the entrance and offered to help. While we walked upstairs, we talked about our work, the area, and the strange weather that week. I learned that he had recently moved from another city.",
       "A few days later, I invited him for tea. We discovered that we both enjoyed cycling and old films. Soon, we began taking short weekend rides together. We also helped each other with small practical problems, such as receiving packages when one of us was away.",
-      "The friendship did not begin with a special event or a complicated plan. It began with a simple offer to carry a shopping bag. I still think about that whenever I meet someone new. A small act of kindness can make an unfamiliar place feel much more like home."
+      "The friendship did not begin with a special event or a complicated plan. It began with a simple offer to carry a shopping bag. I still think about that whenever I meet someone new. A small act of kindness can make an unfamiliar place feel much more like home.",
+      "We still meet for tea from time to time, although both of us have busy schedules. Sometimes we talk about films or cycling routes; on other days, we exchange advice about work. The friendship has not transformed our lives in a dramatic way. It simply makes daily difficulties a little easier to manage. When new residents move into the building, I try to welcome them instead of assuming they would rather be left alone. Not everyone wants a new friendship, of course, but a friendly greeting and an offer of practical help are rarely wasted."
     ],
     "question": "Как началось общение соседей?",
     "options": [
@@ -445,7 +466,7 @@ export const READING_ESSAYS = Object.freeze([
       "С переписки в интернете"
     ],
     "answer": 0,
-    "wordCount": 215
+    "wordCount": 310
   },
   {
     "id": "reading-22",
@@ -456,7 +477,8 @@ export const READING_ESSAYS = Object.freeze([
       "During a family dinner, my cousin announced that she wanted to leave her office job and study design. The news surprised everyone. Her parents asked whether she understood the financial risks, and her older brother immediately suggested several practical alternatives. Within minutes, the conversation became an argument in which nearly everybody was speaking at once.",
       "My cousin grew quiet. She had prepared to explain her decision, but she could not finish a single sentence. I asked the others to wait and invited her to tell us what had led to the idea. She explained that she had been taking evening classes for a year and had already saved enough money for a short course. She was not planning to make a sudden, careless decision.",
       "Once we understood her preparation, our questions changed. Instead of telling her what she should do, we asked how we could support her. Her brother offered to help build a portfolio website, and her parents suggested reviewing the course costs together. The conversation became much calmer, even though some worries remained.",
-      "That evening taught me a useful lesson about disagreement. Listening does not mean automatically agreeing with someone. It means giving the other person enough space to explain their reasons. When we replace quick judgments with honest questions, we often discover that a difficult conversation has more than one reasonable point of view."
+      "That evening taught me a useful lesson about disagreement. Listening does not mean automatically agreeing with someone. It means giving the other person enough space to explain their reasons. When we replace quick judgments with honest questions, we often discover that a difficult conversation has more than one reasonable point of view.",
+      "My cousin eventually enrolled in the design course while continuing to work part-time. Her plans have changed several times, and she still has difficult decisions ahead. However, the family now discusses her progress with interest rather than fear. She sometimes asks for advice, but she knows that the final responsibility is hers. I think this is one of the hardest lessons in close relationships: support does not mean controlling someone else's choices. It means respecting their ability to decide while remaining available when they need encouragement, information, or an honest conversation."
     ],
     "question": "Что изменило семейный разговор?",
     "options": [
@@ -465,7 +487,7 @@ export const READING_ESSAYS = Object.freeze([
       "Девушке дали спокойно объяснить свой план"
     ],
     "answer": 2,
-    "wordCount": 227
+    "wordCount": 318
   },
   {
     "id": "reading-23",
@@ -476,7 +498,8 @@ export const READING_ESSAYS = Object.freeze([
       "Our community centre organised a small event where teenagers and older residents could teach each other useful skills. Some young people expected the afternoon to be boring, while several older participants worried that modern technology would be impossible to understand. The organisers asked everyone to bring one thing they knew well and one thing they wanted to learn.",
       "In the first session, a retired engineer showed a group of students how to repair a simple bicycle. He explained each tool carefully and encouraged them to ask questions. Later, a teenager helped him organise photographs on his phone and create a shared album for his family. Both teachers had moments when they struggled to explain something that seemed obvious to them.",
       "During a break, people began telling stories about their daily lives. The students discovered that older neighbours had worked in many different professions and had experienced changes they had only read about in history books. The older residents learned that young people were interested in more than games and social media.",
-      "By the end of the day, several pairs had arranged to meet again. The event had not removed every difference between generations, but it had given people a reason to become curious rather than suspicious. We often assume that age determines what someone can teach us. In reality, useful knowledge travels in many directions."
+      "By the end of the day, several pairs had arranged to meet again. The event had not removed every difference between generations, but it had given people a reason to become curious rather than suspicious. We often assume that age determines what someone can teach us. In reality, useful knowledge travels in many directions.",
+      "A few months later, the community centre organised a second meeting. This time, participants suggested the activities themselves. A young musician offered beginner guitar lessons, while a former accountant explained how to plan household expenses. Another resident taught participants how to grow herbs indoors. The sessions were informal, and nobody was expected to be an expert in every subject. What mattered was the willingness to share a practical skill. I watched people of different ages laughing at their mistakes and helping each other improve. It felt like a small but convincing example of how communities can learn together."
     ],
     "question": "Чему научил участников обмен навыками?",
     "options": [
@@ -485,7 +508,7 @@ export const READING_ESSAYS = Object.freeze([
       "Опыт зависит только от возраста"
     ],
     "answer": 0,
-    "wordCount": 225
+    "wordCount": 323
   },
   {
     "id": "reading-24",
@@ -496,7 +519,8 @@ export const READING_ESSAYS = Object.freeze([
       "A few years ago, I believed that changing an opinion was a sign of weakness. Whenever someone challenged my ideas, I tried to defend them as quickly as possible. I paid more attention to finding an answer than to understanding the criticism. Winning an argument felt more important than discovering whether my position was correct.",
       "That attitude began to change during a discussion at a book club. We were talking about a character who had made a difficult moral choice. I argued confidently that the character had acted selfishly. Another reader asked me to consider details that I had overlooked. She did not attack my intelligence or demand that I agree. She simply explained how those details had changed her interpretation.",
       "At home, I reread the chapter and realised that my original conclusion had been too simple. The character had caused harm, but the circumstances were more complicated than I had acknowledged. When we met again, I told the group that I had reconsidered. To my surprise, nobody treated it as a defeat. Instead, the discussion became more interesting.",
-      "Since then, I have tried to separate my identity from my opinions. An idea can be useful today and incomplete tomorrow. Listening to evidence does not require us to abandon our values; it can help us apply them more thoughtfully. The ability to change your mind may be one of the most important skills in a world full of complicated questions."
+      "Since then, I have tried to separate my identity from my opinions. An idea can be useful today and incomplete tomorrow. Listening to evidence does not require us to abandon our values; it can help us apply them more thoughtfully. The ability to change your mind may be one of the most important skills in a world full of complicated questions.",
+      "I still catch myself defending an idea too quickly, especially when a subject matters to me personally. When that happens, I try to pause and ask whether I have understood the other person's argument correctly. Sometimes the answer strengthens my original opinion; sometimes it changes it. Both outcomes can be useful. I have learned that confidence is not the same as certainty. A confident person can say, “I was wrong,” without losing their sense of purpose. In fact, the willingness to revise an opinion may be what makes thoughtful confidence possible."
     ],
     "question": "Почему герой изменил отношение к спорам?",
     "options": [
@@ -505,7 +529,7 @@ export const READING_ESSAYS = Object.freeze([
       "Ему запретили высказывать мнение"
     ],
     "answer": 1,
-    "wordCount": 240
+    "wordCount": 331
   }
 ]);
 
