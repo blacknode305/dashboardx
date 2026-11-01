@@ -27,6 +27,7 @@ const WIDGET_CATALOG = Object.freeze({
   videoPlayer:    {category:'media',    file:'_videoPlayer.html'},
   serverConsole:  {category:'system',   file:'_serverConsole.html'},
   telegramBot:    {category:'telegram', file:'_telegramBot.html'},
+  discordPortal:  {category:'social',   file:'_discordPortal.html'},
   dashboardSettings:{category:'system',file:'_dashboardSettings.html'},
   optimaSuppliers:{category:'optima',file:'_optimaSuppliers.html'},
   optimaProducts:{category:'optima',file:'_optimaProducts.html'},
@@ -83,6 +84,7 @@ async function loadTemplates() {
     if(id==='optimaProducts')url.searchParams.set('v','names-optima-print-20261031');
     if(id==='optimaProposals')url.searchParams.set('v','catalog-upload-20261031');
     if(id==='segaEmulator')url.searchParams.set('v','sega-rom-compat-20261101c');
+    if(id==='discordPortal')url.searchParams.set('v','discord-portal-20261101');
     if(id==='englishLanguage')url.searchParams.set('v','english-study-20261101');
     if(id==='realtyRadar')url.searchParams.set('v','realty-widget-name-20261101');
     if(id==='optimaSuppliers')url.searchParams.set('v','suppliers-optima-print-20261031');
