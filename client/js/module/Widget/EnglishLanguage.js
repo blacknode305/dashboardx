@@ -73,6 +73,8 @@ export default class EnglishLanguageWidget{
       .map(([id,value])=>[id,value.slice(0,7000)]));
     this.readingDone=new Set(Array.isArray(old.readingDone)?old.readingDone.filter(
       id=>READING_ESSAYS.some(item=>item.id===id)):[]);
+    this.phoneticsDone=new Set(Array.isArray(old.phoneticsDone)?old.phoneticsDone.filter(
+      id=>PHONETIC_LESSONS.some(item=>item.id===id)):[]);
     this.readingChecks=Object.fromEntries(Object.entries(old.readingChecks||{})
       .filter(([id,value])=>READING_ESSAYS.some(item=>item.id===id)&&
         (value===true||value===false)));
@@ -158,6 +160,14 @@ export default class EnglishLanguageWidget{
       const action=event.target.closest('[data-action]');
       if(!action||!this.root.contains(action))return;
       switch(action.dataset.action){
+        case 'phonetic-done':{
+          const id=action.dataset.phoneticId;
+          if(this.phoneticsDone.has(id))this.phoneticsDone.delete(id);
+          else this.phoneticsDone.add(id);
+          learning.update({phoneticsDone:[...this.phoneticsDone]});
+          this.renderContent(true);
+          break;
+        }
         case 'word-remove':learning.removeWord(action.dataset.term);break;
         case 'word-edit':{
           const card=action.closest('.dx-english-word-card');
@@ -284,6 +294,7 @@ export default class EnglishLanguageWidget{
       if(Array.isArray(safe.done))this.done=new Set(safe.done.filter(id=>validIds.has(id)));
       if(Array.isArray(safe.bookmarks))this.bookmarks=new Set(safe.bookmarks.filter(id=>validIds.has(id)));
       if(Array.isArray(safe.readingDone))this.readingDone=new Set(safe.readingDone);
+      if(Array.isArray(safe.phoneticsDone))this.phoneticsDone=new Set(safe.phoneticsDone);
       if(safe.readingDrafts&&typeof safe.readingDrafts==='object')this.readingDrafts={...safe.readingDrafts};
       if(safe.weak&&typeof safe.weak==='object')this.weak={...safe.weak};
       if(safe.readingChecks&&typeof safe.readingChecks==='object')this.readingChecks={...safe.readingChecks};
@@ -325,7 +336,8 @@ export default class EnglishLanguageWidget{
         readingTheme:this.readingTheme,
         readingDone:[...this.readingDone],
         readingDrafts:this.readingDrafts,
-        readingChecks:this.readingChecks
+        readingChecks:this.readingChecks,
+        phoneticsDone:[...this.phoneticsDone]
       };
     this.store?.updateWidgetState(this.widget.instanceId,{englishGrammar:snapshot});
     learning.update(snapshot);
@@ -1158,6 +1170,8 @@ export default class EnglishLanguageWidget{
     frame.append(make('span','dx-english-chip','20 уроков'),make('h3','','Фонетика, произношение и письменная речь'));
     frame.append(make('p','dx-english-intro',
       'Звуки, ударение, интонация, связная речь, написание и пунктуация. Примеры можно слушать, повторять и сравнивать.'));
+    frame.append(make('p','dx-english-mini',
+      'Изучено '+this.phoneticsDone.size+' из '+PHONETIC_LESSONS.length+' фонетических правил'));
     const categories=[...new Set(PHONETIC_LESSONS.map(x=>x.group))];
     for(const category of categories){
       const box=make('section','dx-english-phonetics-group');
@@ -1173,6 +1187,9 @@ export default class EnglishLanguageWidget{
           const speak=button('▶ '+example,'word-audio');speak.dataset.term=example;
           actions.append(speak);
         }
+        const complete=button(this.phoneticsDone.has(item.id)?'✓ Изучено':'Отметить изученным','phonetic-done');
+        complete.dataset.phoneticId=item.id;
+        actions.append(complete);
         details.append(actions);row.append(head,details);box.append(row);
       }
       frame.append(box);
