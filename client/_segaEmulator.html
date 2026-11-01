@@ -5,18 +5,18 @@
     <div><strong>SEGA · Mega Drive / Genesis</strong><small data-role="sega-game-name">Нет загруженной игры</small></div>
     <span class="dx-chip" data-role="sega-status" aria-live="polite">Готов к загрузке ROM</span>
   </header>
-  <div class="dx-sega-meta"><span class="dx-sega-led" data-role="sega-led">● STANDBY</span><span>16-BIT · GENESIS PLUS GX</span></div>
+  <div class="dx-sega-meta"><span class="dx-sega-led" data-role="sega-led">● STANDBY</span><span>MEGA DRIVE · MASTER SYSTEM · GAME GEAR · 32X</span></div>
   <div class="dx-sega-screen" data-role="sega-screen" tabindex="0" aria-label="Экран Sega. Перетащите сюда ROM Mega Drive или выберите файл">
     <div class="dx-sega-placeholder" data-role="sega-placeholder">
       <span class="dx-sega-symbol" aria-hidden="true">16<span>BIT</span></span>
       <strong>SEGA MEGA DRIVE</strong>
       <span>Выберите свой ROM, чтобы запустить EmulatorJS</span>
-      <span class="dx-muted">.md · .bin · .gen · .smd · .zip</span>
+      <span class="dx-muted">.md · .bin · .gen · .smd · .sms · .gg · .32x · .zip</span>
     </div>
     <iframe data-role="sega-frame" title="EmulatorJS — Sega Mega Drive" allow="fullscreen; autoplay; gamepad" allowfullscreen tabindex="0" hidden></iframe>
   </div>
   <div class="dx-experience-toolbar">
-    <label class="dx-file-button">📁 Загрузить ROM<input type="file" data-role="sega-rom" accept=".md,.bin,.gen,.smd,.zip,application/zip,application/octet-stream" aria-label="Выбрать игру Sega"></label>
+    <label class="dx-file-button">📁 Загрузить ROM<input type="file" data-role="sega-rom" accept=".md,.bin,.gen,.smd,.zip,.sms,.gg,.32x,.sg,application/zip,application/octet-stream" aria-label="Выбрать игру Sega"></label>
     <button type="button" data-action="sega-play">▶ Играть / фокус</button>
     <button type="button" data-action="sega-stop" disabled>■ Остановить</button>
     <button type="button" data-action="sega-fullscreen" disabled>⛶ Полный экран</button>
@@ -33,7 +33,10 @@
     <p>Нажмите «Загрузить ROM», затем ▶ в окне EmulatorJS. После запуска кликните внутри экрана, чтобы клавиатура управляла Sega, а не DashboardX.</p>
     <p>Стрелки — движение · Z/X/C — A/B/C · A/S/D — X/Y/Z (6 кнопок) · Enter — Start. F5 — быстрое сохранение, F9 — загрузка (если браузер не перехватывает клавиши). Настройки клавиш, геймпада, паузы и сохранений находятся в панели EmulatorJS прямо под игрой.</p>
     <p>Поддерживается физический геймпад через браузерный Gamepad API и сенсорный геймпад EmulatorJS. На Mac горячие клавиши сохранения могут конфликтовать с системными — используйте кнопки EmulatorJS.</p>
-    <p>ROM загружается локально из браузера и не отправляется в PRO OPTIMA / Railway. Для запуска ядра требуется интернет-соединение с CDN EmulatorJS. Используйте только законно полученные ROM.</p>
+    <p>Поддерживаются картриджные игры Mega Drive / Genesis (.md, .gen, .bin, .smd), Master System (.sms), Game Gear (.gg) и 32X (.32x). Старые SMD и ROM с переставленными байтами приводятся к стандартному формату автоматически.</p>
+    <p>ZIP должен содержать один ROM. Если внутри несколько игр, распакуйте архив и выберите одну. Образы Sega CD (.cue, .iso, .chd) пока не поддерживаются: для них нужен отдельный запуск с BIOS и файлами диска.</p>
+    <p>Если после нажатия ▶ ядро не запускает игру, используйте «Повторить через другой источник ядра» в окне игры. Некорректные или несовместимые дампы всё равно могут не открыться.</p>
+    <p>ROM обрабатывается локально в браузере и не отправляется в PRO OPTIMA / Railway. Для загрузки ядра и некоторых архивных функций требуется соединение с EmulatorJS CDN. Используйте только законно полученные ROM.</p>
   </details>
 </section>
 </template></body></html>
