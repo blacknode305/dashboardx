@@ -1,0 +1,90 @@
+
+/* Psychology/Mnemonics and Logic — restrained educational widget layout */
+#workspace-canvas .dx-study{display:flex;flex-direction:column;gap:0;min-height:0;min-width:0;height:100%;color:var(--text-main);font:500 12px/1.55 var(--f-family-inter,system-ui,sans-serif)}
+#workspace-canvas .dx-study-head{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;padding:13px 16px;border-bottom:1px solid var(--border)}
+#workspace-canvas .dx-study-head>div:first-child{min-width:170px;flex:1 1 200px}
+#workspace-canvas .dx-study-head small{font-size:10px;letter-spacing:.1em;color:var(--text-muted);font-weight:750}
+#workspace-canvas .dx-study-head h2{font-size:18px;line-height:1.25;margin:3px 0;font-weight:750;letter-spacing:-.02em}
+#workspace-canvas .dx-study-head p{font-size:11px;color:var(--text-muted);margin:0}
+#workspace-canvas .dx-study-progress{display:grid;gap:2px;min-width:110px;text-align:right}
+#workspace-canvas .dx-study-progress strong{font-size:20px;line-height:1.2;font-variant-numeric:tabular-nums}
+#workspace-canvas .dx-study-progress span{font-size:10px;color:var(--text-muted)}
+#workspace-canvas .dx-study-track{height:5px;border-radius:9px;overflow:hidden;background:var(--bg-panel-light);margin-top:4px}
+#workspace-canvas .dx-study-track>div{height:100%;max-width:100%;background:var(--dx-accent,var(--blue));transition:width .2s}
+#workspace-canvas .dx-study-tabs{display:flex;gap:3px;align-items:center;overflow-x:auto;padding:8px 12px;border-bottom:1px solid var(--border);scrollbar-width:thin;white-space:nowrap}
+#workspace-canvas .dx-study-tabs button{flex:0 0 auto;padding:8px 11px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--text-muted);font:600 11px var(--f-family-inter);cursor:pointer}
+#workspace-canvas .dx-study-tabs button:hover{background:var(--bg-panel-inside);color:var(--text-main)}
+#workspace-canvas .dx-study-tabs button[aria-pressed="true"]{border-color:var(--border);color:var(--text-main);background:var(--bg-panel-light)}
+#workspace-canvas .dx-study-layout{display:grid;grid-template-columns:minmax(175px,33%) minmax(0,1fr);flex:1;min-height:0;min-width:0}
+#workspace-canvas .dx-study:not(.is-course) .dx-study-layout{grid-template-columns:minmax(0,1fr)}
+#workspace-canvas .dx-study:not(.is-course) .dx-study-sidebar{display:none!important}
+#workspace-canvas .dx-study-sidebar{display:flex;flex-direction:column;gap:10px;min-width:0;min-height:0;overflow:auto;padding:12px 8px 12px 12px;border-right:1px solid var(--border);background:var(--bg-panel-inside)}
+#workspace-canvas .dx-study-sidebar input{box-sizing:border-box;width:100%;padding:9px 10px;min-height:36px;border:1px solid var(--border);border-radius:7px;background:var(--bg-panel);color:var(--text-main);font:500 11px var(--f-family-inter)}
+#workspace-canvas .dx-study-chapters{display:grid;gap:6px;align-content:start}
+#workspace-canvas .dx-study-group{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg-panel)}
+#workspace-canvas .dx-study-group summary{display:flex;align-items:center;justify-content:space-between;gap:7px;padding:10px;cursor:pointer;font-size:11px;font-weight:700;line-height:1.4}
+#workspace-canvas .dx-study-group summary small{flex:0 0 auto;font-size:10px;color:var(--text-muted)}
+#workspace-canvas .dx-study-lesson{display:flex;align-items:start;justify-content:space-between;gap:5px;width:100%;padding:8px 10px;border:0;border-top:1px solid var(--border);background:transparent;color:var(--text-main);text-align:left;font:500 11px/1.4 var(--f-family-inter);cursor:pointer}
+#workspace-canvas .dx-study-lesson span{overflow-wrap:anywhere}
+#workspace-canvas .dx-study-lesson small{color:var(--text-muted)}
+#workspace-canvas .dx-study-lesson.is-selected{background:var(--dx-accent-soft,var(--bg-panel-light));font-weight:700}
+#workspace-canvas .dx-study-lesson:hover{background:var(--bg-panel-light)}
+#workspace-canvas .dx-study-main{overflow:auto;min-height:0;min-width:0;padding:16px 20px 24px;scrollbar-width:thin}
+#workspace-canvas .dx-study-article{max-width:790px;display:grid;gap:13px;align-content:start;margin:0 auto}
+#workspace-canvas .dx-study-article>h3{margin:0;font-size:19px;line-height:1.35;letter-spacing:-.015em}
+#workspace-canvas .dx-study-article>h4{font-size:13px;margin:0}
+#workspace-canvas .dx-study-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:10px;color:var(--text-muted)}
+#workspace-canvas .dx-study-pill{display:inline-flex;align-items:center;width:max-content;padding:4px 7px;border:1px solid var(--border);background:var(--bg-panel-light);border-radius:5px;font-size:10px;font-weight:700;color:var(--text-muted)}
+#workspace-canvas .dx-study-panel{display:grid;gap:8px;padding:13px 15px;border:1px solid var(--border);border-radius:9px;background:var(--bg-panel-inside)}
+#workspace-canvas .dx-study-panel h4{font-size:12px;margin:0;font-weight:750}
+#workspace-canvas .dx-study-panel p{margin:0;line-height:1.75;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+#workspace-canvas .dx-study-example{border-left:3px solid var(--dx-accent,var(--blue))}
+#workspace-canvas .dx-study-activity{border-style:dashed}
+#workspace-canvas .dx-study-kicker{font-size:10px;font-weight:800;letter-spacing:.06em;color:var(--text-muted)}
+#workspace-canvas .dx-study-answers{display:grid;gap:6px}
+#workspace-canvas .dx-study button.dx-study-answer{padding:9px 11px;text-align:left;border:1px solid var(--border);border-radius:7px;background:var(--bg-panel);color:var(--text-main);font:500 11px/1.5 var(--f-family-inter);cursor:pointer}
+#workspace-canvas .dx-study button.dx-study-answer:hover:not(:disabled){background:var(--bg-panel-light)}
+#workspace-canvas .dx-study button.dx-study-answer.is-chosen{border-color:var(--dx-accent,var(--blue));background:var(--dx-accent-soft,var(--bg-panel-light))}
+#workspace-canvas .dx-study button.dx-study-answer:disabled{opacity:.8;cursor:default}
+#workspace-canvas .dx-study button.dx-study-primary,
+#workspace-canvas .dx-study-actions button,#workspace-canvas .dx-study-lesson-nav button,
+#workspace-canvas .dx-study-main>section>button{
+  min-height:35px;padding:8px 12px;border:1px solid var(--border);border-radius:7px;
+  background:var(--bg-panel-light);color:var(--text-main);font:650 11px/1.4 var(--f-family-inter);cursor:pointer
+}
+#workspace-canvas .dx-study button.dx-study-primary{border-color:var(--dx-accent,var(--blue));background:var(--dx-accent-soft,var(--bg-panel-light));width:max-content;max-width:100%}
+#workspace-canvas .dx-study button:disabled{opacity:.4;cursor:default}
+#workspace-canvas .dx-study button:hover:not(:disabled){filter:brightness(1.09)}
+#workspace-canvas .dx-study-feedback{padding:9px 11px;border:1px solid var(--border);border-radius:7px;background:var(--bg-panel)}
+#workspace-canvas .dx-study-feedback strong{font-size:11px}
+#workspace-canvas .dx-study-feedback.is-correct{border-left:3px solid var(--green)}
+#workspace-canvas .dx-study-feedback.is-wrong{border-left:3px solid var(--red)}
+#workspace-canvas .dx-study-actions,#workspace-canvas .dx-study-lesson-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#workspace-canvas .dx-study-lesson-nav{justify-content:space-between;padding-top:6px}
+#workspace-canvas .dx-study-subtle{font-size:11px;line-height:1.6;color:var(--text-muted);margin:0}
+#workspace-canvas .dx-study-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#workspace-canvas .dx-study-stat{display:grid;gap:2px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel-inside)}
+#workspace-canvas .dx-study-stat strong{font-size:18px}
+#workspace-canvas .dx-study-stat span{color:var(--text-muted);font-size:10px}
+#workspace-canvas .dx-study-drill-options{display:flex;flex-wrap:wrap;gap:10px}
+#workspace-canvas .dx-study-drill-options label{display:grid;gap:4px;flex:1 1 130px;color:var(--text-muted);font-size:11px}
+#workspace-canvas .dx-study-drill-options select,#workspace-canvas .dx-study-memory-form textarea{
+  box-sizing:border-box;width:100%;padding:9px 11px;border:1px solid var(--border);
+  border-radius:7px;background:var(--bg-panel-inside);color:var(--text-main);font:500 12px/1.6 var(--f-family-inter)
+}
+#workspace-canvas .dx-study-word-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:7px;margin:0;padding:0;list-style:none;counter-reset:word}
+#workspace-canvas .dx-study-word-grid li{counter-increment:word;display:flex;align-items:center;gap:7px;min-height:40px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg-panel-inside);font-weight:700}
+#workspace-canvas .dx-study-word-grid li:before{content:counter(word) ".";color:var(--text-muted);font-size:10px}
+#workspace-canvas .dx-study-memory-form{display:grid;gap:10px}
+#workspace-canvas .dx-study-memory-form textarea{min-height:150px;resize:vertical}
+#workspace-canvas .dx-study-timer{margin:0;color:var(--text-muted);font-size:11px}
+#workspace-canvas .dx-study-timer strong{font-size:15px;color:var(--text-main)}
+#workspace-canvas .dx-study-reference{color:var(--text-main);font-weight:700;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+@media(max-width:640px){
+ #workspace-canvas .dx-study-layout{grid-template-columns:minmax(140px,40%) minmax(0,1fr)}
+ #workspace-canvas .dx-study-head{padding:10px}
+ #workspace-canvas .dx-study-head h2{font-size:16px}
+ #workspace-canvas .dx-study-main{padding:11px}
+ #workspace-canvas .dx-study-panel{padding:11px}
+ #workspace-canvas .dx-study-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
