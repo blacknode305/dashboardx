@@ -9,6 +9,10 @@ test('rejects invalid links and excludes malformed prices',()=>{
  const r=normalizeListings([item(1),item(2,{url:'javascript:alert(1)'}),item(3,{price:0})]);
  assert.equal(r.length,1);
 });
+test('detects rent-to-own phrasing but not ordinary sale',()=>{
+ const rows=normalizeListings([item(11,{title:'Аренда с последующим выкупом',description:'Договор'}),item(12,{category:'sale',title:'Продажа квартиры с выкупом',priceUnit:'total'})]);
+ assert.equal(rows[0].tab,'buyout');assert.equal(rows[1].tab,'sale');
+});
 test('keeps buyout distinct and filters by budget, streets and rooms',()=>{
  const rows=normalizeListings([item(1),item(2,{category:'rent_to_own'}),item(3,{price:155000}),item(4,{rooms:3,address:'Лободы, 5'})]);
  assert.equal(filterListings(rows,{tab:'monthly',maxPrice:150000,rooms:[2],streets:['Гоголя']}).length,1);
