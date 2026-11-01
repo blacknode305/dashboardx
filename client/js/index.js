@@ -84,6 +84,7 @@ async function loadTemplates() {
     if(id==='optimaProposals')url.searchParams.set('v','catalog-upload-20261031');
     if(id==='segaEmulator')url.searchParams.set('v','sega-rom-compat-20261101c');
     if(id==='englishLanguage')url.searchParams.set('v','english-study-20261101');
+    if(id==='realtyRadar')url.searchParams.set('v','realty-widget-name-20261101');
     if(id==='optimaSuppliers')url.searchParams.set('v','suppliers-optima-print-20261031');
     const response=await fetch(url,{cache:(id==='optimaProducts'||id==='optimaSuppliers'||id==='optimaProposals')?'no-store':'default'});
     if(!response.ok)throw Error(entry.file+': HTTP '+response.status);
