@@ -22,15 +22,18 @@ export default class SegaEmulatorWidget{
     this.status=widget.querySelector('[data-role="sega-status"]');
     this.led=widget.querySelector('[data-role="sega-led"]');
     this.crt=widget.querySelector('[data-role="sega-crt"]');
+    this.coreSelect=widget.querySelector('[data-role="sega-core"]');
     this.play=widget.querySelector('[data-action="sega-play"]');
     this.stop=widget.querySelector('[data-action="sega-stop"]');
     this.fullscreen=widget.querySelector('[data-action="sega-fullscreen"]');
     this.romFile=null;this.romSource=null;this.romNotes=[];
     this.token=null;this.loaded=false;this.uiReady=false;this.destroyed=false;
-    this.loadVersion=0;this.core='segaMD';this.mode='local';
+    this.loadVersion=0;this.core='segaMD';this.system='segaMD';this.mode='local';
     this.unbind=[];
     const state=window.dashboardxStore?.getWidgetState(widget.instanceId)||{};
     this.crt.checked=state.segaCrt===true;
+    if(this.coreSelect)this.coreSelect.value=
+      ['auto','genesis_plus_gx','picodrive'].includes(state.segaCore)?state.segaCore:'auto';
     this.stage.classList.toggle('is-crt',this.crt.checked);
     const on=(node,type,fn,options)=>{
       node?.addEventListener(type,fn,options);
@@ -39,6 +42,14 @@ export default class SegaEmulatorWidget{
     on(this.crt,'change',()=>{
       this.stage.classList.toggle('is-crt',this.crt.checked);
       window.dashboardxStore?.updateWidgetState(widget.instanceId,{segaCrt:this.crt.checked});
+    });
+    on(this.coreSelect,'change',()=>{
+      const value=this.coreSelect.value;
+      window.dashboardxStore?.updateWidgetState(widget.instanceId,{segaCore:value});
+      if(this.romSource){
+        const source=this.romSource;
+        this.openRom(source,this.mode);
+      }
     });
     on(this.fileInput,'change',()=>{
       const file=this.fileInput.files?.[0];this.fileInput.value='';
@@ -75,7 +86,8 @@ export default class SegaEmulatorWidget{
         if(!this.romFile)return;
         // Structured cloning preserves the File's name, extension and contents.
         event.source.postMessage({type:'dashboardx:sega-rom',token:this.token,
-          file:this.romFile,core:this.core,originalName:this.romSource?.name,
+          file:this.romFile,core:this.core,system:this.system,
+          originalName:this.romSource?.name,
           notes:this.romNotes},event.origin);
         this.setStatus('ROM передан · ядро '+this.core+' · загрузка…');
       }
@@ -135,7 +147,10 @@ export default class SegaEmulatorWidget{
     this.romSource=file;
     this.romFile=prepared.file;
     this.romNotes=prepared.notes;
-    this.core=prepared.system;
+    this.system=prepared.system;
+    const override=this.coreSelect?.value;
+    this.core=prepared.system==='segaMD'&&['genesis_plus_gx','picodrive'].includes(override)
+      ?override:prepared.system;
     this.uiReady=false;
     this.token=String(this.widget.instanceId)+'-'+Math.random().toString(36).slice(2);
     try{
