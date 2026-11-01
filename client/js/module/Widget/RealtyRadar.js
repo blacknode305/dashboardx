@@ -97,7 +97,7 @@ export default class RealtyRadarWidget {
       const url=raw?safeURL(raw):'';
       if(raw&&!url){this.say('Нужен HTTPS URL без логина, пароля или токена в адресе.',true);return;}
       this.feedUrl=url;this.persist();
-      this.say(url?'Источник сохранён. Нажмите «Проверить источник».':'Автоматический источник отключён.');
+      this.say(url?'Адрес поисковой ленты сохранён. Нажмите «Проверить источник».':'Поисковый API ожидает подключения.');
     });
     listen(q('[data-action="export"]'),'click',()=>this.exportJSON());
     const refreshOnReturn=()=>{
@@ -118,7 +118,7 @@ export default class RealtyRadarWidget {
     this.persist();
     this.render();
     if(this.feedUrl)void this.refresh(false);
-    else this.say('Источники объявлений не подключены. Откройте Krisha / OLX / KN или импортируйте JSON. Фильтры и анализ готовы.');
+    else this.say('Поисковый API ожидает подключения. Вкладки, фильтры и анализ готовы; пока можно открыть поиск на Krisha, OLX, KN или импортировать JSON.');
   }
   say(message,error=false){
     this.status.textContent=message;
@@ -155,7 +155,7 @@ export default class RealtyRadarWidget {
   async refresh(manual){
     if(this.busy)return;
     if(!this.feedUrl){
-      this.say('Нет разрешённой JSON-ленты. Для ежедневного просмотра доступны ссылки на сайты и импорт JSON.',true);
+      this.say('Поисковый API ещё не подключён. После оплаты настроим серверную ленту; пока используйте ссылки на сайты или импорт JSON.');
       return;
     }
     this.busy=true;
