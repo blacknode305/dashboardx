@@ -1,8 +1,8 @@
 import { MEMORY_GROUPS, MEMORY_LESSONS, MEMORY_REFERENCES } from './MemoryCourseData.js?v=study-course-20261101';
 import { LOGIC_GROUPS, LOGIC_LESSONS, LOGIC_REFERENCES } from './LogicCourseData.js?v=study-course-20261101';
-import { STUDY_EXTRA_MEMORY, STUDY_EXTRA_LOGIC, STUDY_GROUP_GUIDES } from './StudyExpandedData.js?v=study-expanded-20261101';
-import { MIMIC_GROUPS,MIMIC_LESSONS,MIMIC_UNITS,MIMIC_SCENARIOS,MIMIC_REFERENCES } from './MimicCourseData.js?v=study-expanded-20261101';
-import { createMimicFace } from './MimicFaceVisual.js?v=study-expanded-20261101';
+import { STUDY_EXTRA_MEMORY, STUDY_EXTRA_LOGIC, STUDY_GROUP_GUIDES } from './StudyExpandedData.js?v=study-expanded-20261101c';
+import { MIMIC_GROUPS,MIMIC_LESSONS,MIMIC_UNITS,MIMIC_SCENARIOS,MIMIC_REFERENCES } from './MimicCourseData.js?v=study-expanded-20261101c';
+import { createMimicFace } from './MimicFaceVisual.js?v=study-expanded-20261101c';
 
 const courseMap={
   psychology:{groups:MEMORY_GROUPS,lessons:MEMORY_LESSONS,refs:MEMORY_REFERENCES,extra:STUDY_EXTRA_MEMORY,guide:STUDY_GROUP_GUIDES.memory},
