@@ -1,0 +1,56 @@
+<!doctype html><html lang="ru"><body>
+<template data-widget data-id="discordPortal" data-category="social" data-title="Discord · Каналы">
+<section class="dx-discord" aria-label="Discord — сервера и каналы">
+  <header class="dx-discord-head">
+    <div class="dx-discord-brand">
+      <span class="dx-discord-mark" aria-hidden="true">◈</span>
+      <div><strong>DISCORD</strong><small>Серверы · текст · голосовые комнаты</small></div>
+    </div>
+    <button type="button" class="dx-discord-ghost" data-action="dc-config-toggle" aria-expanded="false">⚙ Настроить</button>
+  </header>
+  <div class="dx-discord-settings" data-role="dc-settings" hidden>
+    <form data-role="dc-server-form" class="dx-discord-server-form">
+      <label>Server ID (числовой)<input name="guildId" inputmode="numeric" maxlength="20" placeholder="ID сервера из Discord" autocomplete="off" required></label>
+      <label>Название в виджете<input name="guildName" maxlength="70" placeholder="Например, Игровой сервер"></label>
+      <label>Ссылка-приглашение (необязательно)<input name="invite" maxlength="180" placeholder="https://discord.gg/..." autocomplete="off"></label>
+      <div class="dx-discord-settings-actions">
+        <button type="submit" class="dx-discord-primary">Добавить / обновить сервер</button>
+        <button type="button" data-action="dc-remove-server" class="dx-discord-danger">Удалить сервер из виджета</button>
+      </div>
+    </form>
+    <p class="dx-discord-note">Чтобы увидеть участников и голосовые комнаты, администратор сервера должен включить Settings → Widget → Enable Server Widget. Для самого Discord-аккаунта пароль и токен не требуются.</p>
+  </div>
+  <div class="dx-discord-toolbar">
+    <label>Сервер<select data-role="dc-guild-select" aria-label="Выбрать сервер Discord"><option value="">Добавьте сервер в настройках</option></select></label>
+    <div class="dx-discord-actions">
+      <button type="button" data-action="dc-refresh" title="Обновить данные публичного виджета">↻</button>
+      <button type="button" data-action="dc-open-server" title="Открыть сервер в Discord">Открыть Discord ↗</button>
+    </div>
+  </div>
+  <p class="dx-discord-status" data-role="dc-status" role="status" aria-live="polite">Добавьте Discord-сервер через настройки.</p>
+  <div class="dx-discord-content">
+    <section class="dx-discord-section">
+      <div class="dx-discord-section-head"><strong>Быстрые комнаты</strong><span data-role="dc-count">0</span></div>
+      <div class="dx-discord-rooms" data-role="dc-rooms"></div>
+      <form data-role="dc-channel-form" class="dx-discord-add-channel">
+        <input name="channelName" placeholder="Название комнаты" maxlength="70" required>
+        <input name="channelId" placeholder="ID канала" inputmode="numeric" maxlength="20" required>
+        <select name="channelType" aria-label="Тип комнаты"><option value="voice">🎙 Голосовой</option><option value="text"># Текстовый</option></select>
+        <button type="submit" title="Сохранить комнату">+ Добавить</button>
+      </form>
+      <small class="dx-discord-caption">Выбери комнату — откроется Discord. Для голосового подключения подтверждение выполняется в самом Discord.</small>
+    </section>
+    <section class="dx-discord-section dx-discord-preview">
+      <div class="dx-discord-section-head"><strong>Официальный виджет сервера</strong><span data-role="dc-online">—</span></div>
+      <div class="dx-discord-embed" data-role="dc-embed">
+        <div class="dx-discord-empty">Для отображения включите Server Widget в настройках вашего Discord-сервера.</div>
+      </div>
+      <small class="dx-discord-caption">Показываются только сведения, разрешённые настройками сервера. Личные каналы не отображаются.</small>
+    </section>
+  </div>
+  <footer class="dx-discord-footer">
+    <span>Работает без бота · ссылки сохраняются локально</span>
+    <a href="https://discord.com/app" target="_blank" rel="noopener noreferrer">Discord ↗</a>
+  </footer>
+</section>
+</template></body></html>
