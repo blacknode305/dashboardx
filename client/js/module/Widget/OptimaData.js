@@ -2,6 +2,7 @@ import { t } from '../i18n.js';
 import { openOptimaPrintPreview } from '../OptimaPrint.js?v=optima-catalog-refresh-20261031';
 import { attachCatalogImporter } from '../CatalogImport.js?v=optima-price-upload-20261031';
 import { getCredential } from '../CredentialStore.js';
+import { optimaRequest } from '../OptimaAPI.js';
 import {
   loadOptima, patchOptima, OPTIMA_POLL_MS, norm, rows, branchNames, money,
   stockCell, orderStatus, effectiveOffers, dateISO
@@ -170,6 +171,32 @@ export default class OptimaDataWidget {
     if(this.refresh)this.listen(this.refresh,'click',()=>this.load());
     if(this.productPrint)this.listen(this.productPrint,'click',()=>this.printProducts());
     if(this.catalogPrint)this.listen(this.catalogPrint,'click',()=>this.printCatalog());
+    if(this.type==='optimaProposals'){
+      const trigger=widget.querySelector('[data-role="catalog-upgrade"]');
+      const input=widget.querySelector('[data-role="catalog-upgrade-file"]');
+      this.listen(trigger,'click',()=>input.click());
+      this.listen(input,'change',async()=>{
+        const file=input.files?.[0];if(!file)return;
+        try{
+          if(file.size>12*1024*1024)throw Error('Файл JSON превышает 12 МБ');
+          const parsed=JSON.parse(await file.text());
+          if(!parsed||Array.isArray(parsed)||typeof parsed!=='object')throw Error('Некорректный JSON');
+          if(parsed.updateType!=='pro-optima-supplier-update-v1')throw Error('Нужен JSON формата pro-optima-supplier-update-v1');
+          const keys=['suppliersUpsert','catalogUpsert','catalogRetired','links','offers','products'];
+          const counts=keys.map(key=>[key,Array.isArray(parsed[key])?parsed[key].length:0]);
+          if(!counts.some(([,count])=>count))throw Error('В upgrade-файле нет операций');
+          const summary=counts.filter(([,count])=>count).map(([key,count])=>key+': '+count).join('\\n');
+          if(!window.confirm('Применить upgrade JSON «'+file.name+'» к PRO OPTIMA?\\n\\n'+summary+'\\n\\nИзменения будут записаны в Railway. Перед записью сервер делает резервную копию.'))return;
+          trigger.disabled=true;this.statusText.textContent='Применение upgrade JSON…';
+          const result=await optimaRequest('/api/admin/apply-update',{method:'POST',body:JSON.stringify(parsed)});
+          this.statusText.textContent='Upgrade применён: '+file.name;
+          await this.load();
+          window.alert('Обновление прайсов применено. '+JSON.stringify(result.summary||{}));
+        }catch(error){
+          this.statusText.textContent='Ошибка upgrade: '+(error.message||String(error));
+        }finally{trigger.disabled=false;input.value='';}
+      });
+    }
     this.catalogImporter=this.type==='optimaProposals'?attachCatalogImporter({
       widget,
       getDatabase:()=>this.db,
