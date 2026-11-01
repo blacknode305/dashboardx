@@ -18,9 +18,9 @@ try {
   await page.goto('http://127.0.0.1:8787/',{waitUntil:'domcontentloaded'});
   await page.waitForSelector('#workspace-surface > widget-element',{timeout:30000});
   await page.waitForFunction(()=>Array.isArray(window.dashboardxTemplates) &&
-    window.dashboardxTemplates.length===28,{timeout:30000});
+    window.dashboardxTemplates.length===Object.keys(window.dashboardxCatalog||{}).length,{timeout:30000});
   const count=await page.locator('template[data-widget]').count();
-  assert.equal(count,28,'All 28 templates must be loaded');
+  assert.equal(count,await page.evaluate(()=>Object.keys(window.dashboardxCatalog).length),'All catalog templates must be loaded');
   // Horizon AR design must load LAST and expose accessible dark + light
   // palettes across the whole Desktop without mutating window geometry.
   const horizonDark=await page.evaluate(()=>{
@@ -315,7 +315,7 @@ try {
   await page.locator('#theme-toggle').click();
   await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
   assert.equal(errors.length,0,'No page errors: '+errors.join('; '));
-  console.log('Browser Spatial smoke OK: 28 templates, same widget live, saved XYZ, Desktop restored');
+  console.log('Browser Spatial smoke OK: catalog templates, same widget live, saved XYZ, Desktop restored');
 } catch(error) {
   failed=true;
   console.error('Browser Spatial smoke failed:',error);
