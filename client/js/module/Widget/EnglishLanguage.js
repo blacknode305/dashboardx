@@ -1,5 +1,5 @@
 import { GRAMMAR_GROUPS, GRAMMAR_LESSONS, GRAMMAR_LEVELS } from './EnglishGrammarData.js?v=english-grammar-20261101';
-import { GRAMMAR_EXPANDED, GRAMMAR_CHAPTER_GUIDES } from './EnglishGrammarExpanded.js?v=english-extended-20261101';
+import { GRAMMAR_EXPANDED, GRAMMAR_CHAPTER_GUIDES, GRAMMAR_COMPARISONS } from './EnglishGrammarExpanded.js?v=english-extended-20261101';
 
 const byId=new Map(GRAMMAR_LESSONS.map(item=>[item.id,item]));
 const make=(tag,className='',text='')=>{
@@ -335,6 +335,7 @@ export default class EnglishLanguageWidget{
         const level=make('small','',item.level);
         if(this.done.has(item.id))level.textContent='✓ '+item.level;
         if(this.bookmarks.has(item.id))level.textContent+=' ★';
+        if(this.weak[item.id]>0)level.textContent+=' ↻';
         row.prepend(level);
         list.append(row);
       }
@@ -397,6 +398,16 @@ export default class EnglishLanguageWidget{
       frame.append(more);
     }
     frame.append(section('Типичная ошибка',topic.mistake,'dx-english-pitfall'));
+    const comparison=GRAMMAR_COMPARISONS[topic.id];
+    if(comparison&&byId.has(comparison.other)){
+      const compare=make('section','dx-english-rule-block dx-english-compare');
+      compare.append(make('h4','','Не путайте эти правила'),
+        make('p','',comparison.note));
+      const link=button('Сравнить: '+byId.get(comparison.other).title,'','dx-english-related');
+      link.removeAttribute('data-action');
+      link.dataset.lesson=comparison.other;
+      compare.append(link);frame.append(compare);
+    }
     if(this.speechStatus)frame.append(make('p','dx-english-mini',this.speechStatus));
 
     const actions=make('div','dx-english-lesson-actions');
