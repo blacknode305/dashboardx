@@ -19,7 +19,7 @@ try {
   });
   await page.goto('http://127.0.0.1:8787/',{waitUntil:'domcontentloaded'});
   await page.waitForSelector('#workspace-surface > widget-element[data-widget-type="add"]');
-  await page.waitForFunction(()=>window.dashboardxTemplates?.length===28);
+  await page.waitForFunction(()=>window.dashboardxTemplates?.length===Object.keys(window.dashboardxCatalog||{}).length);
 
   const created=await page.evaluate(()=>{
     const manager=document.querySelector('#workspace-surface widget-element[data-widget-type="add"]');
