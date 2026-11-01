@@ -1439,3 +1439,143 @@ export const GRAMMAR_CHAPTER_GUIDES = Object.freeze({
     ]
   }
 });
+
+// Contrast pairs guide learners to neighbouring rules that are easy to confuse.
+export const GRAMMAR_COMPARISONS = Object.freeze({
+  "articles-a": {
+    "other": "articles-the",
+    "note": "A/an — предмет ещё не определён; the — собеседник понимает, о каком именно предмете речь."
+  },
+  "articles-the": {
+    "other": "zeroarticle",
+    "note": "The указывает на конкретное; нулевой артикль часто нужен в общем смысле: I like music, но I like the music in this film."
+  },
+  "someany": {
+    "other": "muchmany",
+    "note": "Some/any сообщают о наличии или количестве, а much/many уточняют большое количество или вопрос «сколько?»."
+  },
+  "fewlittle": {
+    "other": "muchmany",
+    "note": "A few / a little — некоторое количество, few / little — почти нет; many/much — много."
+  },
+  "subjectpron": {
+    "other": "possessivepron",
+    "note": "I/me — участник действия, my/mine — принадлежность предмета."
+  },
+  "adjectives": {
+    "other": "adverbs",
+    "note": "Slow описывает существительное (a slow car), slowly — действие (drives slowly)."
+  },
+  "comparative": {
+    "other": "superlative",
+    "note": "Better сравнивает две вещи; the best выделяет лучший вариант в группе."
+  },
+  "present-simple": {
+    "other": "present-cont",
+    "note": "I work here — постоянная работа, I'm working now — действие в процессе прямо сейчас."
+  },
+  "present-cont": {
+    "other": "present-simple",
+    "note": "She is reading now — момент сейчас; she reads every day — привычка."
+  },
+  "present-contrast": {
+    "other": "stative",
+    "note": "С глаголами состояния I know, I want обычно используют Simple, даже когда состояние актуально сейчас."
+  },
+  "present-perfect": {
+    "other": "past-simple",
+    "note": "I've lost my keys — важен результат сейчас; I lost my keys yesterday — указано завершённое время."
+  },
+  "perfect-cont": {
+    "other": "present-perfect",
+    "note": "I've painted the room — результат; I've been painting the room — длительность или процесс."
+  },
+  "past-simple": {
+    "other": "present-perfect",
+    "note": "Yesterday требует Past Simple; опыт «когда-либо» без конкретной даты часто выражают Present Perfect."
+  },
+  "past-cont": {
+    "other": "past-simple",
+    "note": "I was sleeping when you called: sleeping — фоновый процесс, called — короткое событие."
+  },
+  "past-perfect": {
+    "other": "past-simple",
+    "note": "Past Perfect помогает показать, что одно прошлое событие произошло до другого; Past Simple просто сообщает о прошлом."
+  },
+  "used-to": {
+    "other": "past-habits",
+    "note": "I used to wake up early — раньше имел привычку; I'm used to waking up early — уже привык сейчас."
+  },
+  "will": {
+    "other": "goingto",
+    "note": "I'll answer it — решение в момент речи; I'm going to answer — намерение сформировалось раньше."
+  },
+  "goingto": {
+    "other": "present-future",
+    "note": "Going to — намерение; Present Continuous с будущим временем чаще подчёркивает конкретную договорённость."
+  },
+  "future-cont": {
+    "other": "future-perfect",
+    "note": "At five I'll be working — процесс в пять; by five I'll have finished — результат к пяти."
+  },
+  "musthave": {
+    "other": "should",
+    "note": "Must/have to — необходимость; should — совет, который не обязательно выполнять."
+  },
+  "should": {
+    "other": "musthave",
+    "note": "You should go — рекомендация; you must go — обязательное требование."
+  },
+  "maymight": {
+    "other": "deduction",
+    "note": "May/might — возможная ситуация; must в значении предположения выражает сильную уверенность."
+  },
+  "infinitive": {
+    "other": "gerund",
+    "note": "Want to read, enjoy reading: выбор зависит от управляющего глагола."
+  },
+  "gerund": {
+    "other": "verbpatterns",
+    "note": "Stop smoking — прекратить курить; stop to smoke — остановиться ради того, чтобы покурить."
+  },
+  "zero-cond": {
+    "other": "first-cond",
+    "note": "Zero Conditional — общее правило; First Conditional — возможное конкретное событие в будущем."
+  },
+  "first-cond": {
+    "other": "second-cond",
+    "note": "If it rains, I'll stay — реальная возможность; if it rained, I'd stay — гипотетическое условие."
+  },
+  "second-cond": {
+    "other": "third-cond",
+    "note": "Second Conditional — воображаемое настоящее/будущее; Third — альтернативное уже прошедшее событие."
+  },
+  "third-cond": {
+    "other": "mixed-cond",
+    "note": "Third Conditional сообщает о прошлом результате; Mixed Conditional может связать прошлую причину с сегодняшним результатом."
+  },
+  "relative": {
+    "other": "relativeomit",
+    "note": "Местоимение можно опустить, если оно дополнение; когда оно подлежащее (the man who called), опускать нельзя."
+  },
+  "passive-present": {
+    "other": "passive-past",
+    "note": "Is built — настоящее; was built — прошлое. В обоих случаях нужна третья форма глагола."
+  },
+  "questions": {
+    "other": "indirectquestions",
+    "note": "Where does he live? — прямой вопрос; Do you know where he lives? — косвенный вопрос с обычным порядком."
+  },
+  "reported-statements": {
+    "other": "reported-questions",
+    "note": "В пересказанном вопросе используется порядок утверждения, а не прямого вопроса."
+  },
+  "wish": {
+    "other": "second-cond",
+    "note": "I wish I had money и If I had money, I would travel обе используют ирреальное прошлое для настоящего."
+  },
+  "inversion": {
+    "other": "fronting",
+    "note": "Инверсия меняет порядок вспомогательного глагола после отрицательного слова; fronting просто выносит смысловой акцент в начало."
+  }
+});
