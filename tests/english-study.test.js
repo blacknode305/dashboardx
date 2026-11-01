@@ -17,15 +17,6 @@ test('word tooltip provides grammar guidance and concrete vocabulary',()=>{
   assert.equal(readingWordGrammar(readingWordInfo('went')).id,'past-simple');
   assert.equal(readingWordInfo('walking').lemma,'walk');
 });
-test('server stores learning privately with independent revision and public redaction',()=>{
-  // The API is implemented in the separate pro-optima repository; check its deployment there.
-  const s='dashboardx.learning.english /api/dashboardx/learning/english if(!adminOk(req)) delete publicDb.dashboardx.learning body.baseRevision';
-  assert.match(s,/dashboardx\.learning\.english/);
-  assert.match(s,/\/api\/dashboardx\/learning\/english/);
-  assert.match(s,/if\(!adminOk\(req\)\)/);
-  assert.match(s,/delete publicDb\.dashboardx\.learning/);
-  assert.match(s,/body\.baseRevision/);
-});
 test('widget presents specialist views and unified vocabulary',()=>{
   const base=new URL('../client/',import.meta.url);
   const widget=readFileSync(new URL('js/module/Widget/EnglishLanguage.js',base),'utf8');
