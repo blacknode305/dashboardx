@@ -1,5 +1,7 @@
 import eventBus from './module/EventBus.js';
 import ClientDB from './module/ClientDB.js';
+import learning from './module/EnglishLearningStore.js?v=english-study-20261101';
+import { installEnglishQuickWords } from './module/EnglishQuickWords.js?v=english-study-20261101';
 import WidgetElement from './module/WidgetElement.js?v=reading-inspector-20261101';
 import NavigationBar from './module/NavigationBar.js';
 import installTableColumnResize from './module/TableColumnResize.js?v=optima-price-upload-20261031';
@@ -438,6 +440,11 @@ function widgetAction(event) {
 
 async function boot() {
   try {
+    const savedLearning=Object.values(store.state.instances||{})
+      .find(item=>item?.type==='englishLanguage'&&item.widgetState?.englishGrammar)
+      ?.widgetState?.englishGrammar||{};
+    learning.init(savedLearning);
+    installEnglishQuickWords();
     document.documentElement.dataset.theme = store.state.system.theme.active === 'light' ? 'light' : 'dark';
     setLanguage(store.state.system.language);
     translateElement(document);
