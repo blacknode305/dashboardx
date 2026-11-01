@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Английский язык</title></head><body>
+<template data-widget data-id="englishLanguage" data-category="learning" data-title="Английский язык">
+  <section class="dx-english" aria-label="Изучение английской грамматики">
+    <header class="dx-english-heading">
+      <div class="dx-english-heading-copy"><small>ENGLISH · A1–C1</small><h2>Английский язык</h2><p>Грамматика · правила, примеры и практика</p></div>
+      <div class="dx-english-progress" aria-label="Прогресс изучения"><strong data-role="english-progress-number">0%</strong><span data-role="english-progress-label">0 из 103 тем</span><div class="dx-english-progress-track"><div data-role="english-progress-fill"></div></div></div>
+    </header>
+    <nav class="dx-english-tabs" aria-label="Разделы обучения">
+      <button type="button" data-view="grammar" aria-pressed="true">Грамматика</button>
+      <button type="button" data-view="practice" aria-pressed="false">Практика</button>
+      <button type="button" data-view="saved" aria-pressed="false">Избранное</button>
+    </nav>
+    <div class="dx-english-layout">
+      <aside class="dx-english-sidebar" aria-label="Темы грамматики">
+        <div class="dx-english-search"><input type="search" data-role="english-search" placeholder="Найти правило или тему…" aria-label="Поиск правил" autocomplete="off"></div>
+        <select data-role="english-level" aria-label="Фильтр по уровню">
+          <option value="all">Все уровни · A1–C1</option>
+          <option value="A1">A1 · Начальный</option>
+          <option value="A2">A2 · Базовый</option>
+          <option value="B1">B1 · Средний</option>
+          <option value="B2">B2 · Выше среднего</option>
+          <option value="C1">C1 · Продвинутый</option>
+        </select>
+        <div class="dx-english-chapters" data-role="english-chapters" aria-label="Список грамматических правил"></div>
+      </aside>
+      <main class="dx-english-content" data-role="english-content" tabindex="-1" aria-live="off"></main>
+    </div>
+  </section>
+</template>
+</body></html>
