@@ -26,12 +26,14 @@
     <strong>SEGA · EMULATORJS</strong>
     <div id="progress"></div>
     <div id="status" role="status" aria-live="polite">Подключение эмулятора…</div>
-    <button type="button" id="again" hidden>Повторить загрузку</button>
+    <button type="button" id="again" hidden>Повторить через другой источник ядра</button>
   </div>
   <script>
     (() => {
       'use strict';
-      const token = new URLSearchParams(location.hash.slice(1)).get('token');
+      const options = new URLSearchParams(location.hash.slice(1));
+      const token = options.get('token');
+      const stableMode = options.get('mode') === 'stable';
       const expectedOrigin = location.origin;
       const status = document.querySelector('#status');
       const boot = document.querySelector('#boot');
@@ -47,7 +49,8 @@
       let launched = false;
       let coreReady = false;
       let timeoutId = null;
-      let sourceMode = true;
+      let errorBound = false;
+      let startedTimeout = null;
       let loadingPhase = 'Ожидание файла ROM';
       // EmulatorJS may create its Start button before an external EJS_ready
       // callback is attached. Observe the real UI as a second ready signal.
@@ -65,18 +68,32 @@
         send('dashboardx:sega-status', {message});
       }
       function failed(message) {
-        if (coreReady) return;
         clearTimeout(timeoutId);
+        clearTimeout(startedTimeout);
         uiObserver.disconnect();
         progress.hidden = true;
         retry.hidden = false;
+        boot.hidden = false;
         announce(message);
         send('dashboardx:sega-error', {reason:message});
+      }
+      function wireRuntimeErrors() {
+        if (errorBound || !window.EJS_emulator) return;
+        const emulator=window.EJS_emulator;
+        if (typeof emulator.startGameError !== 'function') return;
+        errorBound=true;
+        const original=emulator.startGameError;
+        emulator.startGameError=function(message,...args){
+          failed('Эмулятор не запустил ROM: '+String(message||'ошибка загрузки').slice(0,150)+
+            '. Проверьте систему и целостность образа.');
+          return original.call(this,message,...args);
+        };
       }
       function onInterfaceReady(source) {
         if (coreReady) return;
         coreReady = true;
         clearTimeout(timeoutId);
+        wireRuntimeErrors();
         uiObserver.disconnect();
         boot.hidden = true;
         send('dashboardx:sega-ui-ready',{source});
@@ -112,6 +129,14 @@
       }
       async function loadEmulator() {
         if (coreReady) return;
+        if (stableMode) {
+          window.EJS_DEBUG_XX = false;
+          window.EJS_pathtodata = EJS_FALLBACK;
+          delete window.EJS_paths;
+          announce('Резервный запуск: стабильная версия EmulatorJS с CDN…');
+          appendLoader(EJS_FALLBACK + 'loader.js');
+          return;
+        }
         const moduleURL = LOCAL + 'src/emulator.js';
         window.EJS_DEBUG_XX = true;
         window.EJS_pathtodata = EJS_CORES;
@@ -139,8 +164,17 @@
         }
       }
       window.EJS_ready = () => onInterfaceReady('event');
+      gameRoot.addEventListener('click', event => {
+        if (!event.target.closest('.ejs_start_button') || launched) return;
+        clearTimeout(startedTimeout);
+        startedTimeout = setTimeout(() => {
+          if (!launched) failed('Игра не начала исполняться после нажатия Start. '+
+            'Возможно, ROM повреждён или ядро несовместимо. Попробуйте альтернативный источник.');
+        },45000);
+      },true);
       window.EJS_onGameStart = () => {
         launched = true;
+        clearTimeout(startedTimeout);
         onInterfaceReady('start');
         send('dashboardx:sega-start');
       };
@@ -153,9 +187,11 @@
         }
         received = true;
         window.EJS_player = '#game';
-        window.EJS_core = 'segaMD';
-        window.EJS_controlScheme = 'segaMD';
-        window.EJS_gameName = file.name;
+        const allowedCores = new Set(['segaMD','segaMS','segaGG','sega32x']);
+        const core=allowedCores.has(event.data.core)?event.data.core:'segaMD';
+        window.EJS_core = core;
+        window.EJS_controlScheme = core;
+        window.EJS_gameName = String(event.data.originalName||file.name);
         window.EJS_gameUrl = file;
         window.EJS_startOnLoaded = false;
         window.EJS_language = 'en-US';
@@ -164,7 +200,9 @@
           4:{value:'up arrow'},5:{value:'down arrow'},6:{value:'left arrow'},7:{value:'right arrow'},
           8:{value:'c'},9:{value:'a'},10:{value:'s'},11:{value:'d'}
         }};
-        announce('ROM получен: ' + file.name + ' · подключение EmulatorJS (stable source)…');
+        announce('ROM получен: ' + file.name + ' · система '+core+
+          (Array.isArray(event.data.notes)&&event.data.notes.length?' · '+event.data.notes.join('; '):'')+
+          ' · подключение EmulatorJS…');
         send('dashboardx:sega-received',{name:file.name,size:file.size});
         timeoutId = setTimeout(() => {
           if (!coreReady) failed('Не появился интерфейс EmulatorJS. Последний этап: '+
