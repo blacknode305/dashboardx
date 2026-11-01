@@ -417,3 +417,95 @@
   #workspace-canvas .dx-english-lesson h3{font-size:17px}
   #workspace-canvas .dx-english-tabs{padding-left:8px}
 }
+
+
+/* Extended lessons: usage, worked steps, listening, and hands-on construction. */
+#workspace-canvas .dx-english-usage{
+  border-left:3px solid var(--dx-accent,var(--blue));
+}
+#workspace-canvas .dx-english-steps ol{
+  display:grid;gap:6px;
+  margin:0;
+  padding:0 0 0 20px;
+  color:var(--text-main);
+  line-height:1.65;
+}
+#workspace-canvas .dx-english-steps li{padding-left:2px}
+#workspace-canvas .dx-english-examples{gap:0}
+#workspace-canvas .dx-english-examples>h4{margin-bottom:4px}
+#workspace-canvas .dx-english-example-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
+#workspace-canvas .dx-english-example-row:last-child{border-bottom:0;padding-bottom:0}
+#workspace-canvas .dx-english-example-copy{
+  display:grid;gap:3px;flex:1;min-width:0;
+}
+#workspace-canvas .dx-english-example-copy .dx-english-example-en{
+  font-size:12px;font-weight:680;overflow-wrap:anywhere;
+}
+#workspace-canvas .dx-english-example-copy .dx-english-translation{
+  font-size:11px;color:var(--text-muted);overflow-wrap:anywhere;
+}
+#workspace-canvas .dx-english-speak{
+  display:grid;place-items:center;
+  flex:0 0 32px;width:32px;height:32px;
+  border:1px solid var(--border);border-radius:7px;
+  background:var(--bg-panel-light);
+  color:var(--text-main);cursor:pointer;font-size:12px;
+}
+#workspace-canvas .dx-english-speak:hover{border-color:var(--dx-accent,var(--blue));background:var(--dx-hover-soft)}
+#workspace-canvas .dx-english-builder-prompt{
+  margin:0;
+  font-size:13px;
+  line-height:1.55;
+  color:var(--text-main);
+  font-weight:650;
+}
+#workspace-canvas .dx-english-builder-answer{
+  box-sizing:border-box;
+  display:flex;align-items:flex-start;flex-wrap:wrap;
+  align-content:flex-start;
+  min-height:68px;
+  gap:6px;
+  padding:9px;
+  border:1px dashed var(--dx-accent,var(--border));
+  border-radius:7px;
+  background:var(--bg-panel);
+}
+#workspace-canvas .dx-english-builder-placeholder{
+  padding:10px 2px;
+  font-size:11px;
+  color:var(--text-muted);
+}
+#workspace-canvas .dx-english-builder-words{
+  display:flex;flex-wrap:wrap;gap:6px;
+  padding:5px 0;
+  min-height:34px;
+}
+#workspace-canvas .dx-english-word{
+  min-height:31px;
+  padding:6px 9px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--bg-panel-light);
+  color:var(--text-main);
+  font-size:11px;
+  font-weight:600;
+  cursor:pointer;
+  text-align:center;
+  overflow-wrap:anywhere;
+}
+#workspace-canvas .dx-english-word:hover:not(:disabled){
+  background:var(--dx-hover-soft);border-color:var(--dx-accent,var(--blue));
+}
+#workspace-canvas .dx-english-word.is-used{
+  border-color:var(--dx-accent,var(--blue));
+  background:var(--dx-accent-soft);
+}
+#workspace-canvas .dx-english-builder .dx-english-quiz-actions{
+  margin-top:2px;
+}
