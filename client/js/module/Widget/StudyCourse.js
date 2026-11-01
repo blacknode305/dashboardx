@@ -1,9 +1,13 @@
 import { MEMORY_GROUPS, MEMORY_LESSONS, MEMORY_REFERENCES } from './MemoryCourseData.js?v=study-course-20261101';
 import { LOGIC_GROUPS, LOGIC_LESSONS, LOGIC_REFERENCES } from './LogicCourseData.js?v=study-course-20261101';
+import { STUDY_EXTRA_MEMORY, STUDY_EXTRA_LOGIC, STUDY_GROUP_GUIDES } from './StudyExpandedData.js?v=study-expanded-20261101';
+import { MIMIC_GROUPS,MIMIC_LESSONS,MIMIC_UNITS,MIMIC_SCENARIOS,MIMIC_REFERENCES } from './MimicCourseData.js?v=study-expanded-20261101';
+import { createMimicFace } from './MimicFaceVisual.js?v=study-expanded-20261101';
 
 const courseMap={
-  psychology:{groups:MEMORY_GROUPS,lessons:MEMORY_LESSONS,refs:MEMORY_REFERENCES},
-  logic:{groups:LOGIC_GROUPS,lessons:LOGIC_LESSONS,refs:LOGIC_REFERENCES}
+  psychology:{groups:MEMORY_GROUPS,lessons:MEMORY_LESSONS,refs:MEMORY_REFERENCES,extra:STUDY_EXTRA_MEMORY,guide:STUDY_GROUP_GUIDES.memory},
+  logic:{groups:LOGIC_GROUPS,lessons:LOGIC_LESSONS,refs:LOGIC_REFERENCES,extra:STUDY_EXTRA_LOGIC,guide:STUDY_GROUP_GUIDES.logic},
+  mimic:{groups:MIMIC_GROUPS,lessons:MIMIC_LESSONS,refs:MIMIC_REFERENCES,extra:[],guide:[]}
 };
 const studyWords=Object.freeze([
  'яблоко','мост','телескоп','кофейник','гора','монета','окно','пчела','ключ','книга',
@@ -49,6 +53,7 @@ export default class StudyCourseWidget{
   const cfg=courseMap[this.type];
   if(!cfg||!this.root)throw Error('Учебный курс не найден');
   this.groups=cfg.groups;this.lessons=cfg.lessons;this.references=cfg.refs;
+  this.extra=cfg.extra;this.guides=cfg.guide;
   this.ids=new Set(this.lessons.map(x=>x.id));
   this.byId=new Map(this.lessons.map(x=>[x.id,x]));
   this.store=window.dashboardxStore;this.instanceId=widget.instanceId;
@@ -57,9 +62,20 @@ export default class StudyCourseWidget{
   this.bookmarks=new Set((Array.isArray(old.bookmarks)?old.bookmarks:[]).filter(id=>this.ids.has(id)));
   this.errors=Object.fromEntries(Object.entries(old.errors||{}).filter(([id,count])=>this.ids.has(id)&&Number.isInteger(count)&&count>0));
   this.active=this.ids.has(old.active)?old.active:this.lessons[0].id;
-  this.view=['course','memory','practice','review','sources'].includes(old.view)?old.view:'course';
-  if(this.type==='logic'&&this.view==='memory')this.view='course';
-  if(this.type==='psychology'&&this.view==='practice')this.view='course';
+  this.view=['course','memory','practice','review','sources','lab','observations'].includes(old.view)?old.view:'course';
+  if(this.type==='logic'&&['memory','lab','observations'].includes(this.view))this.view='course';
+  if(this.type==='psychology'&&['practice','lab','observations'].includes(this.view))this.view='course';
+  if(this.type==='mimic'&&['memory','practice'].includes(this.view))this.view='course';
+  this.faceUnit=MIMIC_UNITS.some(x=>x.id===old.faceUnit)?old.faceUnit:'AU12';
+  this.faceIndex=Math.max(0,Math.min(MIMIC_SCENARIOS.length-1,Number(old.faceIndex)||0));
+  this.faceChoice=null;this.faceFeedback=null;
+  const faceHistory=old.faceHistory||{};
+  this.faceHistory={solved:Array.isArray(faceHistory.solved)?
+      [...new Set(faceHistory.solved.filter(x=>Number.isInteger(x)&&x>=0&&x<MIMIC_SCENARIOS.length))]:[],
+    attempts:Math.max(0,Number(faceHistory.attempts)||0),
+    correct:Math.max(0,Number(faceHistory.correct)||0)};
+  this.notes=Object.fromEntries(Object.entries(old.notes||{}).filter(([id,value])=>
+    this.ids.has(id)&&typeof value==='string').map(([id,value])=>[id,value.slice(0,3000)]));
   this.stats={attempts:Math.max(0,Number(old.stats?.attempts)||0),
     perfect:Math.max(0,Number(old.stats?.perfect)||0),best:Math.max(0,Number(old.stats?.best)||0)};
   this.feedback=null;this.selectedChoice=null;this.review=null;
@@ -71,6 +87,13 @@ export default class StudyCourseWidget{
   this.progress=this.root.querySelector('[data-role="course-progress"]');
   this.bar=this.root.querySelector('[data-role="course-progress-bar"]');
   this.searchChanged=()=>this.renderSidebar();
+  this.noteChanged=event=>{
+    const note=event.target.closest('[data-role="study-notes"]');
+    if(!note||!this.main.contains(note))return;
+    this.notes[this.active]=note.value.slice(0,3000);
+    clearTimeout(this.noteTimer);
+    this.noteTimer=setTimeout(()=>this.persist(),550);
+  };
   this.clicked=event=>this.handleClick(event);
   this.submitted=event=>{
    if(event.target.matches('[data-role="memory-form"]')){event.preventDefault();this.checkMemory();}
@@ -78,12 +101,14 @@ export default class StudyCourseWidget{
   this.search.addEventListener('input',this.searchChanged);
   this.root.addEventListener('click',this.clicked);
   this.root.addEventListener('submit',this.submitted);
+  this.main.addEventListener('input',this.noteChanged);
   this.render();
  }
  persist(){
   this.store?.updateWidgetState(this.instanceId,{studyCourse:{
    completed:[...this.completed],bookmarks:[...this.bookmarks],errors:this.errors,
-   active:this.active,view:this.view,stats:this.stats
+   active:this.active,view:this.view,stats:this.stats,
+   notes:this.notes,faceUnit:this.faceUnit,faceIndex:this.faceIndex,faceHistory:this.faceHistory
   }});
  }
  handleClick(event){
@@ -92,6 +117,7 @@ export default class StudyCourseWidget{
    const next=tab.dataset.courseTab;
    if(next===this.view)return;
    this.clearTimer();this.round=null;this.feedback=null;this.selectedChoice=null;this.review=null;
+   this.faceChoice=null;this.faceFeedback=null;
    this.view=next;this.persist();this.render();return;
   }
   const jump=event.target.closest('[data-course-lesson]');
@@ -106,9 +132,30 @@ export default class StudyCourseWidget{
    if(this.view==='review'&&this.review?.answered)return;
    this.feedback=null;this.renderContent(true);return;
   }
+  const faceUnit=event.target.closest('[data-face-unit]');
+  if(faceUnit&&this.type==='mimic'&&this.main.contains(faceUnit)){
+    const id=faceUnit.dataset.faceUnit;
+    if(MIMIC_UNITS.some(unit=>unit.id===id)){
+      this.faceUnit=id;this.persist();this.renderContent(true);
+    }
+    return;
+  }
+  const faceChoice=event.target.closest('[data-face-choice]');
+  if(faceChoice&&this.type==='mimic'&&this.main.contains(faceChoice)){
+    if(!this.faceFeedback){
+      this.faceChoice=Number(faceChoice.dataset.faceChoice);
+      this.renderContent(true);
+    }
+    return;
+  }
   const action=event.target.closest('[data-course-action]');
   if(!action||!this.root.contains(action))return;
   switch(action.dataset.courseAction){
+   case 'face-check':this.checkFaceObservation();break;
+   case 'face-next':this.faceIndex=(this.faceIndex+1)%MIMIC_SCENARIOS.length;
+    this.faceChoice=null;this.faceFeedback=null;this.persist();this.renderContent(true);break;
+   case 'face-restart':this.faceIndex=0;this.faceChoice=null;this.faceFeedback=null;
+    this.persist();this.renderContent();break;
    case 'quiz-check':this.checkAnswer();break;
    case 'complete':this.completed.has(this.active)?this.completed.delete(this.active):this.completed.add(this.active);
     this.persist();this.render();break;
@@ -180,6 +227,8 @@ export default class StudyCourseWidget{
   if(this.view==='memory')this.renderMemory();
   if(this.view==='practice'||this.view==='review')this.renderReview();
   if(this.view==='sources')this.renderSources();
+  if(this.view==='lab')this.renderFaceLab();
+  if(this.view==='observations')this.renderFaceObservations();
   if(keepScroll)this.main.scrollTop=top;
  }
  section(label,value,cls=''){
@@ -196,9 +245,43 @@ export default class StudyCourseWidget{
    make('span','',group?.title||''));
   page.append(meta,make('h3','',lesson.title),
    this.section('Разбор',lesson.explanation),
-   this.section('Пример',lesson.example,'dx-study-example'),
-   this.section('Попробуйте сами',lesson.practice,'dx-study-activity'));
+   this.section('Пример с пояснением',lesson.example,'dx-study-example'));
+  if(this.type==='mimic'){
+    page.append(this.section('Понимание и границы применения',lesson.deepDive||'',
+      'dx-study-deep'));
+    page.append(this.section('Дополнительная ситуация',lesson.secondExample||'',
+      'dx-study-example'));
+    page.append(this.section('Не делайте такой вывод',lesson.pitfall||'',
+      'dx-study-pitfall'));
+  }else{
+    const extra=this.extra[index]||[];
+    const groupIndex=this.groups.findIndex(x=>x.id===lesson.group);
+    const guide=this.guides[groupIndex]||[];
+    if(guide.length){
+      page.append(this.section('Глубже: как работает приём',guide[0],'dx-study-deep'));
+      page.append(this.section('Как отработать технику',guide[1],'dx-study-activity'));
+    }
+    if(extra.length){
+      const examples=make('section','dx-study-panel dx-study-multi-examples');
+      examples.append(make('h4','','Ещё два разобранных примера'));
+      const list=make('ol');
+      list.append(make('li','',extra[0]),make('li','',extra[1]));
+      examples.append(list);page.append(examples);
+      page.append(this.section('Типичная ошибка',extra[2],'dx-study-pitfall'));
+    }
+    if(guide[2])page.append(make('p','dx-study-tip','Обратите внимание: '+guide[2]));
+  }
+  page.append(this.section('Практическое задание',lesson.practice,'dx-study-activity'));
   page.append(this.quiz(lesson));
+  const notes=make('section','dx-study-panel dx-study-notes');
+  notes.append(make('h4','','Мои заметки и собственный пример'),
+    make('p','dx-study-subtle','Запишите пример из своей жизни. Текст сохраняется в браузере вместе с прогрессом.'));
+  const textarea=make('textarea');
+  textarea.dataset.role='study-notes';textarea.rows=4;textarea.maxLength=3000;
+  textarea.placeholder='Мой пример, вывод, ассоциация или ошибка…';
+  textarea.value=this.notes[lesson.id]||'';
+  textarea.setAttribute('aria-label','Заметки к уроку');
+  notes.append(textarea);page.append(notes);
   const actions=make('div','dx-study-actions');
   actions.append(btn(this.bookmarks.has(lesson.id)?'★ Избранное':'☆ В избранное','bookmark'),
    btn(this.completed.has(lesson.id)?'✓ Изучено · снять':'Отметить изученным','complete','dx-study-primary'));
@@ -397,6 +480,8 @@ export default class StudyCourseWidget{
    make('h3','','Научная основа и открытые учебники'));
   const note=this.type==='psychology'?
    'Мнемоники — стратегии запоминания; нет основания обещать фотографическую память или лечение заболеваний. Эффекты зависят от задачи, практики и качества исследований.':
+   this.type==='mimic'?
+   'Движения лица не являются диагнозом эмоций, намерений или правдивости человека. Важны слова, контекст, время движения и индивидуальные особенности.':
    'Логика помогает проверять форму рассуждений, но сама по себе не заменяет проверку фактов, статистики и источников.';
   page.append(make('p','dx-study-subtle',note));
   for(const item of this.references){
@@ -409,8 +494,10 @@ export default class StudyCourseWidget{
  }
  destroy(){
   this.destroyed=true;this.clearTimer();
+  clearTimeout(this.noteTimer);this.persist();
   this.search?.removeEventListener('input',this.searchChanged);
   this.root?.removeEventListener('click',this.clicked);
   this.root?.removeEventListener('submit',this.submitted);
+  this.main?.removeEventListener('input',this.noteChanged);
  }
 }
