@@ -170,3 +170,22 @@
   #workspace-canvas .dx-face-lab-visual{padding:6px}
   #workspace-canvas .dx-mimic-face-svg{max-height:200px;width:min(100%,245px)}
 }
+
+
+/* Spacious initial window for long lessons; user-resized inline dimensions still win. */
+#workspace-canvas .widget--element[data-widget-type="psychology"],
+#workspace-canvas .widget--element[data-widget-type="logic"],
+#workspace-canvas .widget--element[data-widget-type="mimic"]{
+  width:min(870px,calc(100vw - 32px));
+  height:min(78dvh,770px);
+  min-height:min(360px,75dvh);
+}
+@media(max-width:640px){
+  #workspace-canvas .widget--element[data-widget-type="psychology"],
+  #workspace-canvas .widget--element[data-widget-type="logic"],
+  #workspace-canvas .widget--element[data-widget-type="mimic"]{
+    width:min(95vw,570px);
+    height:min(80dvh,700px);
+    min-height:min(320px,70dvh);
+  }
+}
