@@ -16,7 +16,7 @@
 @import "./module/widget/sega-emulator.css?v=sega-rom-compat-20261101c";
 @import "./module/widget/discord-portal.css?v=discord-portal-20261101";
 @import "./module/widget/english-language.css?v=english-study-20261101b";
-@import "./module/widget/study-course.css?v=study-expanded-20261101c";
+@import "./module/widget/study-course.css?v=articles-economics-20261101";
 
 /* DashboardX local — compact, neutral UI with readable text and fluid widths */
 :root, :root[data-theme="dark"] {
