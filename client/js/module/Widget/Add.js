@@ -88,7 +88,7 @@ export default class AddWidget {
     // Include every category from the live catalog, including newly added
     // Developer/Spatial types, without altering the classic category order.
     const groups = [...new Set([
-      'system', 'optima', 'finance', 'tools', 'developer', 'media', 'games', 'telegram',
+      'system', 'optima', 'finance', 'tools', 'learning', 'developer', 'media', 'games', 'telegram',
       ...availableTypes.map(type => type.category)
     ])];
     for (const category of groups) {
