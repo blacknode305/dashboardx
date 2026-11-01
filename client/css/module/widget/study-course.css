@@ -189,3 +189,98 @@
     min-height:min(320px,70dvh);
   }
 }
+
+
+/* Economics and self-contained Russian reading collections. */
+#workspace-canvas .widget--element[data-widget-type="economics"]{
+  width:min(870px,calc(100vw - 32px));
+  height:min(78dvh,770px);
+  min-height:min(360px,75dvh);
+}
+#workspace-canvas .dx-study-articles{max-width:880px;gap:13px}
+#workspace-canvas .dx-study-article-stats{
+  display:flex;gap:8px;flex-wrap:wrap;
+  color:var(--text-muted);font-size:11px;
+}
+#workspace-canvas .dx-study-article-stats>span{
+  padding:6px 9px;border:1px solid var(--border);border-radius:6px;
+  background:var(--bg-panel-inside)
+}
+#workspace-canvas .dx-study-article-filter{
+  display:flex;gap:9px;align-items:center;flex-wrap:wrap
+}
+#workspace-canvas .dx-study-article-filter input{
+  box-sizing:border-box;flex:1 1 230px;min-width:0;
+  padding:9px 11px;min-height:37px;border:1px solid var(--border);
+  border-radius:7px;background:var(--bg-panel-inside);
+  color:var(--text-main);font:500 12px var(--f-family-inter,system-ui)
+}
+#workspace-canvas .dx-study-article-cards{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));
+  gap:10px;align-items:stretch
+}
+#workspace-canvas .dx-study-article-card{
+  display:grid;gap:9px;align-content:start;min-width:0;
+  padding:14px;border:1px solid var(--border);border-radius:10px;
+  background:var(--bg-panel-inside)
+}
+#workspace-canvas .dx-study-article-card[hidden],
+#workspace-canvas .dx-study-articles [hidden]{display:none!important}
+#workspace-canvas .dx-study-article-card-head{
+  display:flex;align-items:start;gap:7px;justify-content:space-between
+}
+#workspace-canvas .dx-study button.dx-study-article-open{
+  display:block;flex:1;min-width:0;padding:0;border:0;
+  background:transparent;color:var(--text-main);text-align:left;
+  font:750 13px/1.45 var(--f-family-inter,system-ui);
+  cursor:pointer;overflow-wrap:anywhere
+}
+#workspace-canvas .dx-study button.dx-study-article-open:hover{
+  text-decoration:underline;text-underline-offset:3px
+}
+#workspace-canvas .dx-study-article-card small,
+#workspace-canvas .dx-study-article-source{font-size:10px;color:var(--text-muted);line-height:1.6}
+#workspace-canvas .dx-study-article-flags{font-size:10px;color:var(--text-muted);white-space:nowrap}
+#workspace-canvas .dx-study-article-excerpt{
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;
+  overflow:hidden;font-size:11px;line-height:1.7;
+  color:var(--text-muted);margin:0;overflow-wrap:anywhere
+}
+#workspace-canvas .dx-study button.dx-study-article-read-link{
+  justify-self:start;padding:5px 0;border:0;background:transparent;
+  font:700 11px var(--f-family-inter,system-ui);
+  color:var(--text-main);cursor:pointer
+}
+#workspace-canvas .dx-study button.dx-study-article-read-link:hover{text-decoration:underline}
+#workspace-canvas .dx-study-article-title{font-size:21px!important;line-height:1.35!important}
+#workspace-canvas .dx-study-article-reading{
+  display:grid;gap:15px;padding:16px 17px;
+  border:1px solid var(--border);border-radius:9px;
+  background:var(--bg-panel-inside)
+}
+#workspace-canvas .dx-study-article-reading p{
+  margin:0;font-size:12.5px;line-height:1.95;
+  overflow-wrap:anywhere;
+}
+#workspace-canvas .dx-study-article-takeaways ul{display:grid;gap:8px;margin:0;padding-left:18px}
+#workspace-canvas .dx-study-article-takeaways li{font-size:12px;line-height:1.7}
+#workspace-canvas .dx-study-article-footer{
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:10px;padding:6px 0
+}
+#workspace-canvas .dx-study-article-origin{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--text-main);font-weight:750;
+  text-decoration:underline;text-underline-offset:4px;
+}
+#workspace-canvas .dx-study-articles .dx-study-article-footer button.dx-study-primary{
+  white-space:normal;text-align:center
+}
+@media(max-width:640px){
+  #workspace-canvas .widget--element[data-widget-type="economics"]{
+    width:min(95vw,570px);height:min(80dvh,700px);min-height:min(320px,70dvh)
+  }
+  #workspace-canvas .dx-study-article-cards{grid-template-columns:minmax(0,1fr)}
+  #workspace-canvas .dx-study-article-reading{padding:12px}
+  #workspace-canvas .dx-study-article-reading p{font-size:12px;line-height:1.8}
+}
