@@ -622,6 +622,92 @@ export default class StudyCourseWidget{
     'Примечание: один и тот же жест может иметь несколько причин. Задания проверяют знание описаний FACS, не определение чувств человека.'));
   this.main.append(page);
  }
+ filterArticles(){
+  if(this.articleId)return;
+  const search=this.articleQuery;
+  let found=0;
+  for(const item of this.main.querySelectorAll('[data-article-search-text]')){
+    const matches=!search||(item.dataset.articleSearchText||'').includes(search);
+    item.hidden=!matches;
+    if(matches)found++;
+  }
+  const count=this.main.querySelector('[data-role="articles-search-count"]');
+  if(count)count.textContent=search?'По запросу: '+found+' из '+this.articles.length:'Показаны все '+this.articles.length+' статей';
+  const noResult=this.main.querySelector('[data-role="articles-no-result"]');
+  if(noResult)noResult.hidden=found!==0;
+ }
+ renderArticles(){
+  const page=make('section','dx-study-article dx-study-articles');
+  page.append(make('span','dx-study-pill','Подборка из интернета · '+this.articles.length+' материалов'),
+    make('h3','','Статьи из интернета'),
+    make('p','dx-study-subtle',
+      'Авторские учебные разборы на русском по проверенным источникам. Это не копия статьи и не обновляемая новостная лента. Полный исходный текст открывается на сайте издания.'));
+  const stats=make('div','dx-study-article-stats');
+  stats.append(make('span','',this.articleRead.size+' прочитано из '+this.articles.length),
+    make('span','',this.articleSaved.size+' в избранном'));
+  page.append(stats);
+  const selected=this.articles.find(item=>item.id===this.articleId);
+  if(selected){
+    const actions=make('div','dx-study-actions');
+    actions.append(btn('← Все статьи','articles-back'),
+      btn(this.articleSaved.has(selected.id)?'★ В избранном':'☆ Сохранить','article-save'));
+    page.append(actions);
+    page.append(make('h3','dx-study-article-title',selected.title),
+      make('p','dx-study-article-source',selected.source));
+    const reading=make('div','dx-study-article-reading');
+    for(const text of selected.paragraphs)reading.append(make('p','',text));
+    page.append(reading);
+    const takeaway=make('section','dx-study-panel dx-study-article-takeaways');
+    takeaway.append(make('h4','','Главные выводы'));
+    const list=make('ul');
+    for(const text of selected.takeaways)list.append(make('li','',text));
+    takeaway.append(list);
+    page.append(takeaway,this.section('Задание по материалу',selected.task,'dx-study-activity'));
+    const sourceLink=make('a','dx-study-article-origin','Открыть полный оригинал ↗');
+    sourceLink.href=selected.url;sourceLink.target='_blank';
+    sourceLink.rel='noopener noreferrer';
+    const footer=make('div','dx-study-article-footer');
+    footer.append(sourceLink,btn(this.articleRead.has(selected.id)?
+      '✓ Прочитано · снять отметку':'Отметить прочитанным','article-read','dx-study-primary'));
+    page.append(footer);
+  }else{
+    const find=make('div','dx-study-article-filter');
+    const input=make('input');
+    input.type='search';input.placeholder='Поиск по названию или источнику…';
+    input.dataset.role='article-search';
+    input.setAttribute('aria-label','Поиск статьи');
+    input.value=this.articleQuery;
+    const count=make('small','dx-study-subtle','Показаны все '+this.articles.length+' статей');
+    count.dataset.role='articles-search-count';
+    find.append(input,count);
+    page.append(find);
+    const cards=make('div','dx-study-article-cards');
+    for(const item of this.articles){
+      const card=make('article','dx-study-article-card');
+      card.dataset.articleSearchText=(item.title+' '+item.source+' '+item.paragraphs.join(' ')).toLocaleLowerCase('ru');
+      const articleButton=btn(item.title,null,'dx-study-article-open');
+      articleButton.dataset.studyArticle=item.id;
+      const source=make('small','',item.source);
+      const excerpt=make('p','',item.paragraphs[0]);
+      excerpt.className='dx-study-article-excerpt';
+      const flags=make('span','dx-study-article-flags',
+        (this.articleRead.has(item.id)?'✓ Прочитано ':'')+
+        (this.articleSaved.has(item.id)?'★ Избранное':''));
+      const heading=make('div','dx-study-article-card-head');
+      heading.append(articleButton,flags);
+      card.append(heading,source,excerpt);
+      const open=btn('Читать разбор →',null,'dx-study-article-read-link');
+      open.dataset.studyArticle=item.id;
+      card.append(open);cards.append(card);
+    }
+    page.append(cards);
+    const noResult=make('p','dx-study-subtle','По запросу ничего не найдено.');
+    noResult.hidden=true;noResult.dataset.role='articles-no-result';
+    page.append(noResult);
+  }
+  this.main.append(page);
+  if(!selected)this.filterArticles();
+ }
  renderSources(){
   const page=make('section','dx-study-article');
   page.append(make('span','dx-study-pill','Методические материалы'),
