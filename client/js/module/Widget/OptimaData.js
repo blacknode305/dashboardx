@@ -623,38 +623,114 @@ export default class OptimaDataWidget {
       return !q||norm([row.name,row.unit,row.price,suppliers.get(String(row.supplierId))?.name].join(' ')).includes(q);
     }).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ru'));
   }
-  catalogLinkPicker(row){
-    const wrap=make('div',undefined,'dx-catalog-link-picker');
+  catalogLinkCell(row){
     const products=rows(this.db?.products);
-    const chosen=products.find(p=>String(p.id)===String(catalogProductId(row)));
-    const field=make('input');field.type='search';field.placeholder='Привязать наименование…';
-    field.value=chosen?.name||'';field.autocomplete='off';field.setAttribute('aria-label','Поиск нашего наименования');
-    const menu=make('div',undefined,'dx-catalog-link-menu');menu.hidden=true;
-    const refresh=()=>{
-      const needle=norm(field.value);menu.replaceChildren();
-      const found=products.filter(p=>!needle||norm(p.name).includes(needle)).slice(0,30);
-      for(const product of found){
-        const option=make('button',product.name+' · #'+product.id,'dx-product-supplier-option');option.type='button';
-        option.addEventListener('mousedown',event=>event.preventDefault());
-        option.addEventListener('click',()=>{menu.hidden=true;void this.saveCatalogLink(row,product);});
-        menu.append(option);
-      }
-      if(!found.length)menu.append(make('span','Совпадений нет'));
-      menu.hidden=false;
-    };
-    field.addEventListener('focus',refresh);field.addEventListener('input',refresh);
-    field.addEventListener('blur',()=>setTimeout(()=>{menu.hidden=true},150));
-    wrap.append(field,menu);
-    if(chosen){
-      const clear=make('button','×');clear.type='button';clear.title='Отвязать';
-      clear.addEventListener('click',()=>void this.saveCatalogLink(row,null));wrap.append(clear);
+    const linked=products.find(p=>String(p.id)===String(catalogProductId(row)));
+    const button=make('button',linked?.name||'Привязать',linked?'dx-catalog-linked-product':'dx-catalog-link-action');
+    button.type='button';
+    button.title=linked?'Изменить привязку «'+linked.name+'»':'Привязать к нашему наименованию';
+    button.setAttribute('aria-label',linked?'Изменить привязку: '+linked.name:'Привязать «'+row.name+'»');
+    button.addEventListener('click',()=>this.openCatalogLinkDialog(row));
+    return button;
+  }
+  openCatalogLinkDialog(row){
+    if(!this.db||this.destroyed)return;
+    if(this.catalogLinkDialog){
+      this.catalogLinkDialog.close();
+      this.catalogLinkDialog.remove();
+      this.catalogLinkDialog=null;
     }
-    return wrap;
+    const products=rows(this.db.products).filter(p=>p&&p.id!=null&&p.catalogStatus!=='proposal');
+    const current=products.find(p=>String(p.id)===String(catalogProductId(row)))||null;
+    let selected=current;
+    const dialog=make('dialog',undefined,'dx-catalog-link-dialog');
+    dialog.setAttribute('aria-label','Привязка позиции каталога к нашему наименованию');
+    const heading=make('h3','Привязка наименования');
+    const subheading=make('p',String(row.name||'Без названия'),'dx-catalog-link-source');
+    const label=make('label','Наше наименование');
+    const field=make('input');
+    field.type='search';
+    field.placeholder='Начните вводить название…';
+    field.autocomplete='off';
+    field.value=current?.name||'';
+    field.setAttribute('role','combobox');
+    field.setAttribute('aria-autocomplete','list');
+    field.setAttribute('aria-expanded','false');
+    field.setAttribute('aria-label','Поиск наших наименований');
+    const menu=make('div',undefined,'dx-catalog-modal-options');
+    menu.id='dx-catalog-options-'+String(this.id)+'-'+String(row.id).replace(/[^a-zA-Z0-9_-]/g,'-');
+    menu.setAttribute('role','listbox');menu.hidden=true;
+    field.setAttribute('aria-controls',menu.id);
+    const chosen=make('p',current?'Сейчас привязано: '+current.name:'Наименование не выбрано','dx-catalog-link-selection');
+    const actions=make('div',undefined,'dx-catalog-link-actions');
+    const cancel=make('button','Отмена');cancel.type='button';
+    const save=make('button','Привязать','dx-catalog-link-confirm');save.type='button';save.disabled=true;
+    const unlink=make('button','Отвязать','dx-catalog-link-unlink');unlink.type='button';unlink.hidden=!current;
+    const updateSave=()=>{
+      save.disabled=!selected||String(selected.id)===String(catalogProductId(row));
+      chosen.textContent=selected?'Выбрано: '+selected.name:(current?'Текущая привязка: '+current.name:'Выберите наименование из списка');
+    };
+    const choose=product=>{
+      selected=product;field.value=String(product.name||'');
+      menu.hidden=true;field.setAttribute('aria-expanded','false');
+      updateSave();save.focus();
+    };
+    const options=()=>{
+      const query=norm(field.value);
+      const found=products.filter(p=>!query||norm(p.name).includes(query)||String(p.id).includes(query))
+        .sort((a,b)=>{
+          const aStart=norm(a.name).startsWith(query),bStart=norm(b.name).startsWith(query);
+          return Number(bStart)-Number(aStart)||String(a.name).localeCompare(String(b.name),'ru');
+        }).slice(0,40);
+      menu.replaceChildren();
+      found.forEach(product=>{
+        const option=make('button',String(product.name||'')+' · #'+product.id,'dx-catalog-modal-option');
+        option.type='button';option.setAttribute('role','option');
+        option.addEventListener('click',()=>choose(product));
+        menu.append(option);
+      });
+      if(!found.length)menu.append(make('p','Совпадений нет','dx-catalog-link-no-results'));
+      menu.hidden=false;field.setAttribute('aria-expanded','true');
+      return found;
+    };
+    field.addEventListener('focus',options);
+    field.addEventListener('input',()=>{selected=null;updateSave();options()});
+    field.addEventListener('keydown',event=>{
+      if(event.key==='Enter'&& !menu.hidden){
+        event.preventDefault();
+        const first=menu.querySelector('button');
+        if(first)first.click();
+      }else if(event.key==='ArrowDown'&&!menu.hidden){
+        event.preventDefault();menu.querySelector('button')?.focus();
+      }else if(event.key==='Escape'&&!menu.hidden){
+        event.preventDefault();event.stopPropagation();
+        menu.hidden=true;field.setAttribute('aria-expanded','false');
+      }
+    });
+    const apply=async product=>{
+      save.disabled=true;unlink.disabled=true;cancel.disabled=true;
+      const ok=await this.saveCatalogLink(row,product);
+      if(ok){if(dialog.open)dialog.close();return;}
+      cancel.disabled=false;unlink.disabled=false;updateSave();
+    };
+    save.addEventListener('click',()=>{if(selected)void apply(selected)});
+    unlink.addEventListener('click',()=>void apply(null));
+    cancel.addEventListener('click',()=>dialog.close());
+    dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});
+    dialog.addEventListener('close',()=>{
+      if(this.catalogLinkDialog===dialog)this.catalogLinkDialog=null;
+      dialog.remove();
+    },{once:true});
+    label.append(field);actions.append(cancel,unlink,save);
+    dialog.append(heading,subheading,label,menu,chosen,actions);
+    document.body.append(dialog);this.catalogLinkDialog=dialog;
+    try{dialog.showModal();field.focus();field.select()}
+    catch(error){dialog.remove();this.catalogLinkDialog=null;this.statusText.textContent='Невозможно открыть окно привязки: '+error.message;}
   }
   async saveCatalogLink(row,product){
-    if(!this.db||!Number.isFinite(Number(this.revision)))return;
+    if(!this.db||!Number.isFinite(Number(this.revision)))return false;
     const previous=catalogProductId(row),nextId=product?.id??null;
-    if(String(previous??'')===String(nextId??''))return;
+    if(String(previous??'')===String(nextId??''))return false;
     const id=String(row.id);
     const updatedCatalog=rows(this.db.supplierCatalog).map(item=>String(item.id)===id?{...item,usedProductId:nextId}:item);
     const updatedProducts=rows(this.db.products).map(item=>{
@@ -662,13 +738,15 @@ export default class OptimaDataWidget {
       if(nextId!==null&&String(item.id)===String(nextId))links.push(id);
       return {...item,catalogLinks:[...new Set(links)]};
     });
-    if(!window.confirm((product?'Привязать «'+row.name+'» к «'+product.name+'»?':'Убрать привязку «'+row.name+'»?')))return;
+    if(!window.confirm((product?'Привязать «'+row.name+'» к «'+product.name+'»?':'Убрать привязку «'+row.name+'»?')))return false;
     this.statusText.textContent='Сохранение привязки…';
     try{
       await patchOptima({supplierCatalog:updatedCatalog,products:updatedProducts},this.revision);
       await this.load();
+      return true;
     }catch(error){
       this.statusText.textContent=error.status===409?'База изменилась. Обновите каталог и попробуйте снова.':'Ошибка привязки: '+error.message;
+      return false;
     }
   }
   printCatalog(){
@@ -791,7 +869,7 @@ export default class OptimaDataWidget {
         {label:t('optima.supplier'),get:x=>suppliersById.get(String(x.supplierId))?.name},
         {label:t('optima.unit'),get:x=>x.unit},
         {label:t('optima.price'),get:x=>money(x.price)},
-        {label:'Привязка к наименованию',get:x=>this.catalogLinkPicker(x)}
+        {label:'Привязка',get:x=>this.catalogLinkCell(x)}
       ],entries);
       const linked=total('supplierCatalog').filter(x=>total('products').some(p=>String(p.id)===String(catalogProductId(x)))).length;
       this.summary.textContent='Показано: '+entries.length+'   |   В каталоге: '+total('supplierCatalog').length+'   |   Непривязано: '+(total('supplierCatalog').length-linked)+'   |   Связано с нашими: '+linked;
@@ -917,6 +995,7 @@ export default class OptimaDataWidget {
     }
   }
   destroy(){
+    if(this.catalogLinkDialog){this.catalogLinkDialog.close();this.catalogLinkDialog.remove();this.catalogLinkDialog=null;}
     this.catalogImporter?.destroy?.();
     this.destroyed=true;
     this.controller?.abort();clearInterval(this.poll);
