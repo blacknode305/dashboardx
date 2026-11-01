@@ -121,7 +121,7 @@ export default class EnglishLanguageWidget{
         case 'done':this.toggleDone();break;
         case 'review-start':this.startReview();break;
         case 'review-next':this.advanceReview();break;
-        case 'review-reset':this.startReview();break;
+        case 'review-reset':this.startReview(this.review?.mode||'all');break;
         case 'saved-open':
           this.view='grammar';this.render();break;
         default:break;
@@ -271,7 +271,8 @@ export default class EnglishLanguageWidget{
       (this.level==='all'||item.level===this.level)&&
       (mode!=='weak'||this.weak[item.id]>0));
     if(!pool.length)return;
-    this.review={ids:shuffle(pool).slice(0,Math.min(10,pool.length)).map(topic=>topic.id),
+    const ordered=mode==='all'?shuffle(pool).sort((a,b)=>Number(this.weak[b.id]||0)-Number(this.weak[a.id]||0)):shuffle(pool);
+    this.review={ids:ordered.slice(0,Math.min(10,pool.length)).map(topic=>topic.id),
       index:0,score:0,answered:false,mode};
     this.view='practice';
     this.choice=null;this.feedback=null;
@@ -361,13 +362,42 @@ export default class EnglishLanguageWidget{
       make('span','',String(position+1)+' / '+GRAMMAR_LESSONS.length));
     const title=make('h3','',topic.title);
     frame.append(meta,title);
+    const expanded=GRAMMAR_EXPANDED[topic.id]||{};
+    const guide=GRAMMAR_CHAPTER_GUIDES[topic.groupId];
+    frame.append(section('Когда использовать',expanded.usage||topic.rule,'dx-english-usage'));
     frame.append(section('Правило',topic.rule));
     frame.append(section('Формула',topic.formula,'dx-english-formula'));
+    if(guide){
+      const how=make('section','dx-english-rule-block dx-english-steps');
+      how.append(make('h4','','Как применять правило'));
+      const points=make('ol','');
+      for(const step of guide.steps)points.append(make('li','',step));
+      how.append(points);frame.append(how);
+    }
     const example=make('section','dx-english-rule-block dx-english-example');
     example.append(make('h4','','Пример'),
       make('p','dx-english-example-en',topic.example),
       make('p','dx-english-translation',topic.translation));
-    frame.append(example,section('Обрати внимание',topic.mistake,'dx-english-pitfall'));
+    frame.append(example);
+    if(expanded.examples?.length){
+      const more=make('section','dx-english-rule-block dx-english-examples');
+      more.append(make('h4','','Дополнительные примеры в речи'));
+      expanded.examples.forEach((item,index)=>{
+        const row=make('div','dx-english-example-row');
+        const content=make('div','dx-english-example-copy');
+        content.append(make('span','dx-english-example-en',item.english),
+          make('span','dx-english-translation',item.russian));
+        const audio=button('▶','', 'dx-english-speak');
+        audio.removeAttribute('data-action');
+        audio.dataset.speak=item.english;
+        audio.title='Прослушать английский пример';
+        audio.setAttribute('aria-label','Прослушать пример '+(index+1));
+        row.append(content,audio);more.append(row);
+      });
+      frame.append(more);
+    }
+    frame.append(section('Типичная ошибка',topic.mistake,'dx-english-pitfall'));
+    if(this.speechStatus)frame.append(make('p','dx-english-mini',this.speechStatus));
 
     const actions=make('div','dx-english-lesson-actions');
     const bookmark=button(this.bookmarks.has(topic.id)?'★ В избранном':'☆ В избранное','bookmark');
@@ -377,11 +407,61 @@ export default class EnglishLanguageWidget{
     actions.append(bookmark,done);frame.append(actions);
 
     frame.append(this.makeQuiz(topic));
+    frame.append(this.makeSentenceBuilder(topic));
     const navigation=make('nav','dx-english-lesson-nav');
     const back=button('← Предыдущая','prev');back.disabled=position===0;
     const next=button('Следующая →','next');next.disabled=position===GRAMMAR_LESSONS.length-1;
     navigation.append(back,next);frame.append(navigation);
     this.content.append(frame);
+  }
+  makeSentenceBuilder(topic){
+    const wrap=make('section','dx-english-quiz dx-english-builder');
+    const target=this.currentBuilder();
+    if(!target)return wrap;
+    const words=target.english.trim().split(/\s+/);
+    wrap.append(make('span','dx-english-quiz-tag','Практика · порядок слов'),
+      make('h4','','Соберите английское предложение по переводу'));
+    wrap.append(make('p','dx-english-builder-prompt',target.russian));
+    const composed=make('div','dx-english-builder-answer');
+    composed.setAttribute('aria-label','Собранное предложение');
+    if(!this.builderSelected.length)composed.append(make('span','dx-english-builder-placeholder','Нажимайте слова ниже в нужном порядке'));
+    this.builderSelected.forEach((wordIndex,position)=>{
+      const chip=button(words[wordIndex],'','dx-english-word is-used');
+      chip.removeAttribute('data-action');
+      chip.dataset.buildRemove=String(position);
+      chip.disabled=Boolean(this.builderFeedback?.correct);
+      chip.title='Убрать слово из ответа';
+      composed.append(chip);
+    });
+    wrap.append(composed);
+    const available=make('div','dx-english-builder-words');
+    for(const wordIndex of this.builderOrder){
+      if(this.builderSelected.includes(wordIndex))continue;
+      const chip=button(words[wordIndex],'','dx-english-word');
+      chip.removeAttribute('data-action');
+      chip.dataset.buildAdd=String(wordIndex);
+      available.append(chip);
+    }
+    wrap.append(available);
+    if(this.builderFeedback){
+      const feedback=make('div','dx-english-feedback '+(this.builderFeedback.correct?'is-success':'is-error'));
+      feedback.setAttribute('role','status');
+      feedback.append(make('strong','',this.builderFeedback.correct?'Верно! Предложение собрано.':'Порядок слов пока неверный.'),
+        make('p','',this.builderFeedback.correct?target.english:
+          'Посмотрите схему и примеры выше. Можно убрать слово из ответа и попробовать ещё раз.'));
+      wrap.append(feedback);
+    }
+    const actions=make('div','dx-english-quiz-actions');
+    const reset=button('Сначала','builder-reset');
+    reset.disabled=!this.builderSelected.length;
+    actions.append(reset);
+    if(!this.builderFeedback?.correct){
+      const check=button('Проверить порядок','builder-check','dx-english-primary');
+      check.disabled=this.builderSelected.length!==words.length;
+      actions.append(check);
+    }
+    wrap.append(actions);
+    return wrap;
   }
   makeQuiz(topic){
     const quiz=make('section','dx-english-quiz');
@@ -406,10 +486,12 @@ export default class EnglishLanguageWidget{
     if(this.feedback){
       const feedback=make('div','dx-english-feedback '+(this.feedback.correct?'is-success':'is-error'));
       feedback.setAttribute('role','status');
-      const heading=this.feedback.correct?'Верно! Тема засчитана.':'Пока неверно. Попробуйте ещё раз.';
+      const locked=this.view==='practice'&&this.review?.answered;
+      const heading=this.feedback.correct?'Верно! Тема засчитана.':
+        (locked?'Неверно — разберём ответ.':'Пока неверно. Попробуйте ещё раз.');
       feedback.append(make('strong','',heading));
-      feedback.append(make('p','',
-        this.feedback.correct?this.feedback.rule:'Подсказка: '+this.feedback.rule));
+      feedback.append(make('p','',(!this.feedback.correct&&locked?'Правильный вариант: '+this.feedback.answer+'. ':'')+
+        (this.feedback.correct?'Почему: ':'Подсказка: ')+this.feedback.rule));
       quiz.append(feedback);
     }
     const actions=make('div','dx-english-quiz-actions');
@@ -431,9 +513,16 @@ export default class EnglishLanguageWidget{
       block.append(make('span','dx-english-chip','Тренировка'),
         make('h3','','Повторение грамматики'));
       block.append(make('p','dx-english-intro',
-        '10 случайных вопросов по правилам выбранного уровня. После каждого ответа показывается объяснение. Правильно решённые темы отмечаются как изученные.'));
+        '10 случайных вопросов по правилам выбранного уровня. После каждого ответа показывается объяснение. Ошибки сохраняются в списке повторения.'));
       block.append(make('p','dx-english-mini','Выбранный уровень: '+(this.level==='all'?'все уровни':this.level)));
-      block.append(button('Начать тренировку','review-start','dx-english-primary'));
+      const buttons=make('div','dx-english-lesson-actions');
+      buttons.append(button('Начать тренировку · 10 вопросов','review-start','dx-english-primary'));
+      const weakCount=GRAMMAR_LESSONS.filter(item=>this.weak[item.id]>0&&(this.level==='all'||item.level===this.level)).length;
+      const weak=button('Повторить ошибки · '+weakCount,'review-mistakes');
+      weak.disabled=!weakCount;
+      buttons.append(weak);block.append(buttons);
+      if(!weakCount)block.append(make('p','dx-english-mini',
+        'Пока нет ошибок для повторения. Пройдите любую тренировку или упражнение.'));
       this.content.append(block);return;
     }
     if(this.review.index>=this.review.ids.length){
@@ -441,7 +530,9 @@ export default class EnglishLanguageWidget{
         make('h3','','Результат: '+this.review.score+' из '+this.review.ids.length));
       block.append(make('p','dx-english-intro',
         'Правильные ответы засчитаны в прогресс грамматики. Повторите темы, в которых ещё не уверены.'));
-      block.append(button('Ещё 10 вопросов','review-reset','dx-english-primary'));
+      block.append(button('Ещё вопросы','review-reset','dx-english-primary'));
+      block.append(make('p','dx-english-mini',
+        'Тем на повторении: '+Object.keys(this.weak).length+'. Откройте «Практика», чтобы повторить именно их.'));
       this.content.append(block);return;
     }
     const topic=byId.get(this.review.ids[this.review.index]);
@@ -476,6 +567,7 @@ export default class EnglishLanguageWidget{
   }
   destroy(){
     this.destroyed=true;
+    if('speechSynthesis' in window)window.speechSynthesis.cancel();
     this.root?.removeEventListener('click',this.onClick);
     this.search?.removeEventListener('input',this.onSearch);
     this.levelSelect?.removeEventListener('change',this.onLevel);
