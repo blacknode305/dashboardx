@@ -3,6 +3,7 @@ import { GRAMMAR_EXPANDED, GRAMMAR_CHAPTER_GUIDES, GRAMMAR_COMPARISONS } from '.
 import { READING_THEMES, READING_ESSAYS, readingDayKey, readingPairForDay } from './EnglishReadingData.js?v=daily-reading-20261101';
 import { EnglishReadingInspector, readingWordInfo, readingGrammarHint, readingWordGrammar } from './EnglishReadingInspector.js?v=reading-inspector-20261101';
 import learning from '../EnglishLearningStore.js';
+import { PHONETIC_LESSONS } from './EnglishPhoneticsData.js?v=english-study-20261101';
 
 const byId=new Map(GRAMMAR_LESSONS.map(item=>[item.id,item]));
 const make=(tag,className='',text='')=>{
@@ -163,6 +164,17 @@ export default class EnglishLanguageWidget{
         case 'word-audio':this.sayText(action.dataset.term,'en-US');break;
         case 'translate-switch':this.translationDirection=this.translationDirection==='en-ru'?'ru-en':'en-ru';this.translationResult='';this.renderContent();break;
         case 'translate-start':void this.translateOnline();break;
+        case 'translator-save':
+          if(this.translationInput.trim()){
+            const term=this.translationInput.trim();
+            const word=readingWordInfo(term);
+            const grammar=readingGrammarHint(term)||readingWordGrammar(word);
+            learning.saveWord(term,{translation:this.translationResult||word?.meaning||'',
+              kind:word?.kind||'',grammarId:grammar?.id||''});
+            this.translationStatus='★ Добавлено в словарь';
+            this.renderContent(true);
+          }
+          break;
         case 'translate-audio-source':this.sayText(this.translationInput,this.translationDirection==='en-ru'?'en-US':'ru-RU');break;
         case 'translate-audio-result':this.sayText(this.translationResult,this.translationDirection==='en-ru'?'ru-RU':'en-US');break;
         case 'reading-play':this.playReading();break;
@@ -965,6 +977,181 @@ export default class EnglishLanguageWidget{
     bottom.append(completed);frame.append(bottom);
     this.content.append(frame);
     this.updateReadingAudio();
+  }
+
+
+  sayText(text,lang='en-US'){
+    if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined')return;
+    window.speechSynthesis.cancel();
+    const utterance=new SpeechSynthesisUtterance(String(text||'').slice(0,700));
+    utterance.lang=lang;utterance.rate=.84;
+    window.speechSynthesis.speak(utterance);
+  }
+  renderWords(){
+    const words=learning.data.savedWords||[];
+    const frame=make('section','dx-english-lesson dx-english-study');
+    frame.append(make('span','dx-english-chip','Мой словарь'),make('h3','','Избранные слова и выражения'));
+    frame.append(make('p','dx-english-intro',
+      'Добавляйте ★ из подсказки над текстом или через правый клик на выделенное слово в любом виджете. Перевод можно уточнить в переводчике.'));
+    frame.append(make('p','dx-english-mini','Сохранено: '+words.length+' · синхронизация: '+learning.status));
+    if(words.length){
+      const quiz=make('div','dx-english-vocab-review');
+      const word=words[this.vocabIndex%words.length];
+      quiz.append(make('h4','','Вспомните русский перевод:'),
+        make('strong','dx-english-vocab-question',word.term));
+      const row=make('div','dx-english-vocab-answer');
+      const input=make('input');input.type='text';input.dataset.role='vocab-answer';
+      input.placeholder='Напишите значение по-русски';input.value=this.vocabAnswer;
+      input.setAttribute('aria-label','Перевод сохранённого слова');
+      row.append(input,button('Проверить','word-check','dx-english-primary'),
+        button('Следующее →','word-next'));
+      quiz.append(row);
+      if(this.vocabFeedback){
+        const notice=make('p','dx-english-feedback',this.vocabFeedback);
+        notice.setAttribute('role','status');quiz.append(notice);
+      }
+      quiz.append(make('p','dx-english-mini',
+        'Повторение '+(this.vocabIndex%words.length+1)+' из '+words.length+
+        ' · точное совпадение не обязательно — проверяем близость написания, не смысловую эквивалентность.'));
+      frame.append(quiz);
+      const list=make('div','dx-english-word-list');
+      for(const item of words){
+        const card=make('article','dx-english-word-card');
+        const details=make('div','');
+        details.append(make('strong','',item.term),make('span','',
+          item.translation||'Перевод не указан — уточните в онлайн-переводчике'));
+        details.append(make('small','',
+          (item.kind||'Слово / выражение')+' · проверки: '+(item.correct||0)+'/'+(item.attempts||0)));
+        const actions=make('div','dx-english-word-actions');
+        const audio=button('▶','word-audio');audio.dataset.term=item.term;
+        const deleteBtn=button('×','word-remove');deleteBtn.dataset.term=item.term;
+        deleteBtn.setAttribute('aria-label','Удалить из избранного: '+item.term);
+        actions.append(audio,deleteBtn);
+        if(item.grammarId&&byId.has(item.grammarId)){
+          const grammar=button('Правило →','','dx-english-related');
+          grammar.removeAttribute('data-action');grammar.dataset.lesson=item.grammarId;
+          actions.append(grammar);
+        }
+        card.append(details,actions);list.append(card);
+      }
+      frame.append(list);
+    }else frame.append(make('p','dx-english-empty','Пока нет избранных слов. Наведите на слово в тексте и нажмите ☆.'));
+    this.content.append(frame);
+  }
+  checkVocabulary(){
+    const words=learning.data.savedWords||[];
+    if(!words.length)return;
+    const word=words[this.vocabIndex%words.length];
+    const norm=text=>String(text||'').toLocaleLowerCase('ru').trim().replace(/[.,!?]/g,'');
+    const answer=norm(this.vocabAnswer);
+    if(!answer){this.vocabFeedback='Сначала впишите перевод.';this.renderContent(true);return}
+    const accepted=word.translation.split(/[;,/]+/).map(norm).filter(Boolean);
+    if(!accepted.length){
+      this.vocabFeedback='Для этого слова пока нет проверочного перевода. Уточните значение в переводчике.';
+      this.renderContent(true);return;
+    }
+    const correct=accepted.some(item=>item===answer);
+    learning.checkWord(word.term,correct);
+    this.vocabFeedback=correct?'✓ Верно.':'Возможный перевод: '+word.translation+
+      '. Другие правильные варианты тоже возможны.';
+    this.renderContent(true);
+  }
+  nextVocabulary(){
+    this.vocabIndex++;this.vocabAnswer='';this.vocabFeedback=null;
+    this.renderContent();
+  }
+  async translateOnline(){
+    const content=this.translationInput.trim().slice(0,2000);
+    if(!content)return;
+    this.translationStatus='Переводим…';this.renderContent(true);
+    const direction=this.translationDirection;
+    if(new TextEncoder().encode(content).length>450){
+      this.translationStatus='MyMemory ограничен 450 байтами за запрос. Переведите более короткий фрагмент или используйте ссылку.';
+      this.renderContent(true);return;
+    }
+    try{
+      const params=new URLSearchParams({q:content,langpair:direction==='en-ru'?'en|ru':'ru|en'});
+      const response=await fetch('https://api.mymemory.translated.net/get?'+params,{cache:'no-store'});
+      const data=await response.json();
+      if(!response.ok||Number(data.responseStatus)!==200||typeof data.responseData?.translatedText!=='string')
+        throw Error(data.responseDetails||'Перевод не получен');
+      this.translationResult=data.responseData.translatedText.trim();
+      this.translationStatus='Машинный перевод может быть неточным.';
+    }catch(e){this.translationStatus='Сервис временно недоступен. Откройте текст по ссылке ниже.'}
+    if(!this.destroyed&&this.view==='translator')this.renderContent(true);
+  }
+  renderTranslator(){
+    const frame=make('section','dx-english-lesson dx-english-study dx-english-translator');
+    frame.append(make('span','dx-english-chip','Онлайн-перевод'),
+      make('h3','','Переводчик и разбор'));
+    const from=this.translationDirection==='en-ru'?'Английский':'Русский';
+    const to=this.translationDirection==='en-ru'?'Русский':'Английский';
+    const toolbar=make('div','dx-english-translation-direction');
+    toolbar.append(make('strong','',from),button('⇄ Поменять языки','translate-switch'),make('strong','',to));
+    frame.append(toolbar);
+    const input=make('textarea');input.rows=5;input.maxLength=2000;
+    input.dataset.role='translator-input';input.value=this.translationInput;
+    input.placeholder='Введите слово, выражение или предложение…';
+    input.setAttribute('aria-label','Текст для перевода');
+    frame.append(input);
+    const controls=make('div','dx-english-lesson-actions');
+    controls.append(button('Перевести','translate-start','dx-english-primary'),
+      button('▶ Произнести исходный','translate-audio-source'));
+    frame.append(controls);
+    const output=make('section','dx-english-rule-block');
+    output.append(make('h4','','Перевод'),make('p','',this.translationResult||'Здесь появится перевод после запроса'));
+    const speak=button('▶ Произнести перевод','translate-audio-result');
+    speak.disabled=!this.translationResult;output.append(speak);frame.append(output);
+    frame.append(make('p','dx-english-mini',this.translationStatus||
+      'Перевод осуществляется внешним сервисом только после нажатия кнопки. Тексты не сохраняются на сервере.'));
+    const link=make('a','dx-english-related','Перевести большой фрагмент в браузере');
+    link.href='https://translate.google.com/?sl='+(this.translationDirection==='en-ru'?'en&tl=ru':'ru&tl=en')+
+      '&text='+encodeURIComponent(this.translationInput)+'&op=translate';
+    link.target='_blank';link.rel='noopener noreferrer';frame.append(link);
+    if(this.translationDirection==='en-ru'&&this.translationInput.trim()){
+      const info=readingWordInfo(this.translationInput.trim());
+      const grammar=readingGrammarHint(this.translationInput)||readingWordGrammar(info);
+      if(info?.meaning&&this.translationInput.trim().split(/\s+/).length===1)
+        frame.append(section('Словарное значение',info.meaning+' · '+(info.kind||'')+
+          (info.form?' · '+info.form:'')));
+      if(grammar&&byId.has(grammar.id)){
+        const panel=make('div','dx-english-rule-block');
+        panel.append(make('h4','','Грамматическая подсказка'),
+          make('p','',grammar.name+' — '+grammar.detail));
+        const jump=button('Открыть правило →','','dx-english-related');
+        jump.removeAttribute('data-action');jump.dataset.lesson=grammar.id;
+        panel.append(jump);frame.append(panel);
+      }
+      const save=button('☆ Добавить исходное слово / выражение','translator-save');
+      save.dataset.action='translator-save';frame.append(save);
+    }
+    this.content.append(frame);
+  }
+  renderPhonetics(){
+    const frame=make('section','dx-english-lesson dx-english-study');
+    frame.append(make('span','dx-english-chip','20 уроков'),make('h3','','Фонетика, произношение и письменная речь'));
+    frame.append(make('p','dx-english-intro',
+      'Звуки, ударение, интонация, связная речь, написание и пунктуация. Примеры можно слушать, повторять и сравнивать.'));
+    const categories=[...new Set(PHONETIC_LESSONS.map(x=>x.group))];
+    for(const category of categories){
+      const box=make('section','dx-english-phonetics-group');
+      const sample=PHONETIC_LESSONS.find(x=>x.group===category);
+      box.append(make('h4','',sample.groupTitle));
+      for(const item of PHONETIC_LESSONS.filter(x=>x.group===category)){
+        const row=make('details','dx-english-phonetic-rule');
+        const head=make('summary','',item.title);
+        const details=make('div','');
+        details.append(make('p','',item.explanation),make('p','dx-english-mini',item.examples));
+        const actions=make('div','dx-english-lesson-actions');
+        for(const example of item.listen){
+          const speak=button('▶ '+example,'word-audio');speak.dataset.term=example;
+          actions.append(speak);
+        }
+        details.append(actions);row.append(head,details);box.append(row);
+      }
+      frame.append(box);
+    }
+    this.content.append(frame);
   }
 
   renderSaved(){
