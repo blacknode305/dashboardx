@@ -2,7 +2,7 @@ import eventBus from './module/EventBus.js';
 import ClientDB from './module/ClientDB.js';
 import learning from './module/EnglishLearningStore.js';
 import { installEnglishQuickWords } from './module/EnglishQuickWords.js?v=english-study-20261101';
-import WidgetElement from './module/WidgetElement.js?v=articles-economics-20261101';
+import WidgetElement from './module/WidgetElement.js?v=mimic-social-20261101b';
 import NavigationBar from './module/NavigationBar.js';
 import installTableColumnResize from './module/TableColumnResize.js?v=optima-price-upload-20261031';
 import installTableSort from './module/TableSort.js?v=optima-price-upload-20261031';
@@ -90,7 +90,7 @@ async function loadTemplates() {
     if(id==='segaEmulator')url.searchParams.set('v','sega-rom-compat-20261101c');
     if(id==='discordPortal')url.searchParams.set('v','discord-portal-20261101');
     if(id==='englishLanguage')url.searchParams.set('v','english-study-20261101');
-    if(['psychology','logic','mimic','economics'].includes(id))url.searchParams.set('v','articles-economics-20261101');
+    if(['psychology','logic','mimic','economics'].includes(id))url.searchParams.set('v','mimic-social-20261101b');
     if(id==='realtyRadar')url.searchParams.set('v','realty-widget-name-20261101');
     if(id==='optimaSuppliers')url.searchParams.set('v','suppliers-optima-print-20261031');
     const response=await fetch(url,{cache:(id==='optimaProducts'||id==='optimaSuppliers'||id==='optimaProposals')?'no-store':'default'});
