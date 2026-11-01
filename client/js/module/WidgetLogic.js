@@ -15,6 +15,7 @@ import LocalCollectionWidget from './Widget/LocalCollection.js?v=nes-interaction
 import MediaPlayerWidget from './Widget/MediaPlayer.js?v=nes-interactions-20261026';
 import ServerConsoleWidget from './Widget/ServerConsole.js?v=nes-interactions-20261026';
 import TelegramBotWidget from './Widget/TelegramBot.js?v=nes-interactions-20261026';
+import DiscordPortalWidget from './Widget/DiscordPortal.js?v=discord-portal-20261101';
 import DashboardSettingsWidget from './Widget/DashboardSettings.js';
 import OptimaSuppliersWidget from './Widget/OptimaSuppliers.js?v=widget-inline-editors-20261101b';
 import OptimaDataWidget from './Widget/OptimaData.js?v=widget-inline-editors-20261101b';
@@ -50,6 +51,7 @@ const WidgetLogic = {
   WishlistGamesWidget: LocalCollectionWidget,
   ServerConsoleWidget,
   TelegramBotWidget,
+  DiscordPortalWidget,
   DashboardSettingsWidget,
   OptimaSuppliersWidget,
   OptimaProductsWidget: OptimaDataWidget,
