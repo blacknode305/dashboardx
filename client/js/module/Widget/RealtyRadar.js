@@ -228,7 +228,7 @@ export default class RealtyRadarWidget {
     if(row.tab==='sale'&&row.area)pills.append(this.pill(nfmt(row.unitCost)+' ₸/м²'));
     if(row.kind==='land')pills.append(this.pill('Земельный участок'));
     if(row.tab==='buyout'){
-      pills.append(this.pill('Аренда с выкупом','warn'));
+      pills.append(this.pill('Возможность выкупа · проверить','warn'));
       if(row.contractPayment)pills.append(this.pill('Платёж по выкупу: '+nfmt(row.contractPayment)+' ₸','warn'));
       if(row.purchasePrice)pills.append(this.pill('Выкуп: '+nfmt(row.purchasePrice)+' ₸'));
     }
