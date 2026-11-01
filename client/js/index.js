@@ -21,6 +21,7 @@ const WIDGET_CATALOG = Object.freeze({
   calculator:     {category:'tools',    file:'_calculator.html'},
   englishLanguage:{category:'learning', file:'_englishLanguage.html'},
   wishlistPrice:  {category:'finance',  file:'_wishlistPrice.html'},
+  realtyRadar:    {category:'tools',    file:'_realtyRadar.html'},
   wishlistGames:  {category:'tools',    file:'_wishlistGames.html'},
   audioPlayer:    {category:'media',    file:'_audioPlayer.html'},
   videoPlayer:    {category:'media',    file:'_videoPlayer.html'},
