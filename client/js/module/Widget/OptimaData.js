@@ -16,6 +16,7 @@ const CONFIG={
   optimaOrders:{branch:true,status:['all','received','sent','expected','today','overdue','done','pending','approved','rejected'],extra:false,date:true,mode:['history','requests']}
 };
 const MAX_ROWS=400;
+const catalogProductId=row=>row.usedProductId??row.productId??row.linkedProductId??null;
 const PRODUCT_COL_DEFAULTS=Object.freeze({id:64,name:225,unit:88,supplier:245,actions:170});
 const PRODUCT_COL_KEYS=Object.keys(PRODUCT_COL_DEFAULTS);
 const PRODUCT_COL_MIN=48;
@@ -468,7 +469,7 @@ export default class OptimaDataWidget {
   }
   configureSelects(){
     const f=this.filters;
-    if(this.controls.status&&this.cfg.status)select(this.controls.status,this.cfg.status.map(x=>[x,t('optima.filter.'+x)]),f.status);
+    if(this.controls.status&&this.cfg.status)select(this.controls.status,this.type==='optimaProposals'?[['all','Все позиции'],['linked','Привязанные'],['unlinked','Непривязанные']]:this.cfg.status.map(x=>[x,t('optima.filter.'+x)]),f.status);
     if(this.cfg.mode)select(this.controls.mode,this.cfg.mode.map(x=>[x,t('optima.mode.'+x)]),f.mode);
     else select(this.controls.mode,[['','—']],'');
     const db=this.db||{};
@@ -613,12 +614,60 @@ export default class OptimaDataWidget {
     const suppliers=new Map(rows(db.suppliers).map(item=>[String(item.id),item]));
     return rows(db.supplierCatalog).filter(row=>{
       if(!row)return false;
-      const linked=products.has(String(row.productId||row.linkedProductId||''));
+      const linked=products.has(String(catalogProductId(row)??''));
       if(f.status==='linked'&&!linked)return false;
       if(f.status==='unlinked'&&linked)return false;
       if(extra&&String(row.supplierId)!==String(extra))return false;
       return !q||norm([row.name,row.unit,row.price,suppliers.get(String(row.supplierId))?.name].join(' ')).includes(q);
     }).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ru'));
+  }
+  catalogLinkPicker(row){
+    const wrap=make('div',undefined,'dx-catalog-link-picker');
+    const products=rows(this.db?.products);
+    const chosen=products.find(p=>String(p.id)===String(catalogProductId(row)));
+    const field=make('input');field.type='search';field.placeholder='Привязать наименование…';
+    field.value=chosen?.name||'';field.autocomplete='off';field.setAttribute('aria-label','Поиск нашего наименования');
+    const menu=make('div',undefined,'dx-catalog-link-menu');menu.hidden=true;
+    const refresh=()=>{
+      const needle=norm(field.value);menu.replaceChildren();
+      const found=products.filter(p=>!needle||norm(p.name).includes(needle)).slice(0,30);
+      for(const product of found){
+        const option=make('button',product.name+' · #'+product.id,'dx-product-supplier-option');option.type='button';
+        option.addEventListener('mousedown',event=>event.preventDefault());
+        option.addEventListener('click',()=>{menu.hidden=true;void this.saveCatalogLink(row,product);});
+        menu.append(option);
+      }
+      if(!found.length)menu.append(make('span','Совпадений нет'));
+      menu.hidden=false;
+    };
+    field.addEventListener('focus',refresh);field.addEventListener('input',refresh);
+    field.addEventListener('blur',()=>setTimeout(()=>{menu.hidden=true},150));
+    wrap.append(field,menu);
+    if(chosen){
+      const clear=make('button','×');clear.type='button';clear.title='Отвязать';
+      clear.addEventListener('click',()=>void this.saveCatalogLink(row,null));wrap.append(clear);
+    }
+    return wrap;
+  }
+  async saveCatalogLink(row,product){
+    if(!this.db||!Number.isFinite(Number(this.revision)))return;
+    const previous=catalogProductId(row),nextId=product?.id??null;
+    if(String(previous??'')===String(nextId??''))return;
+    const id=String(row.id);
+    const updatedCatalog=rows(this.db.supplierCatalog).map(item=>String(item.id)===id?{...item,usedProductId:nextId}:item);
+    const updatedProducts=rows(this.db.products).map(item=>{
+      const links=rows(item.catalogLinks).map(String).filter(v=>v!==id);
+      if(nextId!==null&&String(item.id)===String(nextId))links.push(id);
+      return {...item,catalogLinks:[...new Set(links)]};
+    });
+    if(!window.confirm((product?'Привязать «'+row.name+'» к «'+product.name+'»?':'Убрать привязку «'+row.name+'»?')))return;
+    this.statusText.textContent='Сохранение привязки…';
+    try{
+      await patchOptima({supplierCatalog:updatedCatalog,products:updatedProducts},this.revision);
+      await this.load();
+    }catch(error){
+      this.statusText.textContent=error.status===409?'База изменилась. Обновите каталог и попробуйте снова.':'Ошибка привязки: '+error.message;
+    }
   }
   printCatalog(){
     if(!this.db){window.alert('Сначала подключитесь к базе PRO OPTIMA.');return;}
@@ -739,9 +788,11 @@ export default class OptimaDataWidget {
         {label:t('optima.product'),get:x=>x.name},
         {label:t('optima.supplier'),get:x=>suppliersById.get(String(x.supplierId))?.name},
         {label:t('optima.unit'),get:x=>x.unit},
-        {label:t('optima.price'),get:x=>money(x.price)}
+        {label:t('optima.price'),get:x=>money(x.price)},
+        {label:'Привязка к наименованию',get:x=>this.catalogLinkPicker(x)}
       ],entries);
-      this.summary.textContent=t('optima.found',{count:String(entries.length),total:String(total('supplierCatalog').length)});
+      const linked=total('supplierCatalog').filter(x=>total('products').some(p=>String(p.id)===String(catalogProductId(x)))).length;
+      this.summary.textContent='Показано: '+entries.length+'   |   В каталоге: '+total('supplierCatalog').length+'   |   Непривязано: '+(total('supplierCatalog').length-linked)+'   |   Связано с нашими: '+linked;
     }
     if(this.type==='optimaOffers'){
       const products=new Map(total('products').map(p=>[String(p.id),p]));
