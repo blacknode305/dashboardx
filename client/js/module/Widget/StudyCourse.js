@@ -3,13 +3,14 @@ import { LOGIC_GROUPS, LOGIC_LESSONS, LOGIC_REFERENCES } from './LogicCourseData
 import { STUDY_EXTRA_MEMORY, STUDY_EXTRA_LOGIC, STUDY_GROUP_GUIDES } from './StudyExpandedData.js?v=study-expanded-20261101c';
 import { MIMIC_GROUPS,MIMIC_LESSONS,MIMIC_UNITS,MIMIC_SCENARIOS,MIMIC_REFERENCES } from './MimicCourseData.js?v=study-expanded-20261101c';
 import { createMimicFace } from './MimicFaceVisual.js?v=study-expanded-20261101c';
+import { SOCIAL_GROUPS,SOCIAL_LESSONS,SOCIAL_SCENARIOS,SOCIAL_REFERENCES } from './SocialSignalsData.js?v=mimic-social-20261101';
 import { ECON_GROUPS,ECON_LESSONS,ECON_REFERENCES } from './EconomicsCourseData.js?v=articles-economics-20261101';
 import { STUDY_ARTICLES } from './StudyArticlesData.js?v=articles-economics-20261101';
 
 const courseMap={
   psychology:{groups:MEMORY_GROUPS,lessons:MEMORY_LESSONS,refs:MEMORY_REFERENCES,extra:STUDY_EXTRA_MEMORY,guide:STUDY_GROUP_GUIDES.memory},
   logic:{groups:LOGIC_GROUPS,lessons:LOGIC_LESSONS,refs:LOGIC_REFERENCES,extra:STUDY_EXTRA_LOGIC,guide:STUDY_GROUP_GUIDES.logic},
-  mimic:{groups:MIMIC_GROUPS,lessons:MIMIC_LESSONS,refs:MIMIC_REFERENCES,extra:[],guide:[]},
+  mimic:{groups:[...MIMIC_GROUPS,...SOCIAL_GROUPS],lessons:[...MIMIC_LESSONS,...SOCIAL_LESSONS],refs:[...MIMIC_REFERENCES,...SOCIAL_REFERENCES],extra:[],guide:[]},
   economics:{groups:ECON_GROUPS,lessons:ECON_LESSONS,refs:ECON_REFERENCES,extra:[],guide:[]}
 };
 const studyWords=Object.freeze([
@@ -65,7 +66,7 @@ export default class StudyCourseWidget{
   this.bookmarks=new Set((Array.isArray(old.bookmarks)?old.bookmarks:[]).filter(id=>this.ids.has(id)));
   this.errors=Object.fromEntries(Object.entries(old.errors||{}).filter(([id,count])=>this.ids.has(id)&&Number.isInteger(count)&&count>0));
   this.active=this.ids.has(old.active)?old.active:this.lessons[0].id;
-  this.view=['course','memory','practice','review','sources','lab','observations','articles'].includes(old.view)?old.view:'course';
+  this.view=['course','memory','practice','review','sources','lab','observations','articles','social'].includes(old.view)?old.view:'course';
   if(this.type==='logic'&&['memory','lab','observations'].includes(this.view))this.view='course';
   if(this.type==='psychology'&&['practice','lab','observations'].includes(this.view))this.view='course';
   if(this.type==='mimic'&&['memory','practice'].includes(this.view))this.view='course';
@@ -84,6 +85,15 @@ export default class StudyCourseWidget{
       [...new Set(faceHistory.solved.filter(x=>Number.isInteger(x)&&x>=0&&x<MIMIC_SCENARIOS.length))]:[],
     attempts:Math.max(0,Number(faceHistory.attempts)||0),
     correct:Math.max(0,Number(faceHistory.correct)||0)};
+  const socialState=old.socialState||{};
+  this.socialIndex=Number.isInteger(socialState.index)&&socialState.index>=0&&socialState.index<SOCIAL_SCENARIOS.length?socialState.index:0;
+  this.socialChoice=null;this.socialFeedback=null;
+  this.socialHistory={
+    attempts:Math.max(0,Number(socialState.attempts)||0),
+    correct:Math.max(0,Number(socialState.correct)||0),
+    solved:[...new Set((Array.isArray(socialState.solved)?socialState.solved:[]).filter(
+      id=>typeof id==='string'&&SOCIAL_SCENARIOS.some(caseItem=>caseItem.id===id)))]
+  };
   this.notes=Object.fromEntries(Object.entries(old.notes||{}).filter(([id,value])=>
     this.ids.has(id)&&typeof value==='string').map(([id,value])=>[id,value.slice(0,3000)]));
   this.stats={attempts:Math.max(0,Number(old.stats?.attempts)||0),
@@ -126,7 +136,9 @@ export default class StudyCourseWidget{
    completed:[...this.completed],bookmarks:[...this.bookmarks],errors:this.errors,
    active:this.active,view:this.view,stats:this.stats,
    notes:this.notes,faceUnit:this.faceUnit,faceIndex:this.faceIndex,faceHistory:this.faceHistory,
-   articleRead:[...this.articleRead],articleSaved:[...this.articleSaved],articleId:this.articleId
+   articleRead:[...this.articleRead],articleSaved:[...this.articleSaved],articleId:this.articleId,
+   socialState:{index:this.socialIndex,attempts:this.socialHistory.attempts,
+     correct:this.socialHistory.correct,solved:this.socialHistory.solved}
   }});
  }
  handleClick(event){
@@ -136,6 +148,7 @@ export default class StudyCourseWidget{
    if(next===this.view)return;
    this.clearTimer();this.round=null;this.feedback=null;this.selectedChoice=null;this.review=null;
    this.faceChoice=null;this.faceFeedback=null;
+   this.socialChoice=null;this.socialFeedback=null;
    this.view=next;this.persist();this.render();return;
   }
   const jump=event.target.closest('[data-course-lesson]');
@@ -166,6 +179,21 @@ export default class StudyCourseWidget{
     }
     return;
   }
+  const socialTopic=event.target.closest('[data-social-topic]');
+  if(socialTopic&&this.type==='mimic'&&this.main.contains(socialTopic)){
+    const first=SOCIAL_SCENARIOS.findIndex(item=>item.group===socialTopic.dataset.socialTopic);
+    if(first>=0){this.socialIndex=first;this.socialChoice=null;this.socialFeedback=null;
+      this.persist();this.renderContent();}
+    return;
+  }
+  const socialAnswer=event.target.closest('[data-social-choice]');
+  if(socialAnswer&&this.type==='mimic'&&this.main.contains(socialAnswer)){
+    if(this.socialFeedback===null){
+      this.socialChoice=Number(socialAnswer.dataset.socialChoice);
+      this.renderContent(true);
+    }
+    return;
+  }
   const articleLink=event.target.closest('[data-study-article]');
   if(articleLink&&this.root.contains(articleLink)){
     const id=articleLink.dataset.studyArticle;
@@ -177,6 +205,14 @@ export default class StudyCourseWidget{
   const action=event.target.closest('[data-course-action]');
   if(!action||!this.root.contains(action))return;
   switch(action.dataset.courseAction){
+   case 'social-check':this.checkSocialScenario();break;
+   case 'social-next':
+     this.socialIndex=(this.socialIndex+1)%SOCIAL_SCENARIOS.length;
+     this.socialChoice=null;this.socialFeedback=null;
+     this.persist();this.renderContent();break;
+   case 'social-retry':
+     this.socialChoice=null;this.socialFeedback=null;
+     this.renderContent(true);break;
    case 'articles-back':this.articleId=null;this.persist();this.renderContent();break;
    case 'article-read':
      if(this.articleId){this.articleRead.has(this.articleId)?
@@ -265,6 +301,7 @@ export default class StudyCourseWidget{
   if(this.view==='articles')this.renderArticles();
   if(this.view==='lab')this.renderFaceLab();
   if(this.view==='observations')this.renderFaceObservations();
+  if(this.view==='social')this.renderSocialScenarios();
   if(keepScroll)this.main.scrollTop=top;
  }
  section(label,value,cls=''){
@@ -563,6 +600,86 @@ export default class StudyCourseWidget{
       this.faceHistory.solved.push(this.faceIndex);
   }
   this.persist();this.renderContent(true);
+ }
+ checkSocialScenario(){
+  if(this.type!=='mimic'||this.socialChoice===null||this.socialFeedback!==null)return;
+  const scene=SOCIAL_SCENARIOS[this.socialIndex];
+  if(!scene)return;
+  const correct=this.socialChoice===scene.answer;
+  this.socialFeedback={correct};
+  this.socialHistory.attempts++;
+  if(correct){
+    this.socialHistory.correct++;
+    if(!this.socialHistory.solved.includes(scene.id))this.socialHistory.solved.push(scene.id);
+  }
+  this.persist();this.renderContent(true);
+ }
+ renderSocialScenarios(){
+  const scene=SOCIAL_SCENARIOS[this.socialIndex];
+  if(!scene)return;
+  const group=SOCIAL_GROUPS.find(item=>item.id===scene.group);
+  const page=make('section','dx-study-article dx-study-social');
+  page.append(make('span','dx-study-pill','Общение · '+SOCIAL_SCENARIOS.length+' примеров'),
+    make('h3','','Что человек может иметь в виду?'),
+    make('p','dx-study-subtle',
+      'Тренируйтесь отличать наблюдаемое от предположений. Интонация и мимика могут сопровождать сомнение, шутку или конфликт, но не раскрывают мысли и не доказывают ложь.'));
+  const topics=make('div','dx-study-social-topics');
+  for(const topic of SOCIAL_GROUPS){
+    const option=btn(topic.title,null,'dx-study-social-topic');
+    option.dataset.socialTopic=topic.id;
+    option.setAttribute('aria-pressed',String(topic.id===scene.group));
+    topics.append(option);
+  }
+  page.append(topics);
+  const indicators=make('div','dx-study-stats');
+  for(const [label,value] of [
+    ['Попытки',this.socialHistory.attempts],
+    ['Верно',this.socialHistory.correct],
+    ['Разобрано',this.socialHistory.solved.length+' / '+SOCIAL_SCENARIOS.length]
+  ]){
+    const stat=make('div','dx-study-stat');
+    stat.append(make('strong','',value),make('span','',label));indicators.append(stat);
+  }
+  page.append(indicators);
+  const card=make('section','dx-study-panel dx-study-social-case');
+  card.append(make('small','dx-study-kicker',
+      'Ситуация '+(this.socialIndex+1)+' / '+SOCIAL_SCENARIOS.length+' · '+(group?.title||'')),
+    make('h4','',scene.title),
+    make('p','dx-study-social-description',scene.situation),
+    make('p','dx-study-social-question',scene.question));
+  const options=make('div','dx-study-answers');
+  scene.options.forEach((value,index)=>{
+    const option=btn(String.fromCharCode(65+index)+'. '+value,null,'dx-study-answer');
+    option.dataset.socialChoice=String(index);
+    option.classList.toggle('is-chosen',index===this.socialChoice);
+    option.setAttribute('aria-pressed',String(index===this.socialChoice));
+    option.disabled=this.socialFeedback!==null;
+    options.append(option);
+  });
+  card.append(options);
+  if(this.socialFeedback!==null){
+    const feedback=make('div','dx-study-feedback '+(this.socialFeedback.correct?'is-correct':'is-wrong'));
+    feedback.setAttribute('role','status');
+    feedback.append(make('strong','',this.socialFeedback.correct?
+      '✓ Обоснованная оценка':'Другой вариант точнее'),
+      make('p','',this.socialFeedback.correct?scene.rationale:
+        'Предпочтительный ответ: '+scene.options[scene.answer]+'. '+scene.rationale));
+    card.append(feedback);
+    card.append(this.section('Как ответить человеку',scene.response,'dx-study-example'));
+    card.append(this.section('Дополнительный пример',scene.alternative,'dx-study-activity'));
+  }
+  const controls=make('div','dx-study-actions');
+  const check=btn('Проверить рассуждение','social-check','dx-study-primary');
+  check.disabled=this.socialChoice===null||this.socialFeedback!==null;
+  controls.append(check);
+  if(this.socialFeedback!==null){
+    controls.append(btn('Следующая ситуация →','social-next','dx-study-primary'),
+      btn('Повторить ситуацию','social-retry'));
+  }
+  card.append(controls);page.append(card);
+  page.append(make('p','dx-study-tip',
+    'Важно: эти примеры тренируют осторожную интерпретацию слов и контекста, а не угадывание чужих намерений. При серьёзном споре ориентируйтесь на проверяемые факты и собственные границы.'));
+  this.main.append(page);
  }
  renderFaceObservations(){
   const page=make('section','dx-study-article dx-face-observations');
