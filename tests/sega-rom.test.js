@@ -46,6 +46,12 @@ test('SMD old interleaved cartridge format converts to standard headerless binar
   assert.equal(output.recognized,true);
   assert.deepEqual(new Uint8Array(await output.file.arrayBuffer()),original);
 });
+test('plain BIN named .smd is not mistakenly deinterleaved',async()=>{
+  const rom=testRom();
+  const output=await prepareSegaRom(file(rom,'renamed.smd'));
+  assert.equal(output.file.name,'renamed.bin');
+  assert.deepEqual(new Uint8Array(await output.file.arrayBuffer()),rom);
+});
 test('pair-swapped ROM header and optional copier header are repaired',async()=>{
   const source=testRom(),swapped=new Uint8Array(source);
   for(let i=0;i<swapped.length;i+=2)[swapped[i],swapped[i+1]]=[swapped[i+1],swapped[i]];
