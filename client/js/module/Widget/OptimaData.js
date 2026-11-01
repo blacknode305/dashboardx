@@ -16,7 +16,7 @@ const CONFIG={
   optimaOrders:{branch:true,status:['all','received','sent','expected','today','overdue','done','pending','approved','rejected'],extra:false,date:true,mode:['history','requests']}
 };
 const MAX_ROWS=400;
-const catalogProductId=row=>row.usedProductId??row.productId??row.linkedProductId??null;
+const catalogProductId=row=>row&&Object.prototype.hasOwnProperty.call(row,'usedProductId')?row.usedProductId:(row?.productId??row?.linkedProductId??null);
 const PRODUCT_COL_DEFAULTS=Object.freeze({id:64,name:225,unit:88,supplier:245,actions:170});
 const PRODUCT_COL_KEYS=Object.keys(PRODUCT_COL_DEFAULTS);
 const PRODUCT_COL_MIN=48;
