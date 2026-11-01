@@ -203,6 +203,14 @@ export default class EnglishLanguageWidget{
         this.persist();
       }
     };
+    this.onReadingReturn=()=>{
+      if(!document.hidden&&this.view==='reading'&&readingDayKey()!==this.readingDate){
+        this.stopReading();
+        this.readingIndex=0;this.readingDate=readingDayKey();
+        this.readingAnswer=null;this.readingFeedback=null;
+        this.renderContent();
+      }
+    };
     this.onSearch=()=>{
       this.searchTerm=this.search.value;
       this.renderChapters();
@@ -225,6 +233,7 @@ export default class EnglishLanguageWidget{
     this.search.addEventListener('input',this.onSearch);
     this.levelSelect.addEventListener('change',this.onLevel);
     this.chapterList.addEventListener('toggle',this.onChapterToggle,true);
+    document.addEventListener('visibilitychange',this.onReadingReturn);
     this.levelSelect.value=this.level;
     this.render();
   }
@@ -934,5 +943,6 @@ export default class EnglishLanguageWidget{
     this.search?.removeEventListener('input',this.onSearch);
     this.levelSelect?.removeEventListener('change',this.onLevel);
     this.chapterList?.removeEventListener('toggle',this.onChapterToggle,true);
+    document.removeEventListener('visibilitychange',this.onReadingReturn);
   }
 }
