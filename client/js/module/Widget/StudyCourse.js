@@ -3,7 +3,7 @@ import { LOGIC_GROUPS, LOGIC_LESSONS, LOGIC_REFERENCES } from './LogicCourseData
 import { STUDY_EXTRA_MEMORY, STUDY_EXTRA_LOGIC, STUDY_GROUP_GUIDES } from './StudyExpandedData.js?v=study-expanded-20261101c';
 import { MIMIC_GROUPS,MIMIC_LESSONS,MIMIC_UNITS,MIMIC_SCENARIOS,MIMIC_REFERENCES } from './MimicCourseData.js?v=study-expanded-20261101c';
 import { createMimicFace } from './MimicFaceVisual.js?v=study-expanded-20261101c';
-import { SOCIAL_GROUPS,SOCIAL_LESSONS,SOCIAL_SCENARIOS,SOCIAL_REFERENCES } from './SocialSignalsData.js?v=mimic-social-20261101';
+import { SOCIAL_GROUPS,SOCIAL_LESSONS,SOCIAL_SCENARIOS,SOCIAL_REFERENCES } from './SocialSignalsData.js?v=mimic-social-20261101b';
 import { ECON_GROUPS,ECON_LESSONS,ECON_REFERENCES } from './EconomicsCourseData.js?v=articles-economics-20261101';
 import { STUDY_ARTICLES } from './StudyArticlesData.js?v=articles-economics-20261101';
 
