@@ -13,6 +13,12 @@ export function attachWidgetInlineEditor(widget, form, {title='Редактор'
   bar.className='dx-widget-inline-editor-bar';
   const label=document.createElement('strong');
   label.textContent=title;
+  const minimize=document.createElement('button');
+  minimize.type='button';
+  minimize.className='dx-widget-inline-editor-minimize';
+  minimize.textContent='−';
+  minimize.title='Свернуть окно';
+  minimize.setAttribute('aria-label','Свернуть окно');
   const close=document.createElement('button');
   close.type='button';
   close.className='dx-widget-inline-editor-close';
@@ -22,7 +28,7 @@ export function attachWidgetInlineEditor(widget, form, {title='Редактор'
   const content=document.createElement('div');
   content.className='dx-widget-inline-editor-content';
   content.append(form);
-  bar.append(label,close);
+  bar.append(label,minimize,close);
   pane.append(bar,content);
   widget.body.append(pane);
 
@@ -33,6 +39,11 @@ export function attachWidgetInlineEditor(widget, form, {title='Редактор'
   };
   const open=()=>{
     pane.hidden=false;
+    pane.classList.remove('is-minimized');
+    content.hidden=false;
+    minimize.textContent='−';
+    minimize.title='Свернуть окно';
+    minimize.setAttribute('aria-label','Свернуть окно');
     // Keep the window in the body after dashboard filters re-render.
     if(pane.parentElement!==widget.body)widget.body.append(pane);
     widget.activate?.();
@@ -73,6 +84,14 @@ export function attachWidgetInlineEditor(widget, form, {title='Редактор'
   };
   bar.addEventListener('pointerdown',beginDrag);
   close.addEventListener('click',requestClose);
+  const toggleMinimize=()=>{
+    const minimized=pane.classList.toggle('is-minimized');
+    content.hidden=minimized;
+    minimize.textContent=minimized?'▢':'−';
+    minimize.title=minimized?'Развернуть окно':'Свернуть окно';
+    minimize.setAttribute('aria-label',minimize.title);
+  };
+  minimize.addEventListener('click',toggleMinimize);
   pane.addEventListener('keydown',keydown);
   return {
     element:pane,open,hide,
@@ -80,6 +99,7 @@ export function attachWidgetInlineEditor(widget, form, {title='Редактор'
     destroy(){
       bar.removeEventListener('pointerdown',beginDrag);
       close.removeEventListener('click',requestClose);
+      minimize.removeEventListener('click',toggleMinimize);
       pane.removeEventListener('keydown',keydown);
       pane.remove();
     }
