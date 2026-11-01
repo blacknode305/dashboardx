@@ -5,6 +5,11 @@ import {normalizeListings,filterListings,analyzeListing,analyzeListings} from '.
 test('widget controller imports and is defined',()=>assert.equal(typeof RealtyRadarWidget,'function'));
 const item=(n,extra={})=>({title:'Объявление '+n,url:'https://example.org/a/'+n,category:'monthly',price:100000+n*1000,
   rooms:2,area:50,address:'Гоголя, '+n,priceUnit:'month',...extra});
+test('indexed result without a recognised price remains visible but is not ranked as a deal',()=>{
+ const rows=normalizeListings([item(91,{price:null,sourceConfidence:'search_index'})]);
+ assert.equal(rows.length,1);assert.equal(rows[0].price,null);
+ assert.equal(analyzeListing(rows[0],rows).discount,null);
+});
 test('rejects invalid links and excludes malformed prices',()=>{
  const r=normalizeListings([item(1),item(2,{url:'javascript:alert(1)'}),item(3,{price:0})]);
  assert.equal(r.length,1);
