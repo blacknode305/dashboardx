@@ -2588,3 +2588,19 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
     grid-template-columns:minmax(0,1fr);
   }
 }
+
+
+/* JSON upgrade: native file input occupies the actual click target. */
+#workspace-canvas [data-widget-type="optimaProposals"] .dx-json-upload{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  overflow:hidden;cursor:pointer;min-height:32px;padding:6px 12px;
+  box-sizing:border-box;user-select:none;
+}
+#workspace-canvas [data-widget-type="optimaProposals"] .dx-json-upload input[type="file"]{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  opacity:0!important;cursor:pointer!important;display:block!important;
+  z-index:2;pointer-events:auto!important;font-size:100px!important;
+}
+#workspace-canvas [data-widget-type="optimaProposals"] .dx-json-upload:focus-within{
+  outline:2px solid var(--dx-accent);outline-offset:2px;
+}
