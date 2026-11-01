@@ -1,6 +1,5 @@
 import { t } from '../i18n.js';
 import { openOptimaPrintPreview } from '../OptimaPrint.js?v=optima-catalog-refresh-20261031';
-import { attachCatalogImporter } from '../CatalogImport.js?v=optima-price-upload-20261031';
 import { getCredential } from '../CredentialStore.js';
 import { optimaRequest } from '../OptimaAPI.js';
 import {
@@ -172,9 +171,7 @@ export default class OptimaDataWidget {
     if(this.productPrint)this.listen(this.productPrint,'click',()=>this.printProducts());
     if(this.catalogPrint)this.listen(this.catalogPrint,'click',()=>this.printCatalog());
     if(this.type==='optimaProposals'){
-      const trigger=widget.querySelector('[data-role="catalog-upgrade"]');
       const input=widget.querySelector('[data-role="catalog-upgrade-file"]');
-      this.listen(trigger,'click',()=>input.click());
       this.listen(input,'change',async()=>{
         const file=input.files?.[0];if(!file)return;
         try{
@@ -187,23 +184,17 @@ export default class OptimaDataWidget {
           if(!counts.some(([,count])=>count))throw Error('В upgrade-файле нет операций');
           const summary=counts.filter(([,count])=>count).map(([key,count])=>key+': '+count).join('\\n');
           if(!window.confirm('Применить upgrade JSON «'+file.name+'» к PRO OPTIMA?\\n\\n'+summary+'\\n\\nИзменения будут записаны в Railway. Перед записью сервер делает резервную копию.'))return;
-          trigger.disabled=true;this.statusText.textContent='Применение upgrade JSON…';
-          const result=await optimaRequest('/api/admin/apply-update',{method:'POST',body:JSON.stringify(parsed)});
+          input.disabled=true;this.statusText.textContent='Применение upgrade JSON…';
+          const result=await optimaRequest('/api/dashboardx/catalog/upgrade',{method:'POST',body:JSON.stringify({baseRevision:this.revision,update:parsed})});
           this.statusText.textContent='Upgrade применён: '+file.name;
           await this.load();
           window.alert('Обновление прайсов применено. '+JSON.stringify(result.summary||{}));
         }catch(error){
           this.statusText.textContent='Ошибка upgrade: '+(error.message||String(error));
-        }finally{trigger.disabled=false;input.value='';}
+        }finally{input.disabled=false;input.value='';}
       });
     }
-    this.catalogImporter=this.type==='optimaProposals'?attachCatalogImporter({
-      widget,
-      getDatabase:()=>this.db,
-      getRevision:()=>this.revision,
-      getSupplierFilter:()=>this.filters.extra,
-      onSaved:()=>this.load()
-    }):null;
+    this.catalogImporter=null;
     if(this.productSupplierQuery){
       const query=this.productSupplierQuery;
       const options=this.productSupplierOptions;
