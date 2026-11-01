@@ -1,5 +1,5 @@
 /* Realty Radar is isolated from PRO OPTIMA and other widget styles. */
-.dx-realty {color:var(--text-primary,#e3ebfa);font-family:inherit;font-size:13px;line-height:1.5;min-width:315px;display:flex;flex-direction:column;gap:12px;padding:13px;overflow:hidden}
+.dx-realty {container-type:inline-size;color:var(--text-primary,#e3ebfa);font-family:inherit;font-size:13px;line-height:1.5;min-width:315px;display:flex;flex-direction:column;gap:12px;padding:13px;overflow:hidden}
 .dx-realty *{box-sizing:border-box}
 .dx-realty button,.dx-realty input,.dx-realty select{font:inherit}
 .dx-realty-hero{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-radius:14px;background:linear-gradient(110deg,rgba(28,83,132,.39),rgba(15,27,45,.65));border:1px solid rgba(134,177,219,.18)}
@@ -10,7 +10,8 @@
 .dx-realty-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:4px;border-radius:11px;background:rgba(120,151,188,.09)}
 .dx-realty-tabs button{border:0;border-radius:8px;background:transparent;color:inherit;opacity:.76;padding:9px 3px;font-size:11px;cursor:pointer}
 .dx-realty-tabs button[aria-pressed=true]{background:rgba(48,126,163,.33);opacity:1;box-shadow:inset 0 0 0 1px rgba(129,218,226,.35);font-weight:700}
-.dx-realty-filters{display:grid;grid-template-columns:minmax(145px,2fr) repeat(4,minmax(94px,1fr));gap:7px}
+.dx-realty-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.dx-realty-search{grid-column:1/-1}
 .dx-realty-filters label{font-size:10px;color:var(--text-secondary,#aab6c7);display:flex;flex-direction:column;gap:4px;min-width:0}
 .dx-realty-filters input,.dx-realty-filters select,.dx-realty-source input{min-width:0;width:100%;height:34px;padding:6px 9px;border:1px solid rgba(145,178,203,.26);border-radius:8px;color:inherit;background:rgba(7,16,29,.38)}
 .dx-realty-streets{display:flex;flex-wrap:wrap;gap:8px 13px;padding:8px 12px;border:1px solid rgba(145,178,203,.17);border-radius:9px}
@@ -48,5 +49,6 @@
 .dx-realty-card-footer button{background:none;color:#f3d18c;border:0;font-size:19px;cursor:pointer}
 .dx-realty-empty{grid-column:1/-1;text-align:center;padding:28px 15px;color:#a9b8c8;border:1px dashed rgba(165,193,210,.24);border-radius:11px}
 .dx-realty-footnote{font-size:10px;line-height:1.45;color:var(--text-secondary,#a8b6c4);opacity:.75}
-@media(max-width:850px){.dx-realty-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.dx-realty-search{grid-column:1/-1}.dx-realty-tabs button{font-size:10px;padding:7px 1px}.dx-realty-results{grid-template-columns:1fr}}
+@container (min-width:800px){.dx-realty-filters{grid-template-columns:minmax(145px,2fr) repeat(4,minmax(94px,1fr))}.dx-realty-search{grid-column:auto}}
+@container (max-width:390px){.dx-realty-tabs button{font-size:10px;padding:7px 1px}.dx-realty-results{grid-template-columns:1fr}}
 @media(min-width:1000px){.dx-realty-results{max-height:580px}}
