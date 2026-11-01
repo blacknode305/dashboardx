@@ -21,6 +21,7 @@ import OptimaDataWidget from './Widget/OptimaData.js?v=widget-inline-editors-202
 import OptimaOrdersWidget from './Widget/OptimaOrders.js';
 import NesEmulatorWidget from './Widget/NesEmulator.js?v=nes-interactions-20261026';
 import SegaEmulatorWidget from './Widget/SegaEmulator.js?v=sega-rom-compat-20261101c';
+import RealtyRadarWidget from './Widget/RealtyRadar.js?v=realty-radar-20261101';
 import {
   GithubControlWidgetView,
   ServerMonitorWidgetView,
@@ -60,6 +61,7 @@ const WidgetLogic = {
   TorrentTrackerWidget: LocalCollectionWidget,
   NesEmulatorWidget,
   SegaEmulatorWidget,
+  RealtyRadarWidget,
   GithubControlWidget: GithubControlWidgetView,
   ServerMonitorWidget: ServerMonitorWidgetView,
   SmartContactsWidget: SmartContactsWidgetView,
