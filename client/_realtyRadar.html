@@ -1,0 +1,50 @@
+<!doctype html><html lang="ru"><body>
+<template data-widget data-id="realtyRadar" data-category="tools" data-title="Недвижимость · Радар">
+<section class="dx-realty" aria-label="Мониторинг недвижимости Караганды">
+  <header class="dx-realty-hero">
+    <div><small>КАРАГАНДА · REALTY RADAR</small><h2>Недвижимость</h2><p>Объявления · история цен · выгодные предложения</p></div>
+    <div class="dx-realty-summary"><strong data-role="total">0</strong><span>в выборке</span></div>
+  </header>
+  <nav class="dx-realty-tabs" aria-label="Тип недвижимости">
+    <button type="button" data-tab="monthly" aria-pressed="true">Помесячно</button>
+    <button type="button" data-tab="buyout" aria-pressed="false">С выкупом</button>
+    <button type="button" data-tab="short" aria-pressed="false">Сутки / часы</button>
+    <button type="button" data-tab="sale" aria-pressed="false">Продажа / земля</button>
+  </nav>
+  <div class="dx-realty-filters">
+    <label class="dx-realty-search">Поиск по адресу и описанию<input type="search" data-role="search" placeholder="Гоголя, 41, собственник, ремонт…" autocomplete="off"></label>
+    <label>Максимальная цена, ₸<input type="number" data-role="max" min="1000" max="100000000000" step="1000"></label>
+    <label>Комнатность<select data-role="rooms"><option value="">1–3 комнаты</option><option value="1">1 комната</option><option value="2">2 комнаты</option><option value="3">3 комнаты</option><option value="all">Все</option></select></label>
+    <label>Тип объекта<select data-role="kind"><option value="">Все объекты</option><option value="apartment">Квартиры</option><option value="house">Дома</option><option value="land">Участки</option><option value="commercial">Коммерция</option></select></label>
+    <label>Сортировка<select data-role="sort"><option value="score">Интересные</option><option value="recent">Новые</option><option value="price">Дешевле</option><option value="discount">Ниже рынка</option></select></label>
+  </div>
+  <fieldset class="dx-realty-streets"><legend>Улицы / зона поиска</legend>
+    <label><input type="checkbox" value="Нуркена Абдирова" data-street>Н. Абдирова</label>
+    <label><input type="checkbox" value="Лободы" data-street>Лободы</label>
+    <label><input type="checkbox" value="Ерубаева" data-street>Ерубаева</label>
+    <label><input type="checkbox" value="Гоголя" data-street>Гоголя</label>
+    <small>Снять все галочки — вся Караганда</small>
+  </fieldset>
+  <div class="dx-realty-actions">
+    <button type="button" data-action="refresh">↻ Проверить источник</button>
+    <button type="button" data-action="favorites">☆ Избранное</button>
+    <button type="button" data-action="export">Экспорт JSON</button>
+    <label class="dx-realty-upload">＋ Импорт JSON<input type="file" data-role="import" accept=".json,application/json"></label>
+    <details class="dx-realty-source"><summary>⚙ Источник данных</summary>
+      <p>HTTPS-ссылка на JSON-ленту, полученную с разрешения правообладателя или из собственного источника. Не вставляйте токены в ссылку.</p>
+      <div><input type="url" data-role="feed" placeholder="https://ваш-сервер/realty/feed.json" autocomplete="off">
+      <button type="button" data-action="save-feed">Сохранить</button></div>
+      <small>Схема данных: { "generatedAt": "...", "items": [ { "title": "...", "url": "https://...", "price": 100000, "category": "monthly", "priceUnit": "month", "rooms": 2, "address": "Гоголя, 41" } ] }</small>
+    </details>
+  </div>
+  <div class="dx-realty-search-links"><span>Поиск вручную:</span>
+    <a data-source="krisha" href="https://krisha.kz/arenda/kvartiry/karaganda/" target="_blank" rel="noopener noreferrer">Krisha.kz ↗</a>
+    <a data-source="olx" href="https://www.olx.kz/nedvizhimost/arenda-kvartiry/karaganda/" target="_blank" rel="noopener noreferrer">OLX.kz ↗</a>
+    <a data-source="kn" href="https://www.kn.kz/karaganda/arenda-kvartir" target="_blank" rel="noopener noreferrer">KN.kz ↗</a>
+  </div>
+  <p class="dx-realty-status" data-role="status" role="status" aria-live="polite">Данные пока не загружены.</p>
+  <div class="dx-realty-statbar"><span data-role="visible">Найдено: 0</span><span data-role="deals">Ниже рынка: —</span><span data-role="updated">Обновлено: —</span></div>
+  <div class="dx-realty-results" data-role="results"></div>
+  <footer class="dx-realty-footnote">Цены — из объявлений, а не из сделок. «Ниже рынка» — только статистическое сравнение ≥ 3 похожих объектов; не оценка юридической чистоты. Условия выкупа проверяйте по договору.</footer>
+</section>
+</template></body></html>
