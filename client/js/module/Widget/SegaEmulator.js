@@ -1,19 +1,13 @@
-// Sega Mega Drive / Genesis via official EmulatorJS stable CDN.
+// Sega cartridge player with local ROM normalization and EmulatorJS runtime.
+import { SEGA_EXTENSIONS,validateSegaFile,prepareSegaRom } from './SegaRom.js?v=sega-rom-compat-20261101';
 // Keep EmulatorJS in its own iframe so it does not change DashboardX DOM or globals.
-export const SEGA_ROM_EXTENSIONS=Object.freeze(['md','bin','gen','smd','zip']);
-export function checkSegaRom(file){
-  if(!file||typeof file.name!=='string'||typeof file.size!=='number')throw Error('Выберите файл игры Sega.');
-  const extension=file.name.split('.').pop().toLowerCase();
-  if(!SEGA_ROM_EXTENSIONS.includes(extension))throw Error('Нужен Mega Drive ROM: .md, .bin, .gen, .smd или .zip.');
-  const max=extension==='zip'?64*1024*1024:24*1024*1024;
-  if(file.size<128||file.size>max)throw Error('Неверный размер ROM (допускается до '+(max/1024/1024)+' МБ).');
-  return extension;
-}
-export function segaPlayerURL(moduleUrl,token){
+export const SEGA_ROM_EXTENSIONS=SEGA_EXTENSIONS;
+export const checkSegaRom=validateSegaFile;
+export function segaPlayerURL(moduleUrl,token,mode='local'){
   if(!token||typeof token!=='string')throw Error('Не указан ключ запуска Sega.');
   const url=new URL('../../../sega-player.html',moduleUrl);
-  url.searchParams.set('v','sega-local-runtime-20261101');
-  url.hash=new URLSearchParams({token}).toString();
+  url.searchParams.set('v','sega-rom-compat-20261101');
+  url.hash=new URLSearchParams({token,...(mode==='stable'?{mode:'stable'}:{})}).toString();
   return url.href;
 }
 export default class SegaEmulatorWidget{
@@ -31,7 +25,9 @@ export default class SegaEmulatorWidget{
     this.play=widget.querySelector('[data-action="sega-play"]');
     this.stop=widget.querySelector('[data-action="sega-stop"]');
     this.fullscreen=widget.querySelector('[data-action="sega-fullscreen"]');
-    this.romFile=null;this.token=null;this.loaded=false;this.uiReady=false;this.destroyed=false;
+    this.romFile=null;this.romSource=null;this.romNotes=[];
+    this.token=null;this.loaded=false;this.uiReady=false;this.destroyed=false;
+    this.loadVersion=0;this.core='segaMD';this.mode='local';
     this.unbind=[];
     const state=window.dashboardxStore?.getWidgetState(widget.instanceId)||{};
     this.crt.checked=state.segaCrt===true;
@@ -78,8 +74,10 @@ export default class SegaEmulatorWidget{
       if(event.data?.type==='dashboardx:sega-ready'){
         if(!this.romFile)return;
         // Structured cloning preserves the File's name, extension and contents.
-        event.source.postMessage({type:'dashboardx:sega-rom',token:this.token,file:this.romFile},event.origin);
-        this.setStatus('ROM передан эмулятору · загрузка ядра…');
+        event.source.postMessage({type:'dashboardx:sega-rom',token:this.token,
+          file:this.romFile,core:this.core,originalName:this.romSource?.name,
+          notes:this.romNotes},event.origin);
+        this.setStatus('ROM передан · ядро '+this.core+' · загрузка…');
       }
       if(event.data?.type==='dashboardx:sega-received'){
         this.setStatus('ROM распознан: '+event.data.name+' · подключение EmulatorJS…');
@@ -93,7 +91,7 @@ export default class SegaEmulatorWidget{
         this.led.textContent='● READY';
       }
       if(event.data?.type==='dashboardx:sega-retry'){
-        if(this.romFile)this.openRom(this.romFile);
+        if(this.romSource)this.openRom(this.romSource,this.mode==='local'?'stable':'local');
         return;
       }
       if(event.data?.type==='dashboardx:sega-start'){
@@ -112,31 +110,51 @@ export default class SegaEmulatorWidget{
     this.setStatus('Выберите Sega ROM на устройстве');
   }
   setStatus(message){if(this.status)this.status.textContent=message;}
-  openRom(file){
+  async openRom(file,mode='local'){
     try{checkSegaRom(file)}catch(error){this.setStatus(error.message);return false;}
     this.stopGame();
-    this.romFile=file;
+    const sequence=this.loadVersion;
+    this.mode=mode;
+    this.setStatus('Проверяем формат ROM: '+file.name+'…');
+    this.name.textContent=file.name;
+    this.led.textContent='● CHECK';
+    let prepared;
+    try{
+      prepared=await prepareSegaRom(file);
+      if(this.destroyed||this.loadVersion!==sequence)return false;
+    }catch(error){
+      if(this.loadVersion===sequence){
+        this.led.textContent='● ERROR';
+        this.setStatus(error.message||'Не удалось разобрать ROM.');
+      }
+      return false;
+    }
+    this.romSource=file;
+    this.romFile=prepared.file;
+    this.romNotes=prepared.notes;
+    this.core=prepared.system;
     this.uiReady=false;
     this.token=String(this.widget.instanceId)+'-'+Math.random().toString(36).slice(2);
     try{
-      // A real same-origin HTML document avoids srcdoc bootstrapping issues.
-      // The ROM stays in memory; deliver it as the original structured File.
+      // The same-origin frame receives the prepared ROM through structured cloning.
       this.frame.setAttribute('sandbox','allow-scripts allow-same-origin allow-downloads allow-pointer-lock allow-forms');
       this.frame.setAttribute('allow','fullscreen; autoplay; gamepad');
-      this.frame.src=segaPlayerURL(import.meta.url,this.token);
+      this.frame.src=segaPlayerURL(import.meta.url,this.token,mode);
     }catch(error){
       this.stopGame();this.setStatus(error.message);return false;
     }
     this.loaded=true;
     this.frame.hidden=false;this.placeholder.hidden=true;
-    this.name.textContent=file.name;
+    this.name.textContent=prepared.name;
     this.led.textContent='● LOADING';this.led.classList.remove('is-running');
     this.stop.disabled=false;this.fullscreen.disabled=false;
     this.widget.activate?.();
-    this.setStatus('Запуск ядра Sega Mega Drive…');
+    const detail=prepared.notes.length?' · '+prepared.notes.join('; '):'';
+    this.setStatus('Запуск '+this.core+(mode==='stable'?' · резервный CDN':'')+detail);
     return true;
   }
   stopGame(){
+    this.loadVersion++;
     if(document.fullscreenElement===this.stage)document.exitFullscreen?.().catch(()=>{});
     this.loaded=false;
     this.frame.hidden=true;
@@ -146,7 +164,8 @@ export default class SegaEmulatorWidget{
     this.led.textContent='● STANDBY';this.led.classList.remove('is-running');
     this.name.textContent='Нет загруженной игры';
     this.stop.disabled=true;this.fullscreen.disabled=true;
-    this.romFile=null;this.token=null;this.uiReady=false;
+    this.romFile=null;this.romSource=null;this.romNotes=[];
+    this.token=null;this.uiReady=false;
     this.setStatus('ROM выгружен');
   }
   destroy(){
