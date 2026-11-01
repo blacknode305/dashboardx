@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import RealtyRadarWidget from '../client/js/module/Widget/RealtyRadar.js';
 import {normalizeListings,filterListings,analyzeListing,analyzeListings} from '../client/js/module/Widget/RealtyRadarAnalysis.js';
+test('widget controller imports and is defined',()=>assert.equal(typeof RealtyRadarWidget,'function'));
 const item=(n,extra={})=>({title:'Объявление '+n,url:'https://example.org/a/'+n,category:'monthly',price:100000+n*1000,
   rooms:2,area:50,address:'Гоголя, '+n,priceUnit:'month',...extra});
 test('rejects invalid links and excludes malformed prices',()=>{
