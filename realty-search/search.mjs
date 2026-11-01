@@ -22,7 +22,7 @@ export function makePlan(rotation=0,limit=16){
 }
 export function parsePrice(value){
   const text=clean(value).replace(/\u00a0/g,' ');
-  const match=[...text.matchAll(/(\d{1,3}(?:[\s.,]\d{3})+|\d{4,10}|\d{1,3}(?:[,.]\d{1,2})?)\s*(млн\.?|миллион(?:ов|а)?|тыс\.?|тысяч|₸|тг\.?|тенге|kzt)\b?/giu)];
+  const match=[...text.matchAll(/(\d{1,3}(?:[\s.,]\d{3})+|\d{4,10}|\d{1,3}(?:[,.]\d{1,2})?)\s*(млн\.?|миллион(?:ов|а)?|тыс\.?|тысяч|₸|тг\.?|тенге|kzt)/giu)];
   const matches=match.map(m=>{
     const unit=m[2].toLowerCase();
     let amount=Number(m[1].replace(/\s/g,'').replace(',', '.'));
