@@ -51,6 +51,7 @@ export default class RealtyRadarWidget {
     this.items=normalizeListings(state.items||[]);
     this.favorites=new Set(Array.isArray(state.favorites)?state.favorites.filter(x=>typeof x==='string') : []);
     this.favoritesOnly=false;
+    this.archivedOnly=false;
     this.lastOpenedBefore=Date.parse(state.lastOpened||'')||0;
     this.lastUpdated=state.lastUpdated||null;
     this.lastFetchedAt=Number(state.lastFetchedAt)||0;
@@ -90,6 +91,7 @@ export default class RealtyRadarWidget {
       this.favoritesOnly=!this.favoritesOnly;this.render();
     });
     listen(q('[data-action="refresh"]'),'click',()=>void this.refresh(true));
+    listen(q('[data-action="archived"]'),'click',()=>{this.archivedOnly=!this.archivedOnly;this.render();});
     listen(q('[data-action="save-feed"]'),'click',()=>{
       const raw=this.feedInput.value.trim();
       const url=raw?safeURL(raw):'';
@@ -267,12 +269,13 @@ export default class RealtyRadarWidget {
   }
   render(){
     const current=analyzeListings(this.items,this.filters());
-    const filtered=this.favoritesOnly?current.filter(x=>this.favorites.has(x.id)):current;
+    const filtered=current.filter(x=>Boolean(x.missing)===this.archivedOnly).filter(x=>!this.favoritesOnly||this.favorites.has(x.id));
     this.q('[data-role="total"]').textContent=nfmt(this.items.length);
     this.q('[data-role="visible"]').textContent='Найдено: '+filtered.length;
     this.q('[data-role="deals"]').textContent='Ниже медианы на ≥12%: '+filtered.filter(x=>x.discount!==null&&x.discount>=12).length;
     this.q('[data-role="updated"]').textContent='Данные: '+(this.lastUpdated?new Date(this.lastUpdated).toLocaleString('ru-RU'):'не загружены');
     this.q('[data-action="favorites"]').textContent=this.favoritesOnly?'★ Показать все':'☆ Избранное ('+this.favorites.size+')';
+    this.q('[data-action="archived"]').textContent=this.archivedOnly?'↩ Актуальная выборка':'Архив ('+this.items.filter(x=>x.missing).length+')';
     this.results.replaceChildren();
     if(!filtered.length){
       this.results.append(node('div','dx-realty-empty',this.items.length?
