@@ -7,6 +7,11 @@ const SALE_LINKS={
   olx:'https://www.olx.kz/nedvizhimost/prodazha-kvartir/karaganda/',
   kn:'https://www.kn.kz/karaganda/prodazha-kvartir'
 };
+const SHORT_LINKS={
+  krisha:'https://krisha.kz/arenda/kvartiry-posutochno/karaganda/',
+  olx:'https://www.olx.kz/nedvizhimost/arenda-pochasovo-posutochno/kvartiry/karaganda/',
+  kn:'https://www.kn.kz/karaganda/arenda-kvartir'
+};
 const RENT_LINKS={
   krisha:'https://krisha.kz/arenda/kvartiry/karaganda/',
   olx:'https://www.olx.kz/nedvizhimost/arenda-kvartiry/karaganda/',
@@ -71,7 +76,7 @@ export default class RealtyRadarWidget {
       listen(el,role==='search'||role==='max'?'input':'change',()=>{
         const value=role==='max'?Number(el.value):el.value;
         this.settings[this.tab][role==='search'?'query':role]=value;
-        this.persist();this.render();
+        this.persist();this.applyControls();this.render();
       });
     }
     for(const el of widget.querySelectorAll('[data-street]')){
@@ -131,7 +136,10 @@ export default class RealtyRadarWidget {
     this.q('[data-role="kind"]').value=s.kind;
     this.q('[data-role="sort"]').value=s.sort;
     for(const el of this.widget.querySelectorAll('[data-street]'))el.checked=s.streets.includes(el.value);
-    const links=this.tab==='sale'?SALE_LINKS:RENT_LINKS;
+    const links=this.tab==='sale'?{
+      ...SALE_LINKS,krisha:s.kind==='land'?'https://krisha.kz/prodazha/uchastkov/karaganda/':
+      s.kind==='house'?'https://krisha.kz/prodazha/doma-dachi/karaganda/':SALE_LINKS.krisha
+    }:this.tab==='short'?SHORT_LINKS:RENT_LINKS;
     for(const [source,url] of Object.entries(links)){
       this.q('[data-source="'+source+'"]').href=url;
     }
