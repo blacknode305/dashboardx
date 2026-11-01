@@ -40,3 +40,29 @@ test('grammar progress lives in an instance-scoped widget state',()=>{
   assert.match(logic,/updateWidgetState\(this\.widget\.instanceId/);
   assert.match(logic,/review-start/);
 });
+
+
+test('expanded guides cover all lessons with two translated examples each',()=>{
+  const content=readFileSync(new URL('../client/js/module/Widget/EnglishGrammarExpanded.js',import.meta.url),'utf8');
+  const match=/export const GRAMMAR_EXPANDED = Object\\.freeze\\(([\\s\\S]*?)\\);\\s*export const GRAMMAR_CHAPTER_GUIDES/.exec(content);
+  assert.ok(match,'Expanded grammar JSON should be readable');
+  const expanded=JSON.parse(match[1]);
+  assert.deepEqual(Object.keys(expanded).sort(),lessons.map(item=>item.id).sort());
+  for(const lesson of lessons){
+    const item=expanded[lesson.id];
+    assert.ok(item.usage.length>=25,lesson.id+' needs usage explanation');
+    assert.equal(item.examples.length,2,lesson.id);
+    for(const example of item.examples){
+      assert.ok(example.english.trim(),lesson.id+' missing English example');
+      assert.ok(example.russian.trim(),lesson.id+' missing Russian translation');
+      assert.ok(example.english.split(/\\s+/).length>=3,lesson.id+' example must be a phrase');
+    }
+  }
+});
+
+test('English practice includes sentence building and weakness reviews',()=>{
+  const code=readFileSync(new URL('../client/js/module/Widget/EnglishLanguage.js',import.meta.url),'utf8');
+  for(const expression of [/makeSentenceBuilder/,/checkBuilder/,/recordAttempt/,/review-mistakes/,/speechSynthesis/,/GRAMMAR_COMPARISONS/]){
+    assert.match(code,expression);
+  }
+});
