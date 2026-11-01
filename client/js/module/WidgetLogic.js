@@ -11,7 +11,7 @@ import FinanceTableWidget from './Widget/FinanceTable.js';
 import MoneyConvertApiWidget from './Widget/MoneyConvertApi.js';
 import CalculatorWidget from './Widget/Calculator.js';
 import EnglishLanguageWidget from './Widget/EnglishLanguage.js?v=english-study-20261101c';
-import StudyCourseWidget from './Widget/StudyCourse.js?v=study-expanded-20261101';
+import StudyCourseWidget from './Widget/StudyCourse.js?v=study-expanded-20261101c';
 import LocalCollectionWidget from './Widget/LocalCollection.js?v=nes-interactions-20261026';
 import MediaPlayerWidget from './Widget/MediaPlayer.js?v=nes-interactions-20261026';
 import ServerConsoleWidget from './Widget/ServerConsole.js?v=nes-interactions-20261026';
