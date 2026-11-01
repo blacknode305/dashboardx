@@ -1,6 +1,6 @@
 import eventBus from './module/EventBus.js';
 import ClientDB from './module/ClientDB.js';
-import learning from './module/EnglishLearningStore.js?v=english-study-20261101';
+import learning from './module/EnglishLearningStore.js';
 import { installEnglishQuickWords } from './module/EnglishQuickWords.js?v=english-study-20261101';
 import WidgetElement from './module/WidgetElement.js?v=english-study-20261101';
 import NavigationBar from './module/NavigationBar.js';
