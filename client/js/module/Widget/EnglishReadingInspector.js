@@ -164,8 +164,9 @@ function hoveredWord(event,container){
   return null;
 }
 export class EnglishReadingInspector{
-  constructor(widget,{onGrammar}={}){
+  constructor(widget,{onGrammar,onSave,isSaved}={}){
     this.widget=widget;this.onGrammar=onGrammar;
+    this.onSave=onSave;this.isSaved=isSaved;
     this.cache=new Map();this.token=0;this.key='';
     this.popup=node('aside','dx-reading-inspector');
     this.popup.hidden=true;this.popup.setAttribute('role','region');
@@ -239,6 +240,10 @@ export class EnglishReadingInspector{
       if(hints.length)this.popup.append(node('p','dx-reading-inspector-hints',
         'Отдельные слова: '+hints.map(item=>item.word+' — '+item.meaning).join('; ')));
     }
+    const saveButton=node('button','dx-reading-inspector-favourite',
+      this.isSaved?.(text)?'★ В избранном':'☆ Добавить в избранные слова');
+    saveButton.type='button';saveButton.dataset.inspect='save';
+    this.popup.append(saveButton);
     const grammar=readingGrammarHint(text,context)||readingWordGrammar(word);
     if(grammar){
       const block=node('section','dx-reading-inspector-grammar');
@@ -278,6 +283,13 @@ export class EnglishReadingInspector{
     const target=event.target.closest('[data-inspect]');
     if(!target)return;
     if(target.dataset.inspect==='close'){this.hide();return;}
+    if(target.dataset.inspect==='save'){
+      const word=readingWordInfo(this.text);
+      const grammar=readingGrammarHint(this.text)||readingWordGrammar(word);
+      this.onSave?.(this.text,{translation:word?.meaning||'',kind:word?.kind||'',grammarId:grammar?.id||''});
+      target.textContent='★ В избранном';
+      return;
+    }
     if(target.dataset.inspect==='grammar'){
       this.hide();this.onGrammar?.(target.dataset.grammar);return;
     }
