@@ -1,5 +1,5 @@
 import { t } from '../i18n.js';
-import { attachWidgetInlineEditor } from '../WidgetInlineEditor.js?v=widget-editors-20261101';
+import { attachWidgetInlineEditor } from '../WidgetInlineEditor.js?v=widget-editors-20261101b';
 import { openOptimaPrintPreview } from '../OptimaPrint.js?v=optima-catalog-refresh-20261031';
 import { getCredential } from '../CredentialStore.js';
 import { optimaRequest } from '../OptimaAPI.js';
@@ -306,7 +306,9 @@ export default class OptimaDataWidget {
       }
       // Non-modal subwindow owned by this widget's body: other widgets stay usable.
       const editorPanel=attachWidgetInlineEditor(widget,this.productDraft,{
-        title:'Редактор наименования',kind:'names',onClose:()=>closeDraft()
+        title:'Редактор наименования',kind:'names',
+        host:widget.querySelector('.optima-data[data-optima-module="optimaProducts"]'),
+        onClose:()=>closeDraft()
       });
       this.productEditorPanel=editorPanel;
       const closeDraft=(force=false)=>{
