@@ -1,4 +1,5 @@
 import { t } from '../i18n.js';
+import { attachWidgetInlineEditor } from '../WidgetInlineEditor.js?v=widget-editors-20261101';
 import { getCredential } from '../CredentialStore.js';
 import { loadOptima, patchOptima, OPTIMA_POLL_MS, OPTIMA_BASE, getOptimaWritePassword } from '../OptimaAPI.js';
 import { openOptimaPrintPreview } from '../OptimaPrint.js?v=optima-print-20261031';
@@ -101,8 +102,9 @@ export default class OptimaSuppliersWidget {
     this.deliveryDay.value=this.selectedDeliveryDay;
     this.expanded=new Set();
     this.editor=widget.querySelector('[data-role="optima-editor"]');
-    this.editorHome=this.editor.parentElement;
-    this.editCard=null;
+    this.editorPanel=attachWidgetInlineEditor(widget,this.editor,{
+      title:'Редактор поставщика',kind:'supplier',onClose:()=>this.closeEditor()
+    });
     this.editorTitle=widget.querySelector('[data-role="optima-editor-title"]');
     this.editorError=widget.querySelector('[data-role="optima-editor-error"]');
     this.editName=widget.querySelector('[data-role="optima-edit-name"]');
@@ -220,8 +222,9 @@ export default class OptimaSuppliersWidget {
     this.editName.value='';this.editContact.value='';this.editPhone.value='';
     this.editorError.textContent='';this.scheduleEditor.hidden=false;
     this.scheduleRows.replaceChildren();this.makeScheduleRow({});
-    this.editorHome.insertBefore(this.editor,this.list);
     this.editor.hidden=false;
+    this.editorPanel.setTitle('Добавить поставщика');
+    this.editorPanel.open();
     this.editName.focus({preventScroll:true});
   }
   edit(supplier,mode){
@@ -238,20 +241,17 @@ export default class OptimaSuppliersWidget {
     const card=[...this.list.querySelectorAll('details.optima-supplier')].find(
       el=>el.dataset.supplierId===String(supplier.id)
     );
-    if(card){
-      card.open=true;
-      this.expanded.add(String(supplier.id));
-      card.querySelector('.optima-supplier-body')?.append(this.editor);
-      this.editCard=card;
-    }
+    if(card){card.open=true;this.expanded.add(String(supplier.id));}
     this.editor.hidden=false;
+    this.editorPanel.setTitle('Изменить поставщика');
+    this.editorPanel.open();
     this.editName.focus({preventScroll:true});
   }
-  closeEditor(){
+  closeEditor(force=false){
+    if(this.saving&&!force)return;
     this.editId=null;this.editMode=null;
     this.editor.hidden=true;this.editorError.textContent='';
-    this.editorHome.append(this.editor);
-    this.editCard=null;
+    this.editorPanel.hide();
   }
   makeScheduleRow(data){
     const wrapper=document.createElement('div');wrapper.className='optima-edit-schedule';
@@ -335,7 +335,7 @@ export default class OptimaSuppliersWidget {
     this.saving=true;button.disabled=true;this.editorError.textContent=t('optima.saving');
     try {
       await patchOptima(changes,this.revision);
-      this.closeEditor();await this.load();
+      this.closeEditor(true);await this.load();
     } catch(error){
       if(error.status===409){
         this.editorError.textContent=t('optima.conflict');
@@ -415,9 +415,6 @@ export default class OptimaSuppliersWidget {
       const id=card.dataset.supplierId;
       if(card.open)this.expanded.add(id);else this.expanded.delete(id);
     }
-    // Keep the same live form and unsaved input across list rerenders.
-    if(this.editor.parentElement!==this.editorHome)this.editorHome.append(this.editor);
-    this.editCard=null;
     const filtered=filterOptimaSuppliers(this.rows,this.search.value,this.selectedBranch).filter(s=>
       (Array.isArray(s.schedules)?s.schedules:[]).some(row=>(!this.selectedBranch||normalize(row.branch)===normalize(this.selectedBranch))&&
       (!this.selectedOrderDay||parseDays(row.order).has(this.selectedOrderDay))&&
@@ -499,11 +496,6 @@ export default class OptimaSuppliersWidget {
         if(card.open)this.expanded.add(id);else this.expanded.delete(id);
       });
       this.list.append(card);
-      if(this.editId!==null&&id===String(this.editId)){
-        card.open=true;
-        body.append(this.editor);
-        this.editCard=card;
-      }
     }
   }
 
@@ -522,5 +514,6 @@ export default class OptimaSuppliersWidget {
     this.widget.querySelector('[data-role="optima-cancel-edit"]').removeEventListener('click',this.onCancel);
     this.widget.querySelector('[data-role="optima-edit-form"]').removeEventListener('submit',this.onSubmit);
     this.widget.querySelector('[data-role="optima-add-schedule"]').removeEventListener('click',this.onAddSchedule);
+    this.editorPanel.destroy();
   }
 }
