@@ -1,6 +1,6 @@
 import widgetRegistry from './WidgetRegistry.js';
 import WidgetBase from './WidgetBase.js';
-import WidgetLogic from './WidgetLogic.js?v=catalog-link-modal-20261101';
+import WidgetLogic from './WidgetLogic.js?v=names-editor-autoexpand-20261101';
 import { translateElement, translateWidgetBody, t } from './i18n.js';
 
 export default class WidgetElement extends WidgetBase {
