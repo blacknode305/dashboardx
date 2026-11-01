@@ -509,8 +509,9 @@ export default class StudyCourseWidget{
   const note=this.section('Правило наблюдателя',
     'Пишите «внутренние уголки бровей поднялись», а не «человек испугался». Учитывайте исходное выражение, произнесённые слова, качество изображения и ситуацию. Если смысл важен, задайте уважительный вопрос.','dx-study-pitfall');
   page.append(note);
-  page.append(btn('Потренироваться на ситуациях →',null,'dx-study-primary'));
-  const go=page.lastChild;go.dataset.courseTab='observations';
+  const go=btn('Потренироваться на ситуациях →',null,'dx-study-primary');
+  go.dataset.courseTab='observations';
+  page.append(go);
   this.main.append(page);
  }
  checkFaceObservation(){
