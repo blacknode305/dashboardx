@@ -1,7 +1,8 @@
 import { GRAMMAR_GROUPS, GRAMMAR_LESSONS, GRAMMAR_LEVELS } from './EnglishGrammarData.js?v=english-grammar-20261101';
 import { GRAMMAR_EXPANDED, GRAMMAR_CHAPTER_GUIDES, GRAMMAR_COMPARISONS } from './EnglishGrammarExpanded.js?v=english-extended-20261101';
 import { READING_THEMES, READING_ESSAYS, readingDayKey, readingPairForDay } from './EnglishReadingData.js?v=daily-reading-20261101';
-import { EnglishReadingInspector } from './EnglishReadingInspector.js?v=reading-inspector-20261101';
+import { EnglishReadingInspector, readingWordInfo, readingGrammarHint, readingWordGrammar } from './EnglishReadingInspector.js?v=reading-inspector-20261101';
+import learning from '../EnglishLearningStore.js';
 
 const byId=new Map(GRAMMAR_LESSONS.map(item=>[item.id,item]));
 const make=(tag,className='',text='')=>{
@@ -54,7 +55,7 @@ export default class EnglishLanguageWidget{
       .filter(([id,count])=>validIds.has(id)&&Number.isInteger(count)&&count>0)
       .map(([id,count])=>[id,Math.min(5,count)]));
     this.selected=validIds.has(old.selected)?old.selected:GRAMMAR_LESSONS[0].id;
-    this.view=['grammar','practice','saved','reading'].includes(old.view)?old.view:'grammar';
+    this.view=['grammar','practice','saved','reading','words','translator','phonetics'].includes(old.view)?old.view:'grammar';
     this.level=GRAMMAR_LEVELS.includes(old.level)?old.level:'all';
     this.searchTerm='';
     this.openGroups=new Set([byId.get(this.selected).groupId]);
@@ -77,6 +78,13 @@ export default class EnglishLanguageWidget{
     this.readingIndex=0;
     this.readingDate=readingDayKey();
     this.readingRate=.9;
+    this.translationDirection='en-ru';
+    this.translationInput='';
+    this.translationResult='';
+    this.translationStatus='';
+    this.vocabIndex=0;
+    this.vocabAnswer='';
+    this.vocabFeedback=null;
     this.readingAnswer=null;
     this.readingFeedback=null;
     this.readingAudio=null;
@@ -149,6 +157,14 @@ export default class EnglishLanguageWidget{
       const action=event.target.closest('[data-action]');
       if(!action||!this.root.contains(action))return;
       switch(action.dataset.action){
+        case 'word-remove':learning.removeWord(action.dataset.term);break;
+        case 'word-check':this.checkVocabulary();break;
+        case 'word-next':this.nextVocabulary();break;
+        case 'word-audio':this.sayText(action.dataset.term,'en-US');break;
+        case 'translate-switch':this.translationDirection=this.translationDirection==='en-ru'?'ru-en':'en-ru';this.translationResult='';this.renderContent();break;
+        case 'translate-start':void this.translateOnline();break;
+        case 'translate-audio-source':this.sayText(this.translationInput,this.translationDirection==='en-ru'?'en-US':'ru-RU');break;
+        case 'translate-audio-result':this.sayText(this.translationResult,this.translationDirection==='en-ru'?'ru-RU':'en-US');break;
         case 'reading-play':this.playReading();break;
         case 'reading-pause':this.pauseReading();break;
         case 'reading-stop':this.stopReading();break;
@@ -172,6 +188,10 @@ export default class EnglishLanguageWidget{
           this.view='grammar';this.render();break;
         default:break;
       }
+    };
+    this.onStudyInput=event=>{
+      if(event.target.matches('[data-role="translator-input"]'))this.translationInput=event.target.value.slice(0,2000);
+      if(event.target.matches('[data-role="vocab-answer"]'))this.vocabAnswer=event.target.value;
     };
     this.onReadingChange=event=>{
       if(event.target.matches('[data-role="reading-theme"]')){
@@ -229,10 +249,32 @@ export default class EnglishLanguageWidget{
       if(group.open)this.openGroups.add(group.dataset.groupId);
       else this.openGroups.delete(group.dataset.groupId);
     };
-    this.readingInspector=new EnglishReadingInspector(widget,{onGrammar:id=>this.selectLesson(id)});
+    learning.init(old);
+    this.learningUnsubscribe=learning.subscribe((cloud,status)=>{
+      const safe=cloud||{};
+      if(Array.isArray(safe.done))this.done=new Set(safe.done.filter(id=>validIds.has(id)));
+      if(Array.isArray(safe.bookmarks))this.bookmarks=new Set(safe.bookmarks.filter(id=>validIds.has(id)));
+      if(Array.isArray(safe.readingDone))this.readingDone=new Set(safe.readingDone);
+      if(safe.readingDrafts&&typeof safe.readingDrafts==='object')this.readingDrafts={...safe.readingDrafts};
+      if(safe.weak&&typeof safe.weak==='object')this.weak={...safe.weak};
+      if(safe.readingChecks&&typeof safe.readingChecks==='object')this.readingChecks={...safe.readingChecks};
+      if(this.root.isConnected){
+        this.renderProgress();
+        if(this.view==='grammar')this.renderChapters();
+        if(this.view==='words')this.renderContent(true);
+        const label=this.root.querySelector('[data-role="english-sync"]');
+        if(label)label.textContent=status;
+      }
+    });
+    this.readingInspector=new EnglishReadingInspector(widget,{
+      onGrammar:id=>this.selectLesson(id),
+      onSave:(term,details)=>learning.saveWord(term,details),
+      isSaved:term=>(learning.data.savedWords||[]).some(item=>item.term.toLowerCase()===term.toLowerCase())
+    });
     this.root.addEventListener('click',this.onClick);
     this.content.addEventListener('change',this.onReadingChange);
     this.content.addEventListener('input',this.onReadingInput);
+    this.content.addEventListener('input',this.onStudyInput);
     this.content.addEventListener('focusout',this.onReadingBlur);
     this.search.addEventListener('input',this.onSearch);
     this.levelSelect.addEventListener('change',this.onLevel);
@@ -243,8 +285,7 @@ export default class EnglishLanguageWidget{
   }
   persist(){
     if(this.destroyed)return;
-    this.store?.updateWidgetState(this.widget.instanceId,{
-      englishGrammar:{
+    const snapshot={
         schemaVersion:1,
         selected:this.selected,
         view:this.view,
@@ -256,8 +297,9 @@ export default class EnglishLanguageWidget{
         readingDone:[...this.readingDone],
         readingDrafts:this.readingDrafts,
         readingChecks:this.readingChecks
-      }
-    });
+      };
+    this.store?.updateWidgetState(this.widget.instanceId,{englishGrammar:snapshot});
+    learning.update(snapshot);
   }
   selectLesson(id){
     if(!byId.has(id))return;
@@ -385,6 +427,9 @@ export default class EnglishLanguageWidget{
   render(){
     if(this.destroyed)return;
     this.root.classList.toggle('is-reading',this.view==='reading');
+    this.root.classList.toggle('is-grammar',this.view==='grammar');
+    const status=this.root.querySelector('[data-role="english-sync"]');
+    if(status)status.textContent=learning.status;
     this.root.querySelectorAll('[data-view]').forEach(tab=>{
       const chosen=tab.dataset.view===this.view;
       tab.setAttribute('aria-pressed',String(chosen));
@@ -448,6 +493,9 @@ export default class EnglishLanguageWidget{
     if(this.view==='practice')this.renderReview();
     else if(this.view==='saved')this.renderSaved();
     else if(this.view==='reading')this.renderDailyReading();
+    else if(this.view==='words')this.renderWords();
+    else if(this.view==='translator')this.renderTranslator();
+    else if(this.view==='phonetics')this.renderPhonetics();
     else this.renderLesson();
     this.content.scrollTop=previousScroll;
   }
@@ -941,6 +989,7 @@ export default class EnglishLanguageWidget{
     this.stopReading();
     this.readingInspector?.destroy();
     this.readingInspector=null;
+    this.learningUnsubscribe?.();
     clearTimeout(this.readingPersistTimer);
     this.persist();
     this.destroyed=true;
@@ -948,6 +997,7 @@ export default class EnglishLanguageWidget{
     this.root?.removeEventListener('click',this.onClick);
     this.content?.removeEventListener('change',this.onReadingChange);
     this.content?.removeEventListener('input',this.onReadingInput);
+    this.content?.removeEventListener('input',this.onStudyInput);
     this.content?.removeEventListener('focusout',this.onReadingBlur);
     this.search?.removeEventListener('input',this.onSearch);
     this.levelSelect?.removeEventListener('change',this.onLevel);
