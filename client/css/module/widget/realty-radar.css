@@ -1,0 +1,52 @@
+/* Realty Radar is isolated from PRO OPTIMA and other widget styles. */
+.dx-realty {color:var(--text-primary,#e3ebfa);font:13px/1.5 inherit;min-width:315px;display:flex;flex-direction:column;gap:12px;padding:13px;overflow:hidden}
+.dx-realty *{box-sizing:border-box}
+.dx-realty button,.dx-realty input,.dx-realty select{font:inherit}
+.dx-realty-hero{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-radius:14px;background:linear-gradient(110deg,rgba(28,83,132,.39),rgba(15,27,45,.65));border:1px solid rgba(134,177,219,.18)}
+.dx-realty-hero small{font-size:10px;color:#8bd2e7;font-weight:700;letter-spacing:1.2px}
+.dx-realty-hero h2{font-size:23px;letter-spacing:-.5px;margin:2px 0 0;color:inherit}
+.dx-realty-hero p{margin:0;color:#a9bcce;font-size:11px}
+.dx-realty-summary{text-align:right;min-width:72px}.dx-realty-summary strong{font-size:27px;display:block;color:#8adcd5}.dx-realty-summary span{font-size:10px;color:#a8b5c2}
+.dx-realty-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:4px;border-radius:11px;background:rgba(120,151,188,.09)}
+.dx-realty-tabs button{border:0;border-radius:8px;background:transparent;color:inherit;opacity:.76;padding:9px 3px;font-size:11px;cursor:pointer}
+.dx-realty-tabs button[aria-pressed=true]{background:rgba(48,126,163,.33);opacity:1;box-shadow:inset 0 0 0 1px rgba(129,218,226,.35);font-weight:700}
+.dx-realty-filters{display:grid;grid-template-columns:minmax(145px,2fr) repeat(4,minmax(94px,1fr));gap:7px}
+.dx-realty-filters label{font-size:10px;color:var(--text-secondary,#aab6c7);display:flex;flex-direction:column;gap:4px;min-width:0}
+.dx-realty-filters input,.dx-realty-filters select,.dx-realty-source input{min-width:0;width:100%;height:34px;padding:6px 9px;border:1px solid rgba(145,178,203,.26);border-radius:8px;color:inherit;background:rgba(7,16,29,.38)}
+.dx-realty-streets{display:flex;flex-wrap:wrap;gap:8px 13px;padding:8px 12px;border:1px solid rgba(145,178,203,.17);border-radius:9px}
+.dx-realty-streets legend{font-size:11px;padding:0 4px;opacity:.75}
+.dx-realty-streets label{display:flex;gap:4px;align-items:center;font-size:11px;white-space:nowrap}
+.dx-realty-streets small{opacity:.6;font-size:10px}
+.dx-realty-actions{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.dx-realty-actions>button,.dx-realty-upload,.dx-realty-source button{border:1px solid rgba(145,178,203,.27);background:rgba(77,126,158,.14);color:inherit;border-radius:8px;padding:7px 11px;cursor:pointer}
+.dx-realty-actions button:hover,.dx-realty-upload:hover,.dx-realty-source summary:hover{background:rgba(63,151,177,.31)}
+.dx-realty-upload input{display:none}
+.dx-realty-source{position:relative;margin-left:auto}
+.dx-realty-source summary{list-style:none;cursor:pointer;padding:7px;border-radius:7px}
+.dx-realty-source[open]{flex:1 1 100%;order:2;background:rgba(11,23,35,.4);border-radius:9px;padding:10px}
+.dx-realty-source p,.dx-realty-source small{font-size:11px;opacity:.72;display:block;margin:4px 0}
+.dx-realty-source>div{display:flex;gap:5px;margin:7px 0}
+.dx-realty-source>div input{flex:1}
+.dx-realty-search-links{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11px}
+.dx-realty-search-links span{opacity:.65}
+.dx-realty a{color:#7ad4db;text-decoration:none}.dx-realty a:hover{text-decoration:underline}
+.dx-realty-status{margin:0;font-size:11px;color:#b9cde0}
+.dx-realty-status.is-error{color:#efa99b}
+.dx-realty-statbar{display:flex;flex-wrap:wrap;gap:9px;justify-content:space-between;font-size:11px;opacity:.78}
+.dx-realty-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:9px;max-height:440px;overflow:auto;padding:3px 5px 6px 0;scrollbar-gutter:stable}
+.dx-realty-card{min-width:0;border:1px solid rgba(134,170,190,.21);background:rgba(18,35,52,.40);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:7px}
+.dx-realty-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.dx-realty-card h3{font-size:13px;margin:0;line-height:1.4;overflow-wrap:anywhere}
+.dx-realty-card small{font-size:10px;opacity:.7}
+.dx-realty-price{font-weight:750;font-size:20px;color:#e8f6fb}
+.dx-realty-card-pills{display:flex;flex-wrap:wrap;gap:5px}
+.dx-realty-pill{font-size:10px;border-radius:5px;background:rgba(154,174,197,.14);padding:2px 6px}
+.dx-realty-pill.good{background:rgba(65,168,145,.20);color:#90e1cb}
+.dx-realty-pill.warn{background:rgba(197,131,75,.15);color:#e8c394}
+.dx-realty-card .dx-realty-hint{font-size:11px;color:#b7bdcb}
+.dx-realty-card-footer{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:auto}
+.dx-realty-card-footer button{background:none;color:#f3d18c;border:0;font-size:19px;cursor:pointer}
+.dx-realty-empty{grid-column:1/-1;text-align:center;padding:28px 15px;color:#a9b8c8;border:1px dashed rgba(165,193,210,.24);border-radius:11px}
+.dx-realty-footnote{font-size:10px;line-height:1.45;color:var(--text-secondary,#a8b6c4);opacity:.75}
+@media(max-width:850px){.dx-realty-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.dx-realty-search{grid-column:1/-1}.dx-realty-tabs button{font-size:10px;padding:7px 1px}.dx-realty-results{grid-template-columns:1fr}}
+@media(min-width:1000px){.dx-realty-results{max-height:580px}}
