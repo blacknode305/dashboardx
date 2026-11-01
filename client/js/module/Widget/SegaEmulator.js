@@ -100,8 +100,11 @@ export default class SegaEmulatorWidget{
         this.led.textContent='● PLAYING';this.led.classList.add('is-running');
         window.dispatchEvent(new CustomEvent('dashboardx:media-playing',{detail:{id:widget.instanceId,kind:'sega'}}));
       }
-      if(event.data?.type==='dashboardx:sega-error')
-        this.setStatus(event.data.reason||'Не удалось загрузить EmulatorJS с CDN. Проверьте интернет.');
+      if(event.data?.type==='dashboardx:sega-error'){
+        this.led.textContent='● ERROR';
+        this.led.classList.remove('is-running');
+        this.setStatus(event.data.reason||'Не удалось запустить ROM. Проверьте файл и интернет.');
+      }
     });
     on(this.frame,'load',()=>{
       if(this.loaded&&!this.uiReady&&this.romFile)this.setStatus('Эмулятор открыт · ожидаем передачу ROM…');
