@@ -1,5 +1,5 @@
 /* Realty Radar is isolated from PRO OPTIMA and other widget styles. */
-.dx-realty {color:var(--text-primary,#e3ebfa);font:13px/1.5 inherit;min-width:315px;display:flex;flex-direction:column;gap:12px;padding:13px;overflow:hidden}
+.dx-realty {color:var(--text-primary,#e3ebfa);font-family:inherit;font-size:13px;line-height:1.5;min-width:315px;display:flex;flex-direction:column;gap:12px;padding:13px;overflow:hidden}
 .dx-realty *{box-sizing:border-box}
 .dx-realty button,.dx-realty input,.dx-realty select{font:inherit}
 .dx-realty-hero{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-radius:14px;background:linear-gradient(110deg,rgba(28,83,132,.39),rgba(15,27,45,.65));border:1px solid rgba(134,177,219,.18)}
