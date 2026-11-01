@@ -1,4 +1,5 @@
 import { t } from '../i18n.js';
+import { attachWidgetInlineEditor } from '../WidgetInlineEditor.js?v=widget-editors-20261101';
 import { openOptimaPrintPreview } from '../OptimaPrint.js?v=optima-catalog-refresh-20261031';
 import { getCredential } from '../CredentialStore.js';
 import { optimaRequest } from '../OptimaAPI.js';
@@ -303,36 +304,19 @@ export default class OptimaDataWidget {
         label.append(checkbox,document.createTextNode(branchName));
         branchContainer.append(label);
       }
-      // A separate top-layer editor prevents widget size and inner scrollbars
-      // from compressing the create/edit form.
-      const editorDialog=document.createElement('dialog');
-      editorDialog.className='dx-product-editor-modal';
-      editorDialog.setAttribute('aria-label','Редактор наименования');
-      const editorClose=document.createElement('button');
-      editorClose.type='button';
-      editorClose.className='dx-product-editor-modal-close';
-      editorClose.textContent='×';
-      editorClose.title='Закрыть редактор';
-      editorClose.setAttribute('aria-label','Закрыть редактор');
-      editorDialog.append(editorClose,this.productDraft);
-      widget.body.append(editorDialog);
-      this.productEditorModal=editorDialog;
+      // Non-modal subwindow owned by this widget's body: other widgets stay usable.
+      const editorPanel=attachWidgetInlineEditor(widget,this.productDraft,{
+        title:'Редактор наименования',kind:'names',onClose:()=>closeDraft()
+      });
+      this.productEditorPanel=editorPanel;
       const closeDraft=(force=false)=>{
         if(this.productBusy&&force!==true)return;
-        if(editorDialog.open)editorDialog.close();
+        editorPanel.hide();
         this.productDraft.hidden=true;
         this.productEditId=null;
         this.productFormBaseRevision=null;
         this.productAdd.setAttribute('aria-expanded','false');
       };
-      editorClose.addEventListener('click',closeDraft);
-      editorDialog.addEventListener('click',event=>{
-        if(event.target===editorDialog)closeDraft();
-      });
-      editorDialog.addEventListener('cancel',event=>{
-        if(this.productBusy)event.preventDefault();
-      });
-      editorDialog.addEventListener('close',closeDraft);
       this.openProductEditor=product=>{
         if(this.productBusy)return;
         if(!this.db){
@@ -355,8 +339,8 @@ export default class OptimaDataWidget {
         info.textContent=current?'ID '+current.id+' сохранится. Связи с поставщиками останутся прежними.':defaultInfo;
         this.productDraft.hidden=false;
         this.productAdd.setAttribute('aria-expanded','true');
-        if(!editorDialog.open)editorDialog.showModal();
-        editorDialog.scrollTop=0;
+        editorPanel.setTitle(current?'Изменить наименование':'Добавить наименование');
+        editorPanel.open();
         draftForm.elements.namedItem('name').focus({preventScroll:true});
       };
       this.listen(this.productAdd,'click',()=>{
@@ -364,10 +348,6 @@ export default class OptimaDataWidget {
         this.openProductEditor(null);
       });
       this.listen(widget.querySelector('[data-role="product-draft-cancel"]'),'click',closeDraft);
-      this.listen(widget,'keydown',event=>{
-        if(event.key!=='Escape'||this.productDraft.hidden||this.productBusy)return;
-        event.preventDefault();closeDraft();this.productAdd.focus();
-      });
       this.listen(draftForm,'submit',async event=>{
         event.preventDefault();
         if(this.productBusy)return;
@@ -1020,9 +1000,9 @@ export default class OptimaDataWidget {
     }
   }
   destroy(){
-    if(this.type==='optimaProducts'&&this.productEditorModal){
-      this.productEditorModal.remove();
-      this.productEditorModal=null;
+    if(this.type==='optimaProducts'&&this.productEditorPanel){
+      this.productEditorPanel.destroy();
+      this.productEditorPanel=null;
     }
     if(this.catalogLinkDialog){this.catalogLinkDialog.close();this.catalogLinkDialog.remove();this.catalogLinkDialog=null;}
     this.catalogImporter?.destroy?.();
