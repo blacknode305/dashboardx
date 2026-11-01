@@ -13,7 +13,7 @@
 @import "./module/widget/audio-player.css";
 @import "./module/widget/video-player.css";
 @import "./module/widget/nes-emulator.css?v=widget-experiences-20261026";
-@import "./module/widget/english-language.css?v=daily-reading-20261101";
+@import "./module/widget/english-language.css?v=reading-inspector-20261101";
 
 /* DashboardX local — compact, neutral UI with readable text and fluid widths */
 :root, :root[data-theme="dark"] {
