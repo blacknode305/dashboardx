@@ -50,8 +50,13 @@ export function readingWordInfo(raw){
   }
   if(word.endsWith('es')&&word.length>4)candidates.push([word.slice(0,-2),'V-s / множественное'],[word.slice(0,-1),'V-s / множественное']);
   if(word.endsWith('s')&&word.length>3)candidates.push([word.slice(0,-1),'V-s / множественное']);
-  for(const [lemma,form] of candidates)if(dictionary.has(lemma))
-    return {word,lemma,form,...dictionary.get(lemma)};
+  for(const [lemma,hint] of candidates)if(dictionary.has(lemma)){
+    const entry=dictionary.get(lemma);
+    const form=entry.kind==='noun'&&hint.includes('множественное')?'множественное число':
+      entry.kind==='verb'&&hint.includes('множественное')?'Present Simple (he/she/it)':
+      entry.kind==='verb'?hint:'';
+    return {word,lemma,form,...entry};
+  }
   return {word,lemma:word,form:'',meaning:'',kind:''};
 }
 const patterns=[
@@ -84,6 +89,13 @@ export function readingGrammarHint(selected,context=''){
     return {id:'past-simple',name:'Past Simple',detail:'Контекст указывает на прошедшее.',approximate:true};
   if(/\b(?:always|usually|often|every day|every week)\b/i.test(whole))
     return {id:'present-simple',name:'Present Simple',detail:'Контекст указывает на привычку.',approximate:true};
+  const info=readingWordInfo(short);
+  if(info?.kind==='verb'&&info.form.includes('Past Simple'))
+    return {id:'past-simple',name:'Прошедшая форма глагола',detail:
+      'Это может быть Past Simple либо V3 в составе другой конструкции: нужен контекст.',approximate:true};
+  if(info?.kind==='verb'&&info.form==='V-ing')
+    return {id:'present-cont',name:'Форма V-ing',detail:
+      'Используется с continuous, как герундий или причастие. Время зависит от вспомогательного глагола.',approximate:true};
   return null;
 }
 const node=(tag,cls='',value='')=>{
@@ -144,7 +156,8 @@ export class EnglishReadingInspector{
     if(selection&&!selection.isCollapsed)return;
     const hit=hoveredWord(event,container);
     clearTimeout(this.hoverTimer);
-    if(!hit)return;
+    if(!hit){if(this.key.startsWith('word:'))this.hideSoon();return;}
+    clearTimeout(this.hideTimer);
     const key='word:'+hit.text+':'+hit.context;
     if(key===this.key)return;
     this.hoverTimer=setTimeout(()=>this.show(hit.text,hit.context,hit.rect,'word',key),400);
