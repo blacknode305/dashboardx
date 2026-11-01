@@ -15,3 +15,13 @@ Continue improving other OPTIMA widgets sequentially without changing this one. 
 Data source: the widget reads `GET /api/admin/db` from PRO OPTIMA Railway and updates via revision-guarded `PATCH /api/admin/db`. Database values are not embedded here.
 
 Implementation notes: supplier data comprises stable `id`, `name`, `contact`, `phone`, optional other fields, and `schedules` per branch, with `order`, `delivery`, `note`, and optional `deliveryTimingByDay` entries (`same`, `next`, `two`; absent => default). Preserve unknown schema fields.
+
+## Approved exception — 2026-11-01
+
+The owner explicitly requested that creating and editing suppliers use a non-modal
+floating editor **inside the body of the Suppliers widget**, without blocking
+other dashboard actions. This permits only the presentation/container change
+in `OptimaSuppliers.js` and supporting shared inline-editor styles/logic.
+Existing supplier fields, schedule days, delivery timing, permissions, revision
+guards, and database schema remain protected and unchanged. Other redesigns
+still require explicit approval.
