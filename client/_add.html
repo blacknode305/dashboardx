@@ -6,6 +6,11 @@
     <div class="manager-actions">
       <details class="dx-picker" data-role="type-picker">
         <summary data-i18n-aria="manager.chooseType"><span data-role="type-label" data-i18n="manager.chooseType">Выбрать тип виджета</span><span class="dx-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="dx-manager-search">
+          <input type="search" data-role="widget-search" placeholder="Найти виджет или категорию…" aria-label="Поиск виджета" autocomplete="off" spellcheck="false">
+          <button type="button" data-action="widget-search-clear" aria-label="Очистить поиск" title="Очистить поиск" hidden>×</button>
+        </div>
+        <div class="dx-picker-search-status" data-role="widget-search-count" role="status" aria-live="polite"></div>
         <div class="dx-picker-options" data-role="type-options"></div>
       </details>
       <button type="button" class="dx-primary" data-action="create-instance" data-i18n="manager.create" disabled>Добавить</button>
