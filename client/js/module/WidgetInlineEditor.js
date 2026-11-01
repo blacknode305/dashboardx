@@ -1,6 +1,6 @@
 // Small, non-modal editor window owned by a DashboardX widget.
 // It stays inside the widget body and does not make the rest of the dashboard inert.
-export function attachWidgetInlineEditor(widget, form, {title='Редактор', kind='', onClose}={}){
+export function attachWidgetInlineEditor(widget, form, {title='Редактор', kind='', onClose, host=widget.body}={}){
   if(!widget?.body||!form)throw new Error('Не удалось создать окно редактора');
   const pane=document.createElement('section');
   pane.className='dx-widget-inline-editor'+(kind?' dx-widget-inline-editor-'+kind:'');
@@ -30,7 +30,7 @@ export function attachWidgetInlineEditor(widget, form, {title='Редактор'
   content.append(form);
   bar.append(label,minimize,close);
   pane.append(bar,content);
-  widget.body.append(pane);
+  host.append(pane);
 
   const hide=()=>{pane.hidden=true;};
   const requestClose=()=>{
@@ -45,7 +45,7 @@ export function attachWidgetInlineEditor(widget, form, {title='Редактор'
     minimize.title='Свернуть окно';
     minimize.setAttribute('aria-label','Свернуть окно');
     // Keep the window in the body after dashboard filters re-render.
-    if(pane.parentElement!==widget.body)widget.body.append(pane);
+    if(pane.parentElement!==host)host.append(pane);
     widget.activate?.();
     content.scrollTop=0;
   };
