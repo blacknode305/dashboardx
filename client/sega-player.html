@@ -191,10 +191,13 @@
         }
         received = true;
         window.EJS_player = '#game';
-        const allowedCores = new Set(['segaMD','segaMS','segaGG','sega32x']);
+        const allowedCores = new Set(['segaMD','segaMS','segaGG','sega32x','genesis_plus_gx','picodrive']);
+        const system=['segaMD','segaMS','segaGG','sega32x'].includes(event.data.system)?
+          event.data.system:'segaMD';
         const core=allowedCores.has(event.data.core)?event.data.core:'segaMD';
         window.EJS_core = core;
-        window.EJS_controlScheme = core;
+        // Selected implementation and controller layout are separate options.
+        window.EJS_controlScheme = system;
         window.EJS_gameName = String(event.data.originalName||file.name);
         window.EJS_gameUrl = file;
         window.EJS_startOnLoaded = false;
