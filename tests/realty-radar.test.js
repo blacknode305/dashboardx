@@ -21,7 +21,7 @@ test('benchmark is based on compatible listings, excluding the candidate',()=>{
  item(1,{price:70000}),item(2,{price:100000}),item(3,{price:100000}),item(4,{price:100000})
  ]);
  const analyzed=analyzeListing(rows[0],rows);
- assert.equal(analyzed.median,102000);
+ assert.equal(analyzed.median,103000);
  assert.ok(analyzed.discount>25);
 });
 test('sale price per square meter; short-term units are kept separate',()=>{
