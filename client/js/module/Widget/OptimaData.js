@@ -303,47 +303,36 @@ export default class OptimaDataWidget {
         label.append(checkbox,document.createTextNode(branchName));
         branchContainer.append(label);
       }
-      // Keep the editor fully readable by temporarily growing the Names widget.
-      // The original window height is restored on close unless the user resized it.
-      const expandForDraft=()=>{
-        widget.classList.add('dx-product-editor-open');
-        if(widget._spatialMode||widget.classList.contains('is-maximized'))return;
-        if(this.productEditorOriginalHeight===undefined)this.productEditorOriginalHeight=widget.style.height;
-        const section=widget.querySelector('.optima-data');
-        if(!section)return;
-        const children=[...section.children].filter(el=>!el.hidden&&getComputedStyle(el).display!=='none');
-        const sectionStyle=getComputedStyle(section);
-        const gap=Number.parseFloat(sectionStyle.rowGap)||0;
-        const sectionPadding=(Number.parseFloat(sectionStyle.paddingTop)||0)+(Number.parseFloat(sectionStyle.paddingBottom)||0);
-        const contentHeight=children.reduce((height,el)=>{
-          const style=getComputedStyle(el);
-          const verticalMargin=(Number.parseFloat(style.marginTop)||0)+(Number.parseFloat(style.marginBottom)||0);
-          // The table remains scrollable below the editor instead of forcing thousands of rows into the window.
-          const childHeight=el===this.results?120:Math.max(el.scrollHeight,el.offsetHeight);
-          return height+childHeight+verticalMargin;
-        },0);
-        const chrome=widget.header.offsetHeight+(widget.resizeHandle?.offsetHeight||0)+2;
-        const desired=chrome+sectionPadding+contentHeight+Math.max(0,children.length-1)*gap+8;
-        const available=Number.parseFloat(getComputedStyle(widget).maxHeight);
-        const current=widget.getBoundingClientRect().height;
-        const target=Math.ceil(Math.max(current,Math.min(desired,Number.isFinite(available)?available:desired)));
-        widget.style.height=target+'px';
-        this.productEditorAutoHeight=widget.style.height;
-        window.dashboardxUpdateWorkspaceBounds?.();
-      };
+      // A separate top-layer editor prevents widget size and inner scrollbars
+      // from compressing the create/edit form.
+      const editorDialog=document.createElement('dialog');
+      editorDialog.className='dx-product-editor-modal';
+      editorDialog.setAttribute('aria-label','Редактор наименования');
+      const editorClose=document.createElement('button');
+      editorClose.type='button';
+      editorClose.className='dx-product-editor-modal-close';
+      editorClose.textContent='×';
+      editorClose.title='Закрыть редактор';
+      editorClose.setAttribute('aria-label','Закрыть редактор');
+      editorDialog.append(editorClose,this.productDraft);
+      widget.body.append(editorDialog);
+      this.productEditorModal=editorDialog;
       const closeDraft=()=>{
+        if(this.productBusy)return;
+        if(editorDialog.open)editorDialog.close();
         this.productDraft.hidden=true;
-        widget.classList.remove('dx-product-editor-open');
-        if(this.productEditorOriginalHeight!==undefined){
-          if(widget.style.height===this.productEditorAutoHeight)widget.style.height=this.productEditorOriginalHeight;
-          this.productEditorOriginalHeight=undefined;
-          this.productEditorAutoHeight=undefined;
-          window.dashboardxUpdateWorkspaceBounds?.();
-        }
         this.productEditId=null;
         this.productFormBaseRevision=null;
         this.productAdd.setAttribute('aria-expanded','false');
       };
+      editorClose.addEventListener('click',closeDraft);
+      editorDialog.addEventListener('click',event=>{
+        if(event.target===editorDialog)closeDraft();
+      });
+      editorDialog.addEventListener('cancel',event=>{
+        if(this.productBusy)event.preventDefault();
+      });
+      editorDialog.addEventListener('close',closeDraft);
       this.openProductEditor=product=>{
         if(this.productBusy)return;
         if(!this.db){
@@ -366,8 +355,8 @@ export default class OptimaDataWidget {
         info.textContent=current?'ID '+current.id+' сохранится. Связи с поставщиками останутся прежними.':defaultInfo;
         this.productDraft.hidden=false;
         this.productAdd.setAttribute('aria-expanded','true');
-        expandForDraft();
-        this.productDraft.scrollIntoView({block:'nearest',behavior:'instant'});
+        if(!editorDialog.open)editorDialog.showModal();
+        editorDialog.scrollTop=0;
         draftForm.elements.namedItem('name').focus({preventScroll:true});
       };
       this.listen(this.productAdd,'click',()=>{
@@ -1031,11 +1020,9 @@ export default class OptimaDataWidget {
     }
   }
   destroy(){
-    if(this.type==='optimaProducts'){
-      this.widget.classList.remove('dx-product-editor-open');
-      if(this.productEditorOriginalHeight!==undefined&&this.widget.style.height===this.productEditorAutoHeight){
-        this.widget.style.height=this.productEditorOriginalHeight;
-      }
+    if(this.type==='optimaProducts'&&this.productEditorModal){
+      this.productEditorModal.remove();
+      this.productEditorModal=null;
     }
     if(this.catalogLinkDialog){this.catalogLinkDialog.close();this.catalogLinkDialog.remove();this.catalogLinkDialog=null;}
     this.catalogImporter?.destroy?.();
