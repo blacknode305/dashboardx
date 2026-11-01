@@ -733,6 +733,9 @@ export default class EnglishLanguageWidget{
       return;
     }
     this.stopReading();
+    // The same browser voice can still be reading an earlier grammar example.
+    // Start the daily essay immediately instead of queuing it behind that audio.
+    synth.cancel();
     const chunks=this.readingSpeechChunks(story);
     if(!chunks.length)return;
     const token=++this.readingSpeechToken;
