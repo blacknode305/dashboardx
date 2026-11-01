@@ -130,10 +130,9 @@ export async function prepareSegaRom(file){
   const system=segaFileSystem(name);
   if(system==='segaMD'||system==='sega32x'){
     const originalHeader=hasSegaHeader(bytes);
-    if(extension==='smd'&&!originalHeader){
-      bytes=decodeSmd(bytes,name);
-      if(!hasSegaHeader(bytes))notes.push('SMD преобразован, но заголовок SEGA не обнаружен');
-      else notes.push('SMD преобразован в обычный Mega Drive ROM');
+    if(originalHeader&&extension==='smd'){
+      // A few dumps are plain BIN files mislabelled as SMD.
+      notes.push('SMD уже содержит обычный ROM; используем стандартный формат');
     }else if(!originalHeader&&hasSegaHeader(bytes,512)&&bytes.length%16384===512){
       bytes=bytes.slice(512);
       notes.push('Удалён старый 512-байтный заголовок копировщика');
@@ -143,13 +142,17 @@ export async function prepareSegaRom(file){
     }else if(!originalHeader&&swappedHeader(bytes,512)&&bytes.length%16384===512){
       bytes=swapPairs(bytes.slice(512));
       notes.push('Удалён заголовок и исправлен порядок байтов');
-    }else if(!originalHeader&&extension!=='smd'){
+    }else if(extension==='smd'){
+      bytes=decodeSmd(bytes,name);
+      if(!hasSegaHeader(bytes))notes.push('SMD преобразован, но заголовок SEGA не обнаружен');
+      else notes.push('SMD преобразован в обычный Mega Drive ROM');
+    }else if(!originalHeader){
       notes.push('В ROM нет стандартного заголовка SEGA; если игра не запустится, проверьте дамп');
     }
   }
   if(bytes.length<128||bytes.length>SEGA_ROM_LIMIT)throw Error('Некорректный размер готового ROM.');
   const cleanedName=name.replace(/\.[^.]+$/,'.bin');
-  const outName=notes.some(n=>/преобразован|Исправлен|Удалён|из ZIP/.test(n))
+  const outName=notes.some(n=>/преобразован|обычный ROM|Исправлен|Удалён|из ZIP/.test(n))
     ?(extension==='sms'||extension==='gg'||extension==='32x'?name:cleanedName):name;
   const prepared=notes.length?asFile(bytes,outName,file):file;
   return {file:prepared,name,system,notes,extension,
