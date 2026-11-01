@@ -73,3 +73,18 @@
 @media(prefers-reduced-motion:reduce){
  #workspace-canvas .dx-sega-screen{transition:none}
 }
+
+
+#workspace-canvas .dx-sega-core-select{
+  display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap;
+  font:600 11px/1.2 var(--f-family-inter);color:var(--text-muted);
+}
+#workspace-canvas .dx-sega-core-select select{
+  max-width:170px;min-height:32px;padding:5px 8px;
+  border:1px solid var(--border);border-radius:7px;
+  background:var(--bg-panel-light);color:var(--text-main);
+  font:600 11px/1.2 var(--f-family-inter);cursor:pointer;
+}
+#workspace-canvas .dx-sega-core-select select:focus-visible{
+  outline:2px solid var(--dx-accent);outline-offset:1px
+}
