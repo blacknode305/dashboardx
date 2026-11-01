@@ -52,7 +52,7 @@ function dedupKey(item){
   // Cross-source duplicates require a precise address and area; otherwise preserve both.
   const addr=fold(item.address).replace(/[.,]/g,'');
   return addr.length>=9&&item.area&&item.rooms?
-   [item.tab,item.kind,addr,item.rooms,Math.round(item.area)].join('|'):'url:'+item.url.replace(/\/+$/,'');
+   [item.tab,item.kind,addr,item.rooms,Math.round(item.area),Math.round(item.price/1000)].join('|'):'url:'+item.url.replace(/\/+$/,'');
 }
 export function normalizeListings(input){
   const rows=Array.isArray(input)?input:Array.isArray(input?.items)?input.items:[];
@@ -107,7 +107,10 @@ export function filterListings(rows,filters={}){
   const query=fold(filters.query||'');
   return rows.filter(row=>row.tab===tab&&(tab==='buyout'&&row.contractPayment?row.contractPayment:row.price)<=max&&
     (!kind||row.kind===kind)&&(!rooms.length||row.kind!=='apartment'||rooms.includes(row.rooms))&&
-    (!streets.length||streets.some(x=>fold(row.address+' '+row.title).includes(x)))&&
+    (!streets.length||streets.some(x=>{
+      const address=fold(row.address+' '+row.title);
+      return address.includes(x)||(x==='нуркена абдирова'&&/\bн\.?\s*абдирова\b/.test(address));
+    }))&&
     (!query||fold([row.title,row.address,row.description,row.source].join(' ')).includes(query)));
 }
 export function analyzeListings(rows,filters={}){
