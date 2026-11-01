@@ -52,3 +52,26 @@ test('daily reading UI preserves own translation and provides speech controls',(
   assert.match(controller,/reading-check/);
   assert.match(controller,/Asia\/Almaty|readingDayKey/);
 });
+
+
+test('reading popup recognizes common vocabulary and possible grammar patterns',async()=>{
+  const {readingWordInfo,readingGrammarHint}=await import('../client/js/module/Widget/EnglishReadingInspector.js');
+  assert.equal(readingWordInfo('went').lemma,'go');
+  assert.equal(readingWordInfo('walking').lemma,'walk');
+  assert.equal(readingWordInfo('walking').form,'V-ing');
+  assert.equal(readingWordInfo('books').form,'множественное число');
+  assert.ok(readingWordInfo('the').meaning);
+  assert.equal(readingGrammarHint('has been studying').id,'perfect-cont');
+  assert.equal(readingGrammarHint('was watching').id,'past-cont');
+  assert.equal(readingGrammarHint('will have finished').id,'future-perfect');
+  assert.equal(readingGrammarHint('When I was reading', 'When I was reading').id,'past-cont');
+});
+
+test('selected text is sent to translation service only by an explicit click',()=>{
+  const source=readFileSync(new URL('../client/js/module/Widget/EnglishReadingInspector.js',import.meta.url),'utf8');
+  assert.match(source,/target\.dataset\.inspect!=='translate'/);
+  assert.match(source,/api\.mymemory\.translated\.net\/get/);
+  assert.match(source,/data-inspect/);
+  assert.match(source,/encodeURIComponent\(text\)/);
+  assert.match(source,/this\.onGrammar\?\.\(/);
+});
