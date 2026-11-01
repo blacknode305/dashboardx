@@ -1,4 +1,5 @@
 import { GRAMMAR_GROUPS, GRAMMAR_LESSONS, GRAMMAR_LEVELS } from './EnglishGrammarData.js?v=english-grammar-20261101';
+import { GRAMMAR_EXPANDED, GRAMMAR_CHAPTER_GUIDES } from './EnglishGrammarExpanded.js?v=english-extended-20261101';
 
 const byId=new Map(GRAMMAR_LESSONS.map(item=>[item.id,item]));
 const make=(tag,className='',text='')=>{
@@ -47,6 +48,9 @@ export default class EnglishLanguageWidget{
     const validIds=new Set(byId.keys());
     this.done=new Set(Array.isArray(old.done)?old.done.filter(id=>validIds.has(id)):[]);
     this.bookmarks=new Set(Array.isArray(old.bookmarks)?old.bookmarks.filter(id=>validIds.has(id)):[]);
+    this.weak=Object.fromEntries(Object.entries(old.weak||{})
+      .filter(([id,count])=>validIds.has(id)&&Number.isInteger(count)&&count>0)
+      .map(([id,count])=>[id,Math.min(5,count)]));
     this.selected=validIds.has(old.selected)?old.selected:GRAMMAR_LESSONS[0].id;
     this.view=['grammar','practice','saved'].includes(old.view)?old.view:'grammar';
     this.level=GRAMMAR_LEVELS.includes(old.level)?old.level:'all';
@@ -55,6 +59,10 @@ export default class EnglishLanguageWidget{
     this.choice=null;
     this.feedback=null;
     this.review=null;
+    this.builderSelected=[];
+    this.builderFeedback=null;
+    this.builderId=null;
+    this.builderOrder=[];
     this.destroyed=false;
 
     this.onClick=event=>{
@@ -69,6 +77,27 @@ export default class EnglishLanguageWidget{
         this.persist();this.render();
         return;
       }
+      const word=event.target.closest('[data-build-add]');
+      if(word&&this.content.contains(word)){
+        if(!this.builderFeedback?.correct){
+          const index=Number(word.dataset.buildAdd);
+          if(!this.builderSelected.includes(index))this.builderSelected.push(index);
+          this.builderFeedback=null;this.renderContent(true);
+        }
+        return;
+      }
+      const used=event.target.closest('[data-build-remove]');
+      if(used&&this.content.contains(used)){
+        if(!this.builderFeedback?.correct){
+          this.builderSelected.splice(Number(used.dataset.buildRemove),1);
+          this.builderFeedback=null;this.renderContent(true);
+        }
+        return;
+      }
+      const speak=event.target.closest('[data-speak]');
+      if(speak&&this.root.contains(speak)){
+        this.speakEnglish(speak.dataset.speak);return;
+      }
       const option=event.target.closest('[data-answer]');
       if(option&&this.content.contains(option)){
         if(this.view==='practice'&&this.review?.answered)return;
@@ -82,6 +111,10 @@ export default class EnglishLanguageWidget{
       if(!action||!this.root.contains(action))return;
       switch(action.dataset.action){
         case 'check': this.checkAnswer();break;
+        case 'builder-check':this.checkBuilder();break;
+        case 'builder-reset':
+          this.builderSelected=[];this.builderFeedback=null;this.renderContent(true);break;
+        case 'review-mistakes':this.startReview('weak');break;
         case 'prev':this.stepLesson(-1);break;
         case 'next':this.stepLesson(1);break;
         case 'bookmark':this.toggleBookmark();break;
@@ -125,7 +158,8 @@ export default class EnglishLanguageWidget{
         view:this.view,
         level:this.level,
         done:[...this.done],
-        bookmarks:[...this.bookmarks]
+        bookmarks:[...this.bookmarks],
+        weak:this.weak
       }
     });
   }
@@ -135,6 +169,9 @@ export default class EnglishLanguageWidget{
     this.view='grammar';
     this.choice=null;
     this.feedback=null;
+    this.builderSelected=[];
+    this.builderFeedback=null;
+    this.builderId=null;
     this.openGroups.add(byId.get(id).groupId);
     this.persist();
     this.render();
@@ -161,6 +198,52 @@ export default class EnglishLanguageWidget{
     else this.done.add(this.selected);
     this.persist();this.render();
   }
+  recordAttempt(id,correct){
+    const previous=Number(this.weak[id]||0);
+    if(correct){
+      if(previous>1)this.weak[id]=previous-1;
+      else delete this.weak[id];
+    }else this.weak[id]=Math.min(5,previous+1);
+    this.persist();
+  }
+  speakEnglish(sentence){
+    if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance!=='function'){
+      this.speechStatus='Озвучивание недоступно в этом браузере.';
+      this.renderContent(true);return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance=new SpeechSynthesisUtterance(sentence);
+    utterance.lang='en-US';utterance.rate=.84;
+    window.speechSynthesis.speak(utterance);
+  }
+  currentBuilder(){
+    const topic=byId.get(this.selected)||GRAMMAR_LESSONS[0];
+    const target=GRAMMAR_EXPANDED[topic.id]?.examples?.[0];
+    if(!target)return null;
+    if(this.builderId!==topic.id){
+      this.builderId=topic.id;
+      this.builderSelected=[];
+      this.builderFeedback=null;
+      const count=target.english.trim().split(/\s+/).length;
+      this.builderOrder=shuffle([...Array(count).keys()]);
+      if(this.builderOrder.every((index,i)=>index===i)&&count>1)this.builderOrder.reverse();
+    }
+    return target;
+  }
+  checkBuilder(){
+    const target=this.currentBuilder();
+    if(!target||this.builderFeedback?.correct)return;
+    const words=target.english.trim().split(/\s+/);
+    if(this.builderSelected.length!==words.length)return;
+    const correct=this.builderSelected.every((value,index)=>value===index);
+    this.builderFeedback={correct};
+    this.recordAttempt(this.selected,correct);
+    if(correct){
+      this.done.add(this.selected);
+      this.persist();this.renderProgress();this.renderChapters();
+    }
+    this.renderContent(true);
+  }
   checkAnswer(){
     if(!Number.isInteger(this.choice)||this.choice<0||this.choice>2)return;
     const topic=this.view==='practice'&&this.review
@@ -169,6 +252,7 @@ export default class EnglishLanguageWidget{
     if(this.view==='practice'&&this.review.answered)return;
     if(this.view==='grammar'&&this.feedback?.correct)return;
     const correct=this.choice===topic.quiz.answer;
+    this.recordAttempt(topic.id,correct);
     this.feedback={correct,answer:topic.quiz.options[topic.quiz.answer],rule:topic.rule};
     if(this.view==='practice'&&this.review){
       this.review.answered=true;
@@ -182,11 +266,13 @@ export default class EnglishLanguageWidget{
     }
     this.renderContent(true);
   }
-  startReview(){
-    const pool=GRAMMAR_LESSONS.filter(item=>this.level==='all'||item.level===this.level);
+  startReview(mode='all'){
+    const pool=GRAMMAR_LESSONS.filter(item=>
+      (this.level==='all'||item.level===this.level)&&
+      (mode!=='weak'||this.weak[item.id]>0));
     if(!pool.length)return;
     this.review={ids:shuffle(pool).slice(0,Math.min(10,pool.length)).map(topic=>topic.id),
-      index:0,score:0,answered:false};
+      index:0,score:0,answered:false,mode};
     this.view='practice';
     this.choice=null;this.feedback=null;
     this.persist();this.render();
