@@ -20,7 +20,7 @@ function harness(rejectImport=false) {
     }});
   });
   let startButtonVisible=false,observerTick=null;
-  elements.set('#game',{querySelector:selector=>startButtonVisible&&selector==='.ejs_start_button'?{}:null});
+  elements.set('#game',{querySelector:selector=>startButtonVisible&&selector==='.ejs_start_button'?{}:null,addEventListener:()=>{}});
   class MutationObserverMock {
     constructor(cb){observerTick=cb}
     observe(){}
@@ -61,9 +61,11 @@ function harness(rejectImport=false) {
 }
 
 test('Sega ROM .gen validation includes a 4 MiB game',()=>{
-  assert.deepEqual(SEGA_ROM_EXTENSIONS,['md','bin','gen','smd','zip']);
+  assert.deepEqual(SEGA_ROM_EXTENSIONS,['md','bin','gen','smd','zip','sms','gg','32x','sg']);
   assert.equal(checkSegaRom({name:'Ultimate Mortal Kombat 3 (USA).gen',size:4194304}),'gen');
   assert.equal(checkSegaRom({name:'homebrew.zip',size:10000}),'zip');
+  assert.equal(checkSegaRom({name:'32x_game.32x',size:20000}),'32x');
+  assert.equal(checkSegaRom({name:'game.sms',size:20000}),'sms');
   assert.throws(()=>checkSegaRom({name:'malware.exe',size:1024}),/ROM/);
   assert.throws(()=>checkSegaRom({name:'invalid.gen',size:42}),/размер/);
 });
