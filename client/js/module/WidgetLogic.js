@@ -10,6 +10,7 @@ import FinanceSummaryWidget from './Widget/FinanceSummary.js';
 import FinanceTableWidget from './Widget/FinanceTable.js';
 import MoneyConvertApiWidget from './Widget/MoneyConvertApi.js';
 import CalculatorWidget from './Widget/Calculator.js';
+import EnglishLanguageWidget from './Widget/EnglishLanguage.js?v=english-grammar-20261101';
 import LocalCollectionWidget from './Widget/LocalCollection.js?v=nes-interactions-20261026';
 import MediaPlayerWidget from './Widget/MediaPlayer.js?v=nes-interactions-20261026';
 import ServerConsoleWidget from './Widget/ServerConsole.js?v=nes-interactions-20261026';
@@ -41,6 +42,7 @@ const WidgetLogic = {
   MoneyConvertApiWidget,
   BinanceApiWidget,
   CalculatorWidget,
+  EnglishLanguageWidget,
   AudioPlayerWidget: MediaPlayerWidget,
   VideoPlayerWidget: MediaPlayerWidget,
   WishlistPriceWidget: LocalCollectionWidget,
