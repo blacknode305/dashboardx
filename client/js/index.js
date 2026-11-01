@@ -2,7 +2,7 @@ import eventBus from './module/EventBus.js';
 import ClientDB from './module/ClientDB.js';
 import learning from './module/EnglishLearningStore.js';
 import { installEnglishQuickWords } from './module/EnglishQuickWords.js?v=english-study-20261101';
-import WidgetElement from './module/WidgetElement.js?v=sega-rom-compat-20261101b';
+import WidgetElement from './module/WidgetElement.js?v=sega-rom-compat-20261101c';
 import NavigationBar from './module/NavigationBar.js';
 import installTableColumnResize from './module/TableColumnResize.js?v=optima-price-upload-20261031';
 import installTableSort from './module/TableSort.js?v=optima-price-upload-20261031';
@@ -81,7 +81,7 @@ async function loadTemplates() {
     const url=new URL('../'+entry.file,import.meta.url);
     if(id==='optimaProducts')url.searchParams.set('v','names-optima-print-20261031');
     if(id==='optimaProposals')url.searchParams.set('v','catalog-upload-20261031');
-    if(id==='segaEmulator')url.searchParams.set('v','sega-rom-compat-20261101b');
+    if(id==='segaEmulator')url.searchParams.set('v','sega-rom-compat-20261101c');
     if(id==='englishLanguage')url.searchParams.set('v','english-study-20261101');
     if(id==='optimaSuppliers')url.searchParams.set('v','suppliers-optima-print-20261031');
     const response=await fetch(url,{cache:(id==='optimaProducts'||id==='optimaSuppliers'||id==='optimaProposals')?'no-store':'default'});
