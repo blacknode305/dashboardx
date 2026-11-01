@@ -44,7 +44,7 @@ test('grammar progress lives in an instance-scoped widget state',()=>{
 
 test('expanded guides cover all lessons with two translated examples each',()=>{
   const content=readFileSync(new URL('../client/js/module/Widget/EnglishGrammarExpanded.js',import.meta.url),'utf8');
-  const match=/export const GRAMMAR_EXPANDED = Object\\.freeze\\(([\\s\\S]*?)\\);\\s*export const GRAMMAR_CHAPTER_GUIDES/.exec(content);
+  const match=/export const GRAMMAR_EXPANDED = Object\.freeze\(([\s\S]*?)\);\s*export const GRAMMAR_CHAPTER_GUIDES/.exec(content);
   assert.ok(match,'Expanded grammar JSON should be readable');
   const expanded=JSON.parse(match[1]);
   assert.deepEqual(Object.keys(expanded).sort(),lessons.map(item=>item.id).sort());
@@ -55,7 +55,7 @@ test('expanded guides cover all lessons with two translated examples each',()=>{
     for(const example of item.examples){
       assert.ok(example.english.trim(),lesson.id+' missing English example');
       assert.ok(example.russian.trim(),lesson.id+' missing Russian translation');
-      assert.ok(example.english.split(/\\s+/).length>=3,lesson.id+' example must be a phrase');
+      assert.ok(example.english.split(/\s+/).length>=3,lesson.id+' example must be a phrase');
     }
   }
 });
