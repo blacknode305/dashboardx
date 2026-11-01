@@ -127,6 +127,7 @@ export default class OptimaDataWidget {
     this.statusText=widget.querySelector('[data-role="data-status-text"]');
     this.summary=widget.querySelector('[data-role="data-summary"]');
     this.results=widget.querySelector('[data-role="data-results"]');
+    if(this.type==='optimaProposals'&&(!this.results||!this.controls.search||!this.controls.status))throw new Error('Каталог: шаблон не обновился. Перезагрузите страницу.');
     this.refresh=widget.querySelector('[data-role="data-refresh"]');
     this.productAdd=this.type==='optimaProducts'?widget.querySelector('[data-role="product-add"]'):null;
     this.productDraft=this.type==='optimaProducts'?widget.querySelector('[data-role="product-draft"]'):null;
@@ -156,6 +157,7 @@ export default class OptimaDataWidget {
     this.controls.mode.hidden=this.type==='optimaProposals'||!this.cfg.mode;
     this.listeners=[];
     this.listen=(el,event,fn)=>{
+      if(!el)return;
       el.addEventListener(event,fn);this.listeners.push(()=>el.removeEventListener(event,fn));
     };
     const onFilter=()=>{
@@ -196,7 +198,7 @@ export default class OptimaDataWidget {
       });
     }
     this.catalogImporter=null;
-    if(this.productSupplierQuery){
+    if(this.productSupplierQuery&&this.productSupplierOptions&&widget.querySelector('.dx-product-supplier-picker')){
       const query=this.productSupplierQuery;
       const options=this.productSupplierOptions;
       const picker=widget.querySelector('.dx-product-supplier-picker');
