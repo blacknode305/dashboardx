@@ -3,11 +3,14 @@ import { LOGIC_GROUPS, LOGIC_LESSONS, LOGIC_REFERENCES } from './LogicCourseData
 import { STUDY_EXTRA_MEMORY, STUDY_EXTRA_LOGIC, STUDY_GROUP_GUIDES } from './StudyExpandedData.js?v=study-expanded-20261101c';
 import { MIMIC_GROUPS,MIMIC_LESSONS,MIMIC_UNITS,MIMIC_SCENARIOS,MIMIC_REFERENCES } from './MimicCourseData.js?v=study-expanded-20261101c';
 import { createMimicFace } from './MimicFaceVisual.js?v=study-expanded-20261101c';
+import { ECON_GROUPS,ECON_LESSONS,ECON_REFERENCES } from './EconomicsCourseData.js?v=articles-economics-20261101';
+import { STUDY_ARTICLES } from './StudyArticlesData.js?v=articles-economics-20261101';
 
 const courseMap={
   psychology:{groups:MEMORY_GROUPS,lessons:MEMORY_LESSONS,refs:MEMORY_REFERENCES,extra:STUDY_EXTRA_MEMORY,guide:STUDY_GROUP_GUIDES.memory},
   logic:{groups:LOGIC_GROUPS,lessons:LOGIC_LESSONS,refs:LOGIC_REFERENCES,extra:STUDY_EXTRA_LOGIC,guide:STUDY_GROUP_GUIDES.logic},
-  mimic:{groups:MIMIC_GROUPS,lessons:MIMIC_LESSONS,refs:MIMIC_REFERENCES,extra:[],guide:[]}
+  mimic:{groups:MIMIC_GROUPS,lessons:MIMIC_LESSONS,refs:MIMIC_REFERENCES,extra:[],guide:[]},
+  economics:{groups:ECON_GROUPS,lessons:ECON_LESSONS,refs:ECON_REFERENCES,extra:[],guide:[]}
 };
 const studyWords=Object.freeze([
  'яблоко','мост','телескоп','кофейник','гора','монета','окно','пчела','ключ','книга',
@@ -62,10 +65,17 @@ export default class StudyCourseWidget{
   this.bookmarks=new Set((Array.isArray(old.bookmarks)?old.bookmarks:[]).filter(id=>this.ids.has(id)));
   this.errors=Object.fromEntries(Object.entries(old.errors||{}).filter(([id,count])=>this.ids.has(id)&&Number.isInteger(count)&&count>0));
   this.active=this.ids.has(old.active)?old.active:this.lessons[0].id;
-  this.view=['course','memory','practice','review','sources','lab','observations'].includes(old.view)?old.view:'course';
+  this.view=['course','memory','practice','review','sources','lab','observations','articles'].includes(old.view)?old.view:'course';
   if(this.type==='logic'&&['memory','lab','observations'].includes(this.view))this.view='course';
   if(this.type==='psychology'&&['practice','lab','observations'].includes(this.view))this.view='course';
   if(this.type==='mimic'&&['memory','practice'].includes(this.view))this.view='course';
+  if(this.type==='economics'&&['memory','lab','observations'].includes(this.view))this.view='course';
+  this.articles=STUDY_ARTICLES.filter(a=>a.course===this.type);
+  const articleIds=new Set(this.articles.map(a=>a.id));
+  this.articleRead=new Set((Array.isArray(old.articleRead)?old.articleRead:[]).filter(id=>articleIds.has(id)));
+  this.articleSaved=new Set((Array.isArray(old.articleSaved)?old.articleSaved:[]).filter(id=>articleIds.has(id)));
+  this.articleId=articleIds.has(old.articleId)?old.articleId:null;
+  this.articleQuery='';
   this.faceUnit=MIMIC_UNITS.some(x=>x.id===old.faceUnit)?old.faceUnit:'AU12';
   this.faceIndex=Math.max(0,Math.min(MIMIC_SCENARIOS.length-1,Number(old.faceIndex)||0));
   this.faceChoice=null;this.faceFeedback=null;
@@ -94,6 +104,12 @@ export default class StudyCourseWidget{
     clearTimeout(this.noteTimer);
     this.noteTimer=setTimeout(()=>this.persist(),550);
   };
+  this.articleChanged=event=>{
+    const input=event.target.closest('[data-role="article-search"]');
+    if(!input||!this.main.contains(input))return;
+    this.articleQuery=input.value.slice(0,120).toLocaleLowerCase('ru').trim();
+    this.filterArticles();
+  };
   this.clicked=event=>this.handleClick(event);
   this.submitted=event=>{
    if(event.target.matches('[data-role="memory-form"]')){event.preventDefault();this.checkMemory();}
@@ -102,13 +118,15 @@ export default class StudyCourseWidget{
   this.root.addEventListener('click',this.clicked);
   this.root.addEventListener('submit',this.submitted);
   this.main.addEventListener('input',this.noteChanged);
+  this.main.addEventListener('input',this.articleChanged);
   this.render();
  }
  persist(){
   this.store?.updateWidgetState(this.instanceId,{studyCourse:{
    completed:[...this.completed],bookmarks:[...this.bookmarks],errors:this.errors,
    active:this.active,view:this.view,stats:this.stats,
-   notes:this.notes,faceUnit:this.faceUnit,faceIndex:this.faceIndex,faceHistory:this.faceHistory
+   notes:this.notes,faceUnit:this.faceUnit,faceIndex:this.faceIndex,faceHistory:this.faceHistory,
+   articleRead:[...this.articleRead],articleSaved:[...this.articleSaved],articleId:this.articleId
   }});
  }
  handleClick(event){
@@ -148,9 +166,26 @@ export default class StudyCourseWidget{
     }
     return;
   }
+  const articleLink=event.target.closest('[data-study-article]');
+  if(articleLink&&this.root.contains(articleLink)){
+    const id=articleLink.dataset.studyArticle;
+    if(this.articles.some(item=>item.id===id)){
+      this.articleId=id;this.persist();this.renderContent();
+    }
+    return;
+  }
   const action=event.target.closest('[data-course-action]');
   if(!action||!this.root.contains(action))return;
   switch(action.dataset.courseAction){
+   case 'articles-back':this.articleId=null;this.persist();this.renderContent();break;
+   case 'article-read':
+     if(this.articleId){this.articleRead.has(this.articleId)?
+       this.articleRead.delete(this.articleId):this.articleRead.add(this.articleId);
+       this.persist();this.renderContent(true);}break;
+   case 'article-save':
+     if(this.articleId){this.articleSaved.has(this.articleId)?
+       this.articleSaved.delete(this.articleId):this.articleSaved.add(this.articleId);
+       this.persist();this.renderContent(true);}break;
    case 'face-check':this.checkFaceObservation();break;
    case 'face-next':this.faceIndex=(this.faceIndex+1)%MIMIC_SCENARIOS.length;
     this.faceChoice=null;this.faceFeedback=null;this.persist();this.renderContent(true);break;
@@ -227,6 +262,7 @@ export default class StudyCourseWidget{
   if(this.view==='memory')this.renderMemory();
   if(this.view==='practice'||this.view==='review')this.renderReview();
   if(this.view==='sources')this.renderSources();
+  if(this.view==='articles')this.renderArticles();
   if(this.view==='lab')this.renderFaceLab();
   if(this.view==='observations')this.renderFaceObservations();
   if(keepScroll)this.main.scrollTop=top;
@@ -594,6 +630,8 @@ export default class StudyCourseWidget{
    'Мнемоники — стратегии запоминания; нет основания обещать фотографическую память или лечение заболеваний. Эффекты зависят от задачи, практики и качества исследований.':
    this.type==='mimic'?
    'Движения лица не являются диагнозом эмоций, намерений или правдивости человека. Важны слова, контекст, время движения и индивидуальные особенности.':
+   this.type==='economics'?
+   'Экономические модели упрощают реальность. Обучающие примеры не являются финансовой рекомендацией или прогнозом рынка.':
    'Логика помогает проверять форму рассуждений, но сама по себе не заменяет проверку фактов, статистики и источников.';
   page.append(make('p','dx-study-subtle',note));
   for(const item of this.references){
@@ -611,5 +649,6 @@ export default class StudyCourseWidget{
   this.root?.removeEventListener('click',this.clicked);
   this.root?.removeEventListener('submit',this.submitted);
   this.main?.removeEventListener('input',this.noteChanged);
+  this.main?.removeEventListener('input',this.articleChanged);
  }
 }
