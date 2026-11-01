@@ -1,12 +1,12 @@
 // Sega cartridge player with local ROM normalization and EmulatorJS runtime.
-import { SEGA_EXTENSIONS,validateSegaFile,prepareSegaRom } from './SegaRom.js?v=sega-rom-compat-20261101';
+import { SEGA_EXTENSIONS,validateSegaFile,prepareSegaRom } from './SegaRom.js?v=sega-rom-compat-20261101b';
 // Keep EmulatorJS in its own iframe so it does not change DashboardX DOM or globals.
 export const SEGA_ROM_EXTENSIONS=SEGA_EXTENSIONS;
 export const checkSegaRom=validateSegaFile;
 export function segaPlayerURL(moduleUrl,token,mode='local'){
   if(!token||typeof token!=='string')throw Error('Не указан ключ запуска Sega.');
   const url=new URL('../../../sega-player.html',moduleUrl);
-  url.searchParams.set('v','sega-rom-compat-20261101');
+  url.searchParams.set('v','sega-rom-compat-20261101b');
   url.hash=new URLSearchParams({token,...(mode==='stable'?{mode:'stable'}:{})}).toString();
   return url.href;
 }
