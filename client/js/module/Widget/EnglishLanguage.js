@@ -235,7 +235,7 @@ export default class EnglishLanguageWidget{
     if(!target||this.builderFeedback?.correct)return;
     const words=target.english.trim().split(/\s+/);
     if(this.builderSelected.length!==words.length)return;
-    const correct=this.builderSelected.every((value,index)=>value===index);
+    const correct=this.builderSelected.every((value,index)=>words[value]===words[index]);
     this.builderFeedback={correct};
     this.recordAttempt(this.selected,correct);
     if(correct){
