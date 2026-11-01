@@ -474,6 +474,117 @@ export default class StudyCourseWidget{
   }
   this.main.append(page);
  }
+ renderFaceLab(){
+  const page=make('section','dx-study-article dx-face-lab');
+  page.append(make('span','dx-study-pill','Атлас движений · 12 AU'),
+    make('h3','','Как движется лицо'),
+    make('p','dx-study-subtle',
+      'Выберите единицу действия FACS. Схема подчёркивает область движения, но не является фотографией и не служит инструментом диагностики эмоций или лжи.'));
+  const grid=make('div','dx-face-lab-layout');
+  const explorer=make('div','dx-face-lab-visual');
+  explorer.append(createMimicFace(this.faceUnit));
+  const caption=make('p','dx-study-subtle','Учебная схема · условное движение, не снимок человека');
+  explorer.append(caption);
+  grid.append(explorer);
+  const picker=make('div','dx-face-lab-picker');
+  const unit=MIMIC_UNITS.find(x=>x.id===this.faceUnit)||MIMIC_UNITS[0];
+  picker.append(make('span','dx-study-kicker','Текущая зона: '+unit.zone),
+    make('h4','',unit.id+' · '+unit.title),
+    make('p','',unit.description));
+  const description=make('div','dx-study-panel');
+  description.append(make('h4','','Что искать'),make('p','',unit.features),
+    make('h4','','Мини-задание'),make('p','',unit.test));
+  picker.append(description);
+  const choose=make('div','dx-face-au-choices');
+  for(const candidate of MIMIC_UNITS){
+    const control=btn(candidate.id,null,'dx-face-au-button');
+    control.dataset.faceUnit=candidate.id;
+    control.title=candidate.title;
+    control.setAttribute('aria-pressed',String(candidate.id===unit.id));
+    if(candidate.id===unit.id)control.classList.add('is-selected');
+    choose.append(control);
+  }
+  picker.append(make('h4','','Выберите движение'),choose);
+  grid.append(picker);page.append(grid);
+  const note=this.section('Правило наблюдателя',
+    'Пишите «внутренние уголки бровей поднялись», а не «человек испугался». Учитывайте исходное выражение, произнесённые слова, качество изображения и ситуацию. Если смысл важен, задайте уважительный вопрос.','dx-study-pitfall');
+  page.append(note);
+  page.append(btn('Потренироваться на ситуациях →',null,'dx-study-primary'));
+  const go=page.lastChild;go.dataset.courseTab='observations';
+  this.main.append(page);
+ }
+ checkFaceObservation(){
+  if(this.type!=='mimic'||this.faceChoice===null||this.faceFeedback!==null)return;
+  const problem=MIMIC_SCENARIOS[this.faceIndex];
+  if(!problem)return;
+  const correct=this.faceChoice===problem.answer;
+  this.faceFeedback={correct};
+  this.faceHistory.attempts++;
+  if(correct){
+    this.faceHistory.correct++;
+    if(!this.faceHistory.solved.includes(this.faceIndex))
+      this.faceHistory.solved.push(this.faceIndex);
+  }
+  this.persist();this.renderContent(true);
+ }
+ renderFaceObservations(){
+  const page=make('section','dx-study-article dx-face-observations');
+  const scenario=MIMIC_SCENARIOS[this.faceIndex];
+  page.append(make('span','dx-study-pill','Ситуация '+(this.faceIndex+1)+' / '+MIMIC_SCENARIOS.length),
+    make('h3','','Наблюдайте, не угадывайте мысли'),
+    make('p','dx-study-subtle',
+      'Прочитайте описание и выберите наиболее обоснованный ответ. Ситуации вымышлены; мы тренируем описание движения и уважительное уточнение контекста.'));
+  const stats=make('div','dx-study-stats');
+  for(const [title,value] of [
+    ['Проверок',this.faceHistory.attempts],
+    ['Правильных',this.faceHistory.correct],
+    ['Ситуаций решено',this.faceHistory.solved.length+'/'+MIMIC_SCENARIOS.length]
+  ]){
+    const card=make('div','dx-study-stat');
+    card.append(make('strong','',value),make('span','',title));
+    stats.append(card);
+  }
+  page.append(stats);
+  const test=make('section','dx-study-panel dx-study-quiz');
+  test.append(make('span','dx-study-kicker','Наблюдение'),make('h4','',scenario.movement));
+  const options=make('div','dx-study-answers');
+  scenario.options.forEach((value,index)=>{
+    const option=btn(String.fromCharCode(65+index)+'. '+value,null,'dx-study-answer');
+    option.dataset.faceChoice=String(index);
+    option.classList.toggle('is-chosen',index===this.faceChoice);
+    option.setAttribute('aria-pressed',String(index===this.faceChoice));
+    option.disabled=this.faceFeedback!==null;
+    options.append(option);
+  });
+  test.append(options);
+  if(this.faceFeedback!==null){
+    const feedback=make('div','dx-study-feedback '+(this.faceFeedback.correct?'is-correct':'is-wrong'));
+    feedback.setAttribute('role','status');
+    feedback.append(make('strong','',this.faceFeedback.correct?'✓ Верно':'Разберём иначе'),
+      make('p','',this.faceFeedback.correct?scenario.explanation:
+        'Правильный вариант: '+scenario.options[scenario.answer]+'. '+scenario.explanation));
+    test.append(feedback);
+  }
+  const controls=make('div','dx-study-actions');
+  const check=btn('Проверить наблюдение','face-check','dx-study-primary');
+  check.disabled=this.faceChoice===null||this.faceFeedback!==null;
+  controls.append(check);
+  if(this.faceFeedback!==null)controls.append(btn('Следующая ситуация →','face-next','dx-study-primary'));
+  if(this.faceIndex!==0)controls.append(btn('С начала','face-restart'));
+  test.append(controls);
+  page.append(test);
+  const unit=MIMIC_UNITS.find(x=>x.id===scenario.unit);
+  if(this.faceFeedback!==null&&unit){
+    const preview=make('section','dx-study-panel dx-face-scenario-preview');
+    preview.append(make('h4','','Движение для повторения: '+unit.id+' · '+unit.title));
+    preview.append(createMimicFace(unit.id));
+    preview.append(make('p','dx-study-subtle',unit.features));
+    page.append(preview);
+  }
+  page.append(make('p','dx-study-tip',
+    'Примечание: один и тот же жест может иметь несколько причин. Задания проверяют знание описаний FACS, не определение чувств человека.'));
+  this.main.append(page);
+ }
  renderSources(){
   const page=make('section','dx-study-article');
   page.append(make('span','dx-study-pill','Методические материалы'),
