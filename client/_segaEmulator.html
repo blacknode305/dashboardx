@@ -20,6 +20,11 @@
     <button type="button" data-action="sega-play">▶ Играть / фокус</button>
     <button type="button" data-action="sega-stop" disabled>■ Остановить</button>
     <button type="button" data-action="sega-fullscreen" disabled>⛶ Полный экран</button>
+    <label class="dx-sega-core-select"><span>Ядро</span><select data-role="sega-core" aria-label="Эмуляторное ядро Mega Drive">
+      <option value="auto">Автоматически</option>
+      <option value="genesis_plus_gx">Genesis Plus GX</option>
+      <option value="picodrive">PicoDrive (эксп.)</option>
+    </select></label>
     <label class="dx-sega-checkbox"><input type="checkbox" data-role="sega-crt"> CRT-линии</label>
   </div>
   <div class="dx-sega-controller" aria-label="Подсказка по управлению Sega">
@@ -35,7 +40,7 @@
     <p>Поддерживается физический геймпад через браузерный Gamepad API и сенсорный геймпад EmulatorJS. На Mac горячие клавиши сохранения могут конфликтовать с системными — используйте кнопки EmulatorJS.</p>
     <p>Поддерживаются картриджные игры Mega Drive / Genesis (.md, .gen, .bin, .smd), Master System (.sms), Game Gear (.gg) и 32X (.32x). Старые SMD и ROM с переставленными байтами приводятся к стандартному формату автоматически.</p>
     <p>ZIP должен содержать один ROM. Если внутри несколько игр, распакуйте архив и выберите одну. Образы Sega CD (.cue, .iso, .chd) пока не поддерживаются: для них нужен отдельный запуск с BIOS и файлами диска.</p>
-    <p>Если после нажатия ▶ ядро не запускает игру, используйте «Повторить через другой источник ядра» в окне игры. Некорректные или несовместимые дампы всё равно могут не открыться.</p>
+    <p>Если после нажатия ▶ ядро не запускает игру, используйте «Повторить через другой источник ядра» в окне игры. Для игр Mega Drive можно выбрать другое ядро прямо в панели виджета. PicoDrive — экспериментальное ядро, у него известны проблемы совместимости; автоматическое ядро рекомендуется.</p>
     <p>ROM обрабатывается локально в браузере и не отправляется в PRO OPTIMA / Railway. Для загрузки ядра и некоторых архивных функций требуется соединение с EmulatorJS CDN. Используйте только законно полученные ROM.</p>
   </details>
 </section>
