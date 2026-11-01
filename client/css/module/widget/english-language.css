@@ -509,3 +509,26 @@
 #workspace-canvas .dx-english-builder .dx-english-quiz-actions{
   margin-top:2px;
 }
+
+
+/* Quick contrast with a nearby rule. */
+#workspace-canvas .dx-english-compare{
+  gap:9px;
+  background:transparent;
+}
+#workspace-canvas .dx-english-related{
+  width:max-content;
+  max-width:100%;
+  padding:7px 10px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--bg-panel-light);
+  color:var(--text-main);
+  text-align:left;
+  font-size:11px;
+  cursor:pointer;
+}
+#workspace-canvas .dx-english-related:hover{
+  border-color:var(--dx-accent,var(--blue));
+  background:var(--dx-hover-soft);
+}
