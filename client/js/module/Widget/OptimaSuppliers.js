@@ -1,5 +1,5 @@
 import { t } from '../i18n.js';
-import { attachWidgetInlineEditor } from '../WidgetInlineEditor.js?v=widget-editors-20261101';
+import { attachWidgetInlineEditor } from '../WidgetInlineEditor.js?v=widget-editors-20261101b';
 import { getCredential } from '../CredentialStore.js';
 import { loadOptima, patchOptima, OPTIMA_POLL_MS, OPTIMA_BASE, getOptimaWritePassword } from '../OptimaAPI.js';
 import { openOptimaPrintPreview } from '../OptimaPrint.js?v=optima-print-20261031';
@@ -103,7 +103,8 @@ export default class OptimaSuppliersWidget {
     this.expanded=new Set();
     this.editor=widget.querySelector('[data-role="optima-editor"]');
     this.editorPanel=attachWidgetInlineEditor(widget,this.editor,{
-      title:'Редактор поставщика',kind:'supplier',onClose:()=>this.closeEditor()
+      title:'Редактор поставщика',kind:'supplier',
+      host:widget.querySelector('.optima-suppliers'),onClose:()=>this.closeEditor()
     });
     this.editorTitle=widget.querySelector('[data-role="optima-editor-title"]');
     this.editorError=widget.querySelector('[data-role="optima-editor-error"]');
