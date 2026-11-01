@@ -106,6 +106,38 @@ export function readingGrammarHint(selected,context=''){
       'Используется с continuous, как герундий или причастие. Время зависит от вспомогательного глагола.',approximate:true};
   return null;
 }
+export function readingWordGrammar(info){
+  if(!info)return null;
+  const word=info.word||'';
+  let id='',name='',detail='';
+  if(word==='the'){id='articles-the';name='Артикль the';detail='Употребление определённого артикля.';}
+  else if(word==='a'||word==='an'){id='articles-a';name='A / an';detail='Неопределённые артикли.';}
+  else if(['this','that','these','those'].includes(word)){id='demonstrative';name='Указательные местоимения';detail='Близость, дальность и число.';}
+  else if(info.kind==='pronoun'){id='subjectpron';name='Личные местоимения';detail='Выбор формы по роли в предложении.';}
+  else if(info.kind==='modal'){
+    id=word==='must'?'musthave':word==='should'?'should':
+      ['may','might'].includes(word)?'maymight':'can';
+    name='Модальные глаголы';detail='Уточните смысл модального глагола в контексте.';
+  }
+  else if(word==='if'||word==='unless'){id='first-cond';name='Условные предложения';detail='Тип условия зависит от времён обеих частей.';}
+  else if(info.kind==='auxiliary'){
+    id=['have','has','had'].includes(word)?'have':'be';
+    name='Вспомогательный глагол';detail='Время определяется всей конструкцией.';
+  }
+  else if(info.kind==='noun'&&info.form==='множественное число'){
+    id='plural';name='Множественное число';detail='Образование формы множественного числа.';
+  }
+  else if(info.kind==='adjective'){id='adjectives';name='Прилагательные';detail='Описание предмета или состояния.';}
+  else if(info.kind==='adverb'){id='adverbplace';name='Наречия';detail='Функция и место наречия зависят от вида.';}
+  else if(info.kind==='verb'&&info.form.includes('Past Simple')){
+    id='past-simple';name='Прошедшая форма';detail='Может быть Past Simple либо V3 при вспомогательном глаголе.';
+  }
+  else if(info.kind==='verb'&&info.form==='V-ing'){
+    id='gerund';name='Форма -ing';detail='Может быть герундием или частью длительного времени.';
+  }
+  if(!id)return null;
+  return {id,name,detail,approximate:true};
+}
 const node=(tag,cls='',value='')=>{
   const el=document.createElement(tag);if(cls)el.className=cls;el.textContent=value;return el;
 };
@@ -207,7 +239,7 @@ export class EnglishReadingInspector{
       if(hints.length)this.popup.append(node('p','dx-reading-inspector-hints',
         'Отдельные слова: '+hints.map(item=>item.word+' — '+item.meaning).join('; ')));
     }
-    const grammar=readingGrammarHint(text,context);
+    const grammar=readingGrammarHint(text,context)||readingWordGrammar(word);
     if(grammar){
       const block=node('section','dx-reading-inspector-grammar');
       block.append(node('strong','',grammar.name),node('p','',grammar.detail));
