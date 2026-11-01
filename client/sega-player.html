@@ -94,6 +94,9 @@
         coreReady = true;
         clearTimeout(timeoutId);
         wireRuntimeErrors();
+        // The start button can appear while the constructor is still running;
+        // attach the failure hook again after EJS_emulator has been assigned.
+        setTimeout(wireRuntimeErrors,250);
         uiObserver.disconnect();
         boot.hidden = true;
         send('dashboardx:sega-ui-ready',{source});
@@ -166,6 +169,7 @@
       window.EJS_ready = () => onInterfaceReady('event');
       gameRoot.addEventListener('click', event => {
         if (!event.target.closest('.ejs_start_button') || launched) return;
+        wireRuntimeErrors();
         clearTimeout(startedTimeout);
         startedTimeout = setTimeout(() => {
           if (!launched) failed('Игра не начала исполняться после нажатия Start. '+
