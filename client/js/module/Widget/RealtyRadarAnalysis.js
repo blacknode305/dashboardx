@@ -105,7 +105,7 @@ export function filterListings(rows,filters={}){
   const streets=Array.isArray(filters.streets)?filters.streets.map(fold).filter(Boolean):[];
   const kind=filters.kind||'';
   const query=fold(filters.query||'');
-  return rows.filter(row=>row.tab===tab&&row.price<=max&&
+  return rows.filter(row=>row.tab===tab&&(tab==='buyout'&&row.contractPayment?row.contractPayment:row.price)<=max&&
     (!kind||row.kind===kind)&&(!rooms.length||row.kind!=='apartment'||rooms.includes(row.rooms))&&
     (!streets.length||streets.some(x=>fold(row.address+' '+row.title).includes(x)))&&
     (!query||fold([row.title,row.address,row.description,row.source].join(' ')).includes(query)));
