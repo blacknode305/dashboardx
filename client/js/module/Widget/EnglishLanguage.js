@@ -646,6 +646,263 @@ export default class EnglishLanguageWidget{
     block.append(tally);
     this.content.append(block);
   }
+
+  dailyReadings(){
+    const today=readingDayKey();
+    if(this.readingDate!==today){
+      this.stopReading();
+      this.readingDate=today;
+      this.readingIndex=0;
+      this.readingAnswer=null;
+      this.readingFeedback=null;
+    }
+    return readingPairForDay(today,this.readingTheme);
+  }
+  activeReading(){
+    const pair=this.dailyReadings();
+    return pair[Math.min(this.readingIndex,pair.length-1)]||pair[0]||null;
+  }
+  toggleReadingDone(){
+    const story=this.activeReading();
+    if(!story)return;
+    if(this.readingDone.has(story.id))this.readingDone.delete(story.id);
+    else this.readingDone.add(story.id);
+    this.persist();
+    this.renderContent(true);
+  }
+  checkReadingAnswer(){
+    const story=this.activeReading();
+    if(!story||!Number.isInteger(this.readingAnswer))return;
+    const correct=this.readingAnswer===story.answer;
+    this.readingChecks[story.id]=correct;
+    this.readingFeedback=correct?'Верно! Вы поняли главную мысль текста.':
+      'Пока неверно. Перечитайте нужный абзац и попробуйте ещё раз.';
+    this.persist();
+    this.renderContent(true);
+  }
+  readingSpeechChunks(story){
+    // Short utterances improve reliability on Chromium, WebKit and long essays.
+    const chunks=[];
+    for(const paragraph of story.paragraphs){
+      const sentences=paragraph.match(/[^.!?]+[.!?]+(?:["”']*)|[^.!?]+$/g)||[paragraph];
+      let chunk='';
+      for(const sentence of sentences){
+        const part=sentence.trim();
+        if(!part)continue;
+        if(chunk.length+part.length>165&&chunk){
+          chunks.push(chunk);chunk='';
+        }
+        if(part.length>165){
+          const words=part.split(/\s+/);
+          for(const word of words){
+            if(chunk.length+word.length>165&&chunk){chunks.push(chunk);chunk='';}
+            chunk+=(chunk?' ':'')+word;
+          }
+        }else{
+          chunk+=(chunk?' ':'')+part;
+        }
+      }
+      if(chunk)chunks.push(chunk);
+    }
+    return chunks;
+  }
+  playReading(){
+    const story=this.activeReading();
+    if(!story)return;
+    if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance!=='function'){
+      this.readingAudioStatus='В этом браузере нет доступного синтеза речи.';
+      this.updateReadingAudio();return;
+    }
+    const synth=window.speechSynthesis;
+    if(this.readingAudio?.id===story.id){
+      if(this.readingAudio.paused){
+        this.readingAudio.paused=false;
+        synth.resume();
+        this.readingAudioStatus='Продолжено воспроизведение';
+        this.updateReadingAudio();
+      }
+      return;
+    }
+    this.stopReading();
+    const chunks=this.readingSpeechChunks(story);
+    if(!chunks.length)return;
+    const token=++this.readingSpeechToken;
+    this.readingAudio={id:story.id,paused:false,index:0,chunks,token};
+    this.readingAudioStatus='Читаем текст вслух…';
+    const speakNext=()=>{
+      const audio=this.readingAudio;
+      if(!audio||audio.token!==token||this.destroyed)return;
+      if(audio.index>=audio.chunks.length){
+        this.readingAudio=null;
+        this.readingAudioStatus='Чтение завершено';
+        this.updateReadingAudio();
+        return;
+      }
+      const utterance=new SpeechSynthesisUtterance(audio.chunks[audio.index++]);
+      utterance.lang='en-US';
+      utterance.rate=this.readingRate;
+      utterance.onend=()=>{if(this.readingAudio?.token===token)speakNext();};
+      utterance.onerror=event=>{
+        if(this.readingAudio?.token!==token)return;
+        this.readingAudio=null;
+        this.readingAudioStatus='Озвучивание прервано. Попробуйте снова.';
+        this.updateReadingAudio();
+      };
+      try{synth.speak(utterance);}catch(error){
+        this.readingAudio=null;this.readingAudioStatus='Не удалось воспроизвести текст.';
+        this.updateReadingAudio();
+      }
+    };
+    speakNext();
+    this.updateReadingAudio();
+  }
+  pauseReading(){
+    if(!this.readingAudio||this.readingAudio.paused)return;
+    window.speechSynthesis.pause();
+    this.readingAudio.paused=true;
+    this.readingAudioStatus='Пауза';
+    this.updateReadingAudio();
+  }
+  stopReading(){
+    this.readingSpeechToken++;
+    const hadAudio=Boolean(this.readingAudio);
+    this.readingAudio=null;
+    if(hadAudio&&'speechSynthesis' in window)window.speechSynthesis.cancel();
+    if(hadAudio)this.readingAudioStatus='';
+    this.updateReadingAudio();
+  }
+  updateReadingAudio(){
+    const active=Boolean(this.readingAudio);
+    const play=this.content?.querySelector('[data-action="reading-play"]');
+    const pause=this.content?.querySelector('[data-action="reading-pause"]');
+    const stop=this.content?.querySelector('[data-action="reading-stop"]');
+    const status=this.content?.querySelector('[data-role="reading-audio-status"]');
+    if(play){
+      play.textContent=active&&this.readingAudio.paused?'▶ Продолжить':'▶ Читать вслух';
+      play.disabled=active&&!this.readingAudio.paused;
+    }
+    if(pause)pause.disabled=!active||this.readingAudio.paused;
+    if(stop)stop.disabled=!active;
+    if(status)status.textContent=this.readingAudioStatus||
+      'Используется английский голос браузера. Интернет для текстов не нужен.';
+  }
+  renderDailyReading(){
+    const stories=this.dailyReadings();
+    const story=this.activeReading();
+    if(!story)return;
+    const topic=READING_THEMES.find(item=>item.id===story.theme);
+    const frame=make('article','dx-english-reading');
+    const header=make('header','dx-english-reading-header');
+    const date=new Date(this.readingDate+'T00:00:00Z').toLocaleDateString('ru-RU',{
+      timeZone:'UTC',day:'numeric',month:'long',year:'numeric'
+    });
+    header.append(make('span','dx-english-chip','Два текста на день'),
+      make('h3','','Чтение и самостоятельный перевод'),
+      make('p','dx-english-mini','Тексты дня · '+date+' · сменяются по календарю'));
+    frame.append(header);
+
+    const filters=make('div','dx-english-reading-toolbar');
+    const themeLabel=make('label','dx-english-reading-theme');
+    themeLabel.append(make('span','','Тема сочинений'));
+    const themeSelect=make('select');
+    themeSelect.dataset.role='reading-theme';
+    const options=[{id:'all',title:'Все темы'},...READING_THEMES];
+    options.forEach(item=>{
+      const option=new Option(item.title,item.id);
+      themeSelect.append(option);
+    });
+    themeSelect.value=this.readingTheme;
+    themeLabel.append(themeSelect);filters.append(themeLabel);
+    filters.append(make('span','dx-english-mini',
+      'Прочитано: '+this.readingDone.size+' из '+READING_ESSAYS.length+' текстов'));
+    frame.append(filters);
+
+    const switcher=make('nav','dx-english-reading-switcher');
+    stories.forEach((entry,index)=>{
+      const selected=index===this.readingIndex;
+      const tab=button((this.readingDone.has(entry.id)?'✓ ':'')+'Текст '+(index+1),'','dx-english-reading-tab');
+      tab.removeAttribute('data-action');
+      tab.dataset.readingStory=entry.id;
+      tab.setAttribute('aria-pressed',String(selected));
+      tab.classList.toggle('is-active',selected);
+      const sub=make('span','',entry.title);tab.append(sub);
+      switcher.append(tab);
+    });
+    frame.append(switcher);
+
+    const meta=make('div','dx-english-lesson-meta');
+    meta.append(make('span','dx-english-chip',story.level),make('span','',topic?.title||'Чтение'),
+      make('span','',story.wordCount+' слов · около '+Math.ceil(story.wordCount/110)+' мин чтения'));
+    frame.append(meta,make('h3','dx-english-reading-title',story.title));
+    const intro=make('p','dx-english-reading-intro',
+      'Прочитайте английский текст, попробуйте перевести каждый абзац самостоятельно, затем прослушайте произношение.');
+    frame.append(intro);
+
+    const audio=make('div','dx-english-reading-audio');
+    audio.append(button('▶ Читать вслух','reading-play','dx-english-primary'),
+      button('Ⅱ Пауза','reading-pause'),button('■ Стоп','reading-stop'));
+    const speedLabel=make('label','dx-english-reading-speed');
+    speedLabel.append(make('span','','Скорость'));
+    const speed=make('select');speed.dataset.role='reading-speed';
+    [[.75,'0.75×'],[.9,'0.9×'],[1,'1×'],[1.15,'1.15×']].forEach(([value,label])=>
+      speed.add(new Option(label,String(value))));
+    speed.value=String(this.readingRate);speedLabel.append(speed);audio.append(speedLabel);
+    frame.append(audio);
+    const status=make('p','dx-english-mini');status.dataset.role='reading-audio-status';
+    frame.append(status);
+
+    const text=make('section','dx-english-reading-text');
+    text.setAttribute('lang','en');
+    for(const paragraph of story.paragraphs)text.append(make('p','',paragraph));
+    frame.append(text);
+
+    const draft=make('section','dx-english-reading-draft');
+    draft.append(make('h4','','Мой перевод на русский'),
+      make('p','dx-english-mini','Переводите своими словами. Сохраняется в браузере автоматически, без отправки на сервер.'));
+    const field=make('textarea');
+    field.dataset.role='reading-draft';
+    field.dataset.storyId=story.id;
+    field.placeholder='Напишите свой перевод текста здесь. Начните с первого абзаца…';
+    field.rows=8;
+    field.maxLength=7000;
+    field.value=this.readingDrafts[story.id]||'';
+    field.setAttribute('aria-label','Мой собственный перевод на русский');
+    draft.append(field);
+    const draftStatus=make('p','dx-english-mini',
+      'Черновик сохраняется автоматически');draftStatus.dataset.role='reading-draft-status';
+    draft.append(draftStatus);frame.append(draft);
+
+    const comprehension=make('section','dx-english-quiz dx-english-reading-check');
+    comprehension.append(make('span','dx-english-quiz-tag','Проверка понимания'),
+      make('h4','',story.question));
+    const answers=make('div','dx-english-options');
+    story.options.forEach((answer,index)=>{
+      const option=button(answer,'','dx-english-option');
+      option.removeAttribute('data-action');
+      option.dataset.readingAnswer=String(index);
+      option.classList.toggle('is-selected',this.readingAnswer===index);
+      option.setAttribute('aria-pressed',String(this.readingAnswer===index));
+      answers.append(option);
+    });
+    comprehension.append(answers);
+    const check=button('Проверить понимание','reading-check','dx-english-primary');
+    check.disabled=!Number.isInteger(this.readingAnswer);
+    comprehension.append(check);
+    if(this.readingFeedback){
+      const feedback=make('p','dx-english-feedback '+(this.readingChecks[story.id]?'is-success':'is-error'),
+        this.readingFeedback);
+      feedback.setAttribute('role','status');comprehension.append(feedback);
+    }
+    frame.append(comprehension);
+    const bottom=make('div','dx-english-lesson-actions');
+    const completed=button(this.readingDone.has(story.id)?'✓ Прочитано':'Отметить прочитанным',
+      'reading-done','dx-english-primary');
+    completed.setAttribute('aria-pressed',String(this.readingDone.has(story.id)));
+    bottom.append(completed);frame.append(bottom);
+    this.content.append(frame);
+    this.updateReadingAudio();
+  }
+
   renderSaved(){
     const frame=make('section','dx-english-lesson');
     frame.append(make('span','dx-english-chip','Личный список'),
