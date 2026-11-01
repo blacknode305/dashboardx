@@ -2674,3 +2674,21 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   margin-right:auto;color:var(--red);
 }
 .dx-catalog-link-dialog .dx-catalog-link-actions button:disabled{opacity:.42;cursor:default}
+
+
+/* Names editor: opening "Изменить" grows the window before the editor may scroll.
+   Keep the editor at its natural height on desktop, with a bounded fallback on small screens. */
+#workspace-canvas .widget--element[data-widget-type="optimaProducts"].dx-product-editor-open
+  .dx-product-draft{
+  flex:0 0 auto;
+  min-height:auto;
+  max-height:clamp(190px,55dvh,650px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+#workspace-canvas .widget--element[data-widget-type="optimaProducts"].dx-product-editor-open
+  .optima-table-scroll{
+  flex:1 1 auto;
+  min-height:85px;
+  overflow:auto;
+}
