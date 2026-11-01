@@ -88,3 +88,85 @@
  #workspace-canvas .dx-study-panel{padding:11px}
  #workspace-canvas .dx-study-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+
+/* Expanded lesson reader for Mnemonics, Logic and Facial Expressions. */
+#workspace-canvas .dx-study-multi-examples ol{
+  display:grid;gap:12px;margin:0;padding-left:22px;
+}
+#workspace-canvas .dx-study-multi-examples li{
+  font-size:12px;line-height:1.8;padding-left:3px;overflow-wrap:anywhere;
+}
+#workspace-canvas .dx-study-deep{
+  background:var(--bg-panel-inside);border-left:3px solid var(--blue);
+}
+#workspace-canvas .dx-study-pitfall{
+  background:var(--bg-panel-inside);border-left:3px solid var(--yellow);
+}
+#workspace-canvas .dx-study-tip{
+  margin:0;padding:10px 12px;border:1px dashed var(--border);
+  border-radius:8px;color:var(--text-muted);font-size:11px;line-height:1.7;
+}
+#workspace-canvas .dx-study-notes textarea{
+  box-sizing:border-box;display:block;width:100%;min-height:98px;
+  padding:10px 11px;border:1px solid var(--border);border-radius:7px;
+  resize:vertical;background:var(--bg-panel);color:var(--text-main);
+  font:500 12px/1.7 var(--f-family-inter);
+}
+#workspace-canvas .dx-study-notes textarea:focus{
+  outline:2px solid var(--dx-accent,var(--blue));outline-offset:1px
+}
+#workspace-canvas .dx-face-lab-layout{
+  display:grid;grid-template-columns:minmax(210px, .9fr) minmax(250px,1.1fr);
+  gap:14px;align-items:start;
+}
+#workspace-canvas .dx-face-lab-visual{
+  display:grid;justify-items:center;gap:10px;padding:12px;
+  border:1px solid var(--border);border-radius:10px;
+  background:var(--bg-panel-inside)
+}
+#workspace-canvas .dx-mimic-face-svg{
+  display:block;width:min(100%,300px);height:auto;
+  max-height:285px;overflow:visible;
+}
+#workspace-canvas .dx-face-lab-visual>.dx-study-subtle{text-align:center}
+#workspace-canvas .dx-face-lab-picker{
+  display:grid;gap:9px;align-content:start;min-width:0
+}
+#workspace-canvas .dx-face-lab-picker>h4,
+#workspace-canvas .dx-face-lab-picker>.dx-study-panel>h4{
+  margin:0;font-size:13px;font-weight:700
+}
+#workspace-canvas .dx-face-lab-picker>p{
+  margin:0;line-height:1.7;font-size:11px;color:var(--text-muted)
+}
+#workspace-canvas .dx-face-au-choices{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;
+}
+#workspace-canvas .dx-study button.dx-face-au-button{
+  display:grid;place-items:center;min-height:35px;
+  border:1px solid var(--border);border-radius:7px;
+  background:var(--bg-panel-inside);color:var(--text-main);
+  font:700 11px var(--f-family-mono,monospace);cursor:pointer;
+}
+#workspace-canvas .dx-study button.dx-face-au-button:hover{
+  background:var(--bg-panel-light)
+}
+#workspace-canvas .dx-study button.dx-face-au-button.is-selected{
+  background:var(--dx-accent-soft,var(--bg-panel-light));
+  border-color:var(--dx-accent,var(--blue))
+}
+#workspace-canvas .dx-face-scenario-preview{
+  justify-items:start;
+}
+#workspace-canvas .dx-face-scenario-preview .dx-mimic-face-svg{
+  width:150px;max-height:155px
+}
+#workspace-canvas .dx-face-observations .dx-study-quiz .dx-study-actions{
+  display:flex;gap:8px;flex-wrap:wrap
+}
+@media(max-width:790px){
+  #workspace-canvas .dx-face-lab-layout{grid-template-columns:1fr}
+  #workspace-canvas .dx-face-lab-visual{padding:6px}
+  #workspace-canvas .dx-mimic-face-svg{max-height:200px;width:min(100%,245px)}
+}
