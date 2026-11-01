@@ -11,6 +11,10 @@ export default class AddWidget {
     this.typePicker = widget.querySelector('[data-role="type-picker"]');
     this.existingPicker = widget.querySelector('[data-role="existing-picker"]');
     this.typeOptions = widget.querySelector('[data-role="type-options"]');
+    this.searchInput = widget.querySelector('[data-role="widget-search"]');
+    this.clearSearch = widget.querySelector('[data-action="widget-search-clear"]');
+    this.searchCount = widget.querySelector('[data-role="widget-search-count"]');
+    this.searchQuery = '';
     this.existingOptions = widget.querySelector('[data-role="existing-options"]');
     this.typeLabel = widget.querySelector('[data-role="type-label"]');
     this.existingLabel = widget.querySelector('[data-role="existing-label"]');
@@ -29,6 +33,24 @@ export default class AddWidget {
     };
     this.createButton.addEventListener('click', this.onCreate);
     this.linkButton.addEventListener('click', this.onLink);
+    this.onSearch = () => {
+      this.searchQuery = this.searchInput.value.trim().toLocaleLowerCase('ru');
+      this.filterTypes();
+    };
+    this.onClearSearch = () => {
+      this.searchInput.value = '';
+      this.searchQuery = '';
+      this.filterTypes();
+      this.searchInput.focus();
+    };
+    this.searchInput?.addEventListener('input', this.onSearch);
+    this.searchInput?.addEventListener('keydown', event => {
+      if(event.key === 'Escape' && this.searchInput.value) {
+        event.preventDefault();
+        this.onClearSearch();
+      }
+    });
+    this.clearSearch?.addEventListener('click', this.onClearSearch);
     this.render();
   }
 
@@ -76,6 +98,36 @@ export default class AddWidget {
     return paragraph;
   }
 
+  filterTypes() {
+    const query = this.searchQuery;
+    let visible = 0;
+    this.typeOptions.querySelectorAll('.dx-picker-group').forEach(group => {
+      const category = group.dataset.searchLabel || '';
+      let count = 0;
+      group.querySelectorAll('.dx-picker-option').forEach(option => {
+        const match = !query || category.includes(query) ||
+          (option.dataset.searchText || '').includes(query);
+        option.hidden = !match;
+        if(match)count++;
+      });
+      group.hidden = count === 0;
+      const counter = group.querySelector('.dx-picker-group-count');
+      if(counter)counter.textContent = String(count);
+      visible += count;
+      if(query && count)group.open = true;
+      else if(!query)group.open = false;
+    });
+    this.typeOptions.querySelector('[data-role="widget-no-matches"]')?.remove();
+    if(query && !visible) {
+      const message = this.makeEmpty('Ничего не найдено. Попробуйте другое название или категорию.');
+      message.dataset.role = 'widget-no-matches';
+      this.typeOptions.append(message);
+    }
+    if(this.clearSearch)this.clearSearch.hidden = !query;
+    if(this.searchCount)this.searchCount.textContent =
+      query ? 'Найдено виджетов: '+visible : '';
+  }
+
   render() {
     const availableTypes = (window.dashboardxTemplates || []).filter(type => type.id !== 'add');
     this.typeOptions.replaceChildren();
@@ -99,6 +151,7 @@ export default class AddWidget {
       const group = document.createElement('details');
       group.className = 'dx-picker-group';
       group.dataset.category = category;
+      group.dataset.searchLabel = (t('nav.' + category)+' '+category).toLocaleLowerCase('ru');
       const heading = document.createElement('summary');
       heading.className = 'dx-picker-group-heading';
       const name = document.createElement('span');
@@ -116,16 +169,18 @@ export default class AddWidget {
       options.className = 'dx-picker-group-options';
       for (const type of entries) {
         const note = type.serverOnly ? t('ui.serverOnly') : type.id;
-        options.append(this.makeOption(widgetTitle(type.id,type.title), note, () => {
+        const option = this.makeOption(widgetTitle(type.id,type.title), note, () => {
           this.selectedType = type.id;
           this.typeLabel.textContent = widgetTitle(type.id,type.title);
           this.typePicker.open = false;
           this.createButton.disabled = false;
-        }));
+        });
+        option.dataset.searchText = (widgetTitle(type.id,type.title)+' '+type.id+' '+note).toLocaleLowerCase('ru');
+        options.append(option);
       }
       group.append(heading, options);
       group.addEventListener('toggle', () => {
-        if (!group.open) return;
+        if (!group.open || this.searchQuery) return;
         this.typeOptions.querySelectorAll('.dx-picker-group[open]').forEach(other => {
           if (other !== group) other.open = false;
         });
@@ -135,6 +190,8 @@ export default class AddWidget {
     if (!availableTypes.length) {
       this.typeOptions.append(this.makeEmpty(t('manager.templateUnavailable')));
     }
+    this.searchQuery = this.searchInput?.value.trim().toLocaleLowerCase('ru') || '';
+    this.filterTypes();
 
     const current = this.store.workspace;
     const existing = Object.values(this.store.state.instances);
@@ -195,5 +252,7 @@ export default class AddWidget {
   destroy() {
     this.createButton?.removeEventListener('click', this.onCreate);
     this.linkButton?.removeEventListener('click', this.onLink);
+    this.searchInput?.removeEventListener('input', this.onSearch);
+    this.clearSearch?.removeEventListener('click', this.onClearSearch);
   }
 }
