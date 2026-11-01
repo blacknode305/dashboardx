@@ -4,7 +4,7 @@ import { OPTIMA_BASE } from './OptimaAPI.js';
 const KEY='dashboardx.english.learning.v1';
 const PATH='/api/dashboardx/learning/english';
 const KEYS=['done','bookmarks','weak','readingDone','readingDrafts','readingChecks',
-  'savedWords','readingTheme','selected','view','level'];
+  'savedWords','readingTheme','selected','view','level','phoneticsDone'];
 const validData=data=>data&&typeof data==='object'&&!Array.isArray(data)?data:{};
 const clone=value=>JSON.parse(JSON.stringify(value));
 const store={
@@ -69,7 +69,7 @@ const store={
       // Server text drafts take precedence for the same story; local-only drafts survive.
       const combine=(a,b)=>[...new Set([...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])])];
       const merged={...this.data,...server};
-      for(const field of ['done','bookmarks','readingDone'])
+      for(const field of ['done','bookmarks','readingDone','phoneticsDone'])
         merged[field]=combine(server[field],this.data[field]);
       merged.readingDrafts={...validData(this.data.readingDrafts),...validData(server.readingDrafts)};
       merged.weak={...validData(this.data.weak),...validData(server.weak)};
