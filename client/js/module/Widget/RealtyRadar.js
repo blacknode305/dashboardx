@@ -53,6 +53,7 @@ export default class RealtyRadarWidget {
     this.favoritesOnly=false;
     this.lastOpenedBefore=Date.parse(state.lastOpened||'')||0;
     this.lastUpdated=state.lastUpdated||null;
+    this.lastFetchedAt=Number(state.lastFetchedAt)||0;
     this.listeners=[];
     this.dead=false;
     this.busy=false;
@@ -76,7 +77,7 @@ export default class RealtyRadarWidget {
       listen(el,role==='search'||role==='max'?'input':'change',()=>{
         const value=role==='max'?Number(el.value):el.value;
         this.settings[this.tab][role==='search'?'query':role]=value;
-        this.persist();this.applyControls();this.render();
+        this.persist();if(role==='kind')this.applyControls();this.render();
       });
     }
     for(const el of widget.querySelectorAll('[data-street]')){
@@ -97,6 +98,11 @@ export default class RealtyRadarWidget {
       this.say(url?'Источник сохранён. Нажмите «Проверить источник».':'Автоматический источник отключён.');
     });
     listen(q('[data-action="export"]'),'click',()=>this.exportJSON());
+    const refreshOnReturn=()=>{
+      if(this.feedUrl&&!this.busy&&Date.now()-this.lastFetchedAt>6*60*60*1000)void this.refresh(false);
+    };
+    listen(window,'focus',refreshOnReturn);
+    listen(document,'visibilitychange',()=>{if(!document.hidden)refreshOnReturn();});
     listen(this.upload,'change',()=>void this.importJSON());
     listen(this.results,'click',event=>{
       const button=event.target.closest('[data-favorite]');
@@ -122,7 +128,7 @@ export default class RealtyRadarWidget {
     this.store?.updateWidgetState(this.id,{
       tab:this.tab,settings:this.settings,feedUrl:this.feedUrl,
       items:this.items.slice(0,300),favorites:[...this.favorites].slice(0,400),
-      lastOpened:new Date().toISOString(),lastUpdated:this.lastUpdated
+      lastOpened:new Date().toISOString(),lastUpdated:this.lastUpdated,lastFetchedAt:this.lastFetchedAt
     });
   }
   applyControls(){
@@ -151,6 +157,7 @@ export default class RealtyRadarWidget {
       return;
     }
     this.busy=true;
+    this.lastFetchedAt=Date.now();this.persist();
     this.say('Загрузка разрешённой ленты объявлений…');
     const abort=new AbortController();
     const timer=setTimeout(()=>abort.abort(),14000);
