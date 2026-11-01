@@ -249,7 +249,7 @@ const dictionaries = {
     'nav.all':'Барлығы','nav.pinned':'Бекітілген','nav.hidden':'Жасырын','nav.favorite':'Таңдаулылар',
     'nav.system':'Жүйе','nav.finance':'Қаржы','nav.tools':'Құралдар',
     'nav.media':'Медиа','nav.telegram':'Telegram','nav.social':'Қарым-қатынас','widget.discordPortal':'Discord · Арналар',
-    'nav.optima':'Оптима','nav.learning':'Оқу','widget.englishLanguage':'Ағылшын тілі','widget.psychology':'Мнемоника','widget.logic':'Логика',
+    'nav.optima':'Оптима','nav.learning':'Оқу','widget.englishLanguage':'Ағылшын тілі','widget.psychology':'Мнемоника','widget.logic':'Логика','widget.mimic':'Бет қимылы',
     'orders.mode.plan':'Кесте бойынша',
     'orders.day':'Апта күні',
     'orders.day.sun':'Жексенбі',
