@@ -1,6 +1,7 @@
 import { GRAMMAR_GROUPS, GRAMMAR_LESSONS, GRAMMAR_LEVELS } from './EnglishGrammarData.js?v=english-grammar-20261101';
 import { GRAMMAR_EXPANDED, GRAMMAR_CHAPTER_GUIDES, GRAMMAR_COMPARISONS } from './EnglishGrammarExpanded.js?v=english-extended-20261101';
 import { READING_THEMES, READING_ESSAYS, readingDayKey, readingPairForDay } from './EnglishReadingData.js?v=daily-reading-20261101';
+import { EnglishReadingInspector } from './EnglishReadingInspector.js?v=reading-inspector-20261101';
 
 const byId=new Map(GRAMMAR_LESSONS.map(item=>[item.id,item]));
 const make=(tag,className='',text='')=>{
@@ -90,7 +91,9 @@ export default class EnglishLanguageWidget{
       }
       const tab=event.target.closest('[data-view]');
       if(tab&&this.root.contains(tab)){
-        if(this.view==='reading'&&tab.dataset.view!=='reading')this.stopReading();
+        if(this.view==='reading'&&tab.dataset.view!=='reading'){
+          this.stopReading();this.readingInspector?.hide();
+        }
         this.view=tab.dataset.view;
         this.choice=null;this.feedback=null;
         this.persist();this.render();
@@ -101,7 +104,7 @@ export default class EnglishLanguageWidget{
         const list=this.dailyReadings();
         const index=list.findIndex(item=>item.id===story.dataset.readingStory);
         if(index>=0){
-          this.stopReading();this.readingIndex=index;this.readingAnswer=null;
+          this.stopReading();this.readingInspector?.hide();this.readingIndex=index;this.readingAnswer=null;
           this.readingFeedback=null;this.renderContent();
         }
         return;
@@ -172,7 +175,7 @@ export default class EnglishLanguageWidget{
     };
     this.onReadingChange=event=>{
       if(event.target.matches('[data-role="reading-theme"]')){
-        this.stopReading();
+        this.stopReading();this.readingInspector?.hide();
         this.readingTheme=event.target.value;
         this.readingIndex=0;
         this.readingAnswer=null;this.readingFeedback=null;
@@ -226,6 +229,7 @@ export default class EnglishLanguageWidget{
       if(group.open)this.openGroups.add(group.dataset.groupId);
       else this.openGroups.delete(group.dataset.groupId);
     };
+    this.readingInspector=new EnglishReadingInspector(widget,{onGrammar:id=>this.selectLesson(id)});
     this.root.addEventListener('click',this.onClick);
     this.content.addEventListener('change',this.onReadingChange);
     this.content.addEventListener('input',this.onReadingInput);
@@ -935,6 +939,8 @@ export default class EnglishLanguageWidget{
   }
   destroy(){
     this.stopReading();
+    this.readingInspector?.destroy();
+    this.readingInspector=null;
     clearTimeout(this.readingPersistTimer);
     this.persist();
     this.destroyed=true;
