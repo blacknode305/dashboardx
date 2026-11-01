@@ -30,7 +30,8 @@ export function normalizeListing(src){
   const url=safeUrl(src.url||src.link);
   const title=String(src.title||src.name||'').trim().slice(0,160);
   const price=money(src.price);
-  if(!url||!title||!price||price>1_000_000_000_000)return null;
+  if(!url||!title||price>1_000_000_000_000)return null;
+  if(!price&&src.sourceConfidence!=='search_index')return null;
   const tab=inferredTab(src);
   const address=String(src.address||src.location||'').trim().slice(0,180);
   const description=String(src.description||'').trim().slice(0,480);
@@ -43,7 +44,9 @@ export function normalizeListing(src){
   const original=src.id?String(src.id).slice(0,120):url.split('#')[0];
   const sellerType=['owner','agency','unknown'].includes(src.sellerType)?src.sellerType:'unknown';
   return {id:original,source:String(src.source||new URL(url).hostname).slice(0,50),
-    url,title,address,description,tab,kind,rooms,area,price,priceUnit,
+    url,title,address,description,tab,kind,rooms,area,price:price||null,priceUnit,
+    sourceConfidence:src.sourceConfidence==='search_index'?'search_index':'provided',
+    availabilityConfirmed:src.availabilityConfirmed===true,
     sellerType,postedAt:date(src.postedAt),firstSeen:date(src.firstSeen)||new Date().toISOString(),
     lastSeen:date(src.lastSeen)||new Date().toISOString(),
     missing:src.missing===true,previousPrice:money(src.previousPrice)||null,
@@ -76,7 +79,7 @@ export function median(values){
 const unitPrice=x=>x.area&&x.priceUnit==='total'?x.price/x.area:x.price;
 function comparables(row,all){
   const street=fold(row.address).split(',')[0].trim();
-  const local=all.filter(x=>x.id!==row.id&&x.tab===row.tab&&x.priceUnit===row.priceUnit&&x.kind===row.kind &&
+  const local=all.filter(x=>x.price>0&&x.id!==row.id&&x.tab===row.tab&&x.priceUnit===row.priceUnit&&x.kind===row.kind &&
     (row.kind!=='apartment'||(x.rooms===row.rooms&&((!x.area||!row.area)||Math.abs(x.area-row.area)/row.area<=0.35))));
   // Strict neighborhood benchmark only if sufficient comparable rows on same street.
   const same=street.length>5?local.filter(x=>fold(x.address).includes(street)||street.includes(fold(x.address).split(',')[0])):[];
@@ -84,7 +87,7 @@ function comparables(row,all){
 }
 export function analyzeListing(row,all){
   const peers=comparables(row,all);
-  const unit=unitPrice(row),base=peers.length>=3?median(peers.map(unitPrice)):null;
+  const unit=row.price>0?unitPrice(row):null,base=peers.length>=3?median(peers.map(unitPrice)):null;
   const discount=base&&unit?Math.round((1-unit/base)*1000)/10:null;
   const last=Date.parse(row.postedAt||row.firstSeen||'');
   const age=Number.isFinite(last)?Math.max(0,Math.floor((Date.now()-last)/86400000)):null;
@@ -107,7 +110,7 @@ export function filterListings(rows,filters={}){
   const streets=Array.isArray(filters.streets)?filters.streets.map(fold).filter(Boolean):[];
   const kind=filters.kind||'';
   const query=fold(filters.query||'');
-  return rows.filter(row=>row.tab===tab&&(tab==='buyout'&&row.contractPayment?row.contractPayment:row.price)<=max&&
+  return rows.filter(row=>row.tab===tab&&(!row.price||(tab==='buyout'&&row.contractPayment?row.contractPayment:row.price)<=max)&&
     (!kind||row.kind===kind)&&(!rooms.length||row.kind!=='apartment'||rooms.includes(row.rooms))&&
     (!streets.length||streets.some(x=>{
       const address=fold(row.address+' '+row.title);
@@ -118,9 +121,9 @@ export function filterListings(rows,filters={}){
 export function analyzeListings(rows,filters={}){
   const filtered=filterListings(rows,filters);
   return filtered.map(x=>analyzeListing(x,rows)).sort((a,b)=>{
-    if(filters.sort==='price')return a.price-b.price;
+    if(filters.sort==='price')return (a.price||Infinity)-(b.price||Infinity);
     if(filters.sort==='recent')return Date.parse(b.firstSeen||0)-Date.parse(a.firstSeen||0);
     if(filters.sort==='discount')return (b.discount??-1000)-(a.discount??-1000);
-    return b.score-a.score||a.price-b.price;
+    return Number(Boolean(b.price))-Number(Boolean(a.price))||b.score-a.score||(a.price||Infinity)-(b.price||Infinity);
   });
 }
