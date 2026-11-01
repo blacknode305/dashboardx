@@ -115,6 +115,8 @@ export default class EnglishLanguageWidget{
         case 'builder-reset':
           this.builderSelected=[];this.builderFeedback=null;this.renderContent(true);break;
         case 'review-mistakes':this.startReview('weak');break;
+        case 'review-menu':
+          this.review=null;this.choice=null;this.feedback=null;this.renderContent();break;
         case 'prev':this.stepLesson(-1);break;
         case 'next':this.stepLesson(1);break;
         case 'bookmark':this.toggleBookmark();break;
@@ -541,9 +543,12 @@ export default class EnglishLanguageWidget{
         make('h3','','Результат: '+this.review.score+' из '+this.review.ids.length));
       block.append(make('p','dx-english-intro',
         'Правильные ответы засчитаны в прогресс грамматики. Повторите темы, в которых ещё не уверены.'));
-      block.append(button('Ещё вопросы','review-reset','dx-english-primary'));
-      block.append(make('p','dx-english-mini',
-        'Тем на повторении: '+Object.keys(this.weak).length+'. Откройте «Практика», чтобы повторить именно их.'));
+      const buttons=make('div','dx-english-lesson-actions');
+      buttons.append(button('Ещё вопросы','review-reset','dx-english-primary'));
+      const weak=button('Повторить ошибки · '+Object.keys(this.weak).length,'review-mistakes');
+      weak.disabled=!Object.keys(this.weak).length;
+      buttons.append(weak,button('Выбор тренировки','review-menu'));
+      block.append(buttons);
       this.content.append(block);return;
     }
     const topic=byId.get(this.review.ids[this.review.index]);
