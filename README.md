@@ -1,4 +1,12 @@
-# DashboardX — GitHub Pages / localStorage
+# DashboardX by blacknode305 — веб-дашборд с AI-виджетами
+
+**DashboardX** — действующий открытый веб-проект разработчика **[blacknode305](https://github.com/blacknode305)**: настраиваемые рабочие столы и виджеты, пространственный 3D/AR-просмотр, учебные курсы, игры, инструменты и опциональные AI-возможности с собственным API-ключом (BYOK).
+
+**Рабочая версия:** [blacknode305.github.io/dashboardx](https://blacknode305.github.io/dashboardx/) · **Код:** [github.com/blacknode305/dashboardx](https://github.com/blacknode305/dashboardx)
+
+*DashboardX by blacknode305 is a live, open-source, customizable web dashboard with AI-ready (bring-your-own-key) widgets, spatial workspaces, educational tools and browser utilities.*
+
+**Об ИИ:** базовый дашборд работает в браузере; AI-функциям требуется подключение собственного серверного шлюза и API-ключа. Проект разработан независимо, **не является продуктом Google или OpenAI**.
 
 > ⭐ **DashboardX — открытый проект!** Можно бесплатно скачивать, изучать, использовать, изменять и создавать свои версии по лицензии **MIT**. Если проект оказался полезным — поддержите его звёздочкой на [GitHub](https://github.com/blacknode305/dashboardx), поделитесь отзывом или предложите улучшение. Звёздочка — пожелание, **не обязательное условие лицензии**. Я открыт к сотрудничеству и предложениям по разработке: [профиль blacknode305](https://github.com/blacknode305).
 >
