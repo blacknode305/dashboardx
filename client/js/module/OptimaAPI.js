@@ -7,9 +7,21 @@ export const hasOptimaWritePassword=()=>Boolean(ownerWritePassword);
 export const getOptimaWritePassword=()=>ownerWritePassword;
 export const OPTIMA_BASE='https://pro-optima-production.up.railway.app';
 export const OPTIMA_POLL_MS=90000;
-export const PRODUCTION_BRANCHES=['ГОРНЯК','ЛОБОДЫ','НУРКЕН','САРАНЬ','ПРИШАХТИНСК'];
+export const PRODUCTION_BRANCHES=['Горняк','Лободы','Нуркена','Сарань','Пришахтинск','Ермекова','Анжерская'];
 export const textValue=value=>String(value??'');
 export const norm=value=>textValue(value).trim().toLocaleLowerCase();
+export const branchKey=value=>{
+  const key=norm(value).replace(/\s+/g,' ');
+  if(key==='нуркен'||key==='нуркена')return 'нуркена';
+  if(key==='анжерского')return 'анжерская';
+  return key;
+};
+export const sameBranch=(a,b)=>branchKey(a)===branchKey(b);
+export const canonicalBranch=value=>{
+  const key=branchKey(value);
+  const names={горняк:'Горняк',лободы:'Лободы',нуркена:'Нуркена',сарань:'Сарань',пришахтинск:'Пришахтинск',ермекова:'Ермекова',анжерская:'Анжерская'};
+  return names[key]||textValue(value).trim().replace(/\s+/g,' ');
+};
 export const rows=value=>Array.isArray(value)?value:[];
 export const money=value=>{
   const n=Number(value);
@@ -17,10 +29,13 @@ export const money=value=>{
     ?new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2}).format(n)+' ₸':'—';
 };
 export const branchNames=db=>{
+  // The server-managed registry is authoritative after the first branch edit.
+  if(Array.isArray(db?.branches))return [...new Map(db.branches.filter(Boolean).map(v=>[branchKey(v),textValue(v).trim()])).values()];
   const dynamic=rows(db?.suppliers).flatMap(s=>rows(s.schedules).map(r=>textValue(r.branch).trim()))
     .concat(rows(db?.history).map(r=>textValue(r.branch).trim()))
     .concat(rows(db?.stocks).map(r=>textValue(r.branch).trim()));
-  return [...new Set([...PRODUCTION_BRANCHES,...dynamic.filter(Boolean)])];
+  return [...new Map([...PRODUCTION_BRANCHES,...dynamic.filter(Boolean)]
+    .map(v=>[branchKey(v),canonicalBranch(v)])).values()];
 };
 export async function optimaRequest(path,options={}){
   const token=getCredential('optima');
@@ -72,15 +87,15 @@ export function dateISO(){
   return lookup('year')+'-'+lookup('month')+'-'+lookup('day');
 }
 export function stockAt(stockHistory,productId,branch,date){
-  const target=norm(branch);
+  const target=branchKey(branch);
   return rows(stockHistory).filter(s=>
-    Number(s.productId)===Number(productId)&&norm(s.branch)===target&&
+    Number(s.productId)===Number(productId)&&branchKey(s.branch)===target&&
     textValue(s.date)<=date
   ).sort((a,b)=>textValue(b.date).localeCompare(textValue(a.date))||
     textValue(b.createdAt).localeCompare(textValue(a.createdAt)))[0]||null;
 }
 export function stockCell(db,product,branch,date){
-  if(rows(product.excludedBranches).some(x=>norm(x)===norm(branch)))return {text:'—',kind:'na'};
+  if(rows(product.excludedBranches).some(x=>sameBranch(x,branch)))return {text:'—',kind:'na'};
   const stock=stockAt(db.stocks,product.id,branch,date);
   if(!stock)return {text:'?',kind:'unknown'};
   if(stock.value==='-')return {text:'—',kind:'na'};
@@ -98,7 +113,7 @@ export function orderStatus(rec,date=dateISO()){
   return stage;
 }
 export function offerForBranch(o,branch){
-  return !branch || branch==='*' || o.branch===branch || o.branch==='*';
+  return !branch || branch==='*' || sameBranch(o.branch,branch) || o.branch==='*';
 }
 export function effectiveOffers(offers,branch){
   if(!branch||branch==='*')return rows(offers);
@@ -107,7 +122,7 @@ export function effectiveOffers(offers,branch){
     if(!offerForBranch(offer,branch))continue;
     const key=textValue(offer.supplierId)+'|'+textValue(offer.productId);
     const previous=map.get(key);
-    if(!previous || (offer.branch===branch&&previous.branch!==branch))map.set(key,offer);
+    if(!previous || (sameBranch(offer.branch,branch)&&!sameBranch(previous.branch,branch)))map.set(key,offer);
   }
   return [...map.values()];
 }
