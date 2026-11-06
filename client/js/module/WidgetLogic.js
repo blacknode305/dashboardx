@@ -19,6 +19,7 @@ import TelegramBotWidget from './Widget/TelegramBot.js?v=nes-interactions-202610
 import DiscordPortalWidget from './Widget/DiscordPortal.js?v=discord-portal-20261101';
 import DashboardSettingsWidget from './Widget/DashboardSettings.js';
 import OptimaSuppliersWidget from './Widget/OptimaSuppliers.js?v=widget-inline-editors-20261101b';
+import OptimaBranchesWidget from './Widget/OptimaBranches.js?v=optima-branches-20261106';
 import OptimaDataWidget from './Widget/OptimaData.js?v=optima-offers-filter-picker-20261106';
 import OptimaOrdersWidget from './Widget/OptimaOrders.js';
 import NesEmulatorWidget from './Widget/NesEmulator.js?v=nes-interactions-20261026';
@@ -59,6 +60,7 @@ const WidgetLogic = {
   DiscordPortalWidget,
   DashboardSettingsWidget,
   OptimaSuppliersWidget,
+  OptimaBranchesWidget,
   OptimaProductsWidget: OptimaDataWidget,
   OptimaProposalsWidget: OptimaDataWidget,
   OptimaOffersWidget: OptimaDataWidget,
