@@ -638,17 +638,40 @@ export default class OptimaDataWidget {
     button.title=linked?'Изменить привязку «'+linked.name+'»':'Привязать к нашему наименованию';
     button.setAttribute('aria-label',linked?'Изменить привязку: '+linked.name:'Привязать «'+row.name+'»');
     button.addEventListener('click',()=>this.openCatalogLinkDialog(row));
-    const edit=make('button','Изменить','dx-catalog-link-action');
+    return button;
+  }
+  catalogPriceCell(row){
+    const wrapper=make('div',undefined,'dx-catalog-price-cell');
+    wrapper.style.display='flex';
+    wrapper.style.alignItems='center';
+    wrapper.style.gap='6px';
+    wrapper.append(make('span',money(row.price)));
+    const edit=make('button',undefined,'dx-catalog-price-edit');
     edit.type='button';
-    edit.title='Ввести цену из накладной для «'+row.name+'»';
+    edit.title='Изменить цену из накладной';
     edit.setAttribute('aria-label','Изменить цену: '+row.name);
+    edit.style.display='inline-flex';
+    edit.style.alignItems='center';
+    edit.style.justifyContent='center';
+    edit.style.width='28px';
+    edit.style.height='28px';
+    edit.style.padding='4px';
+    const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    icon.setAttribute('viewBox','0 0 24 24');
+    icon.setAttribute('width','16');
+    icon.setAttribute('height','16');
+    icon.setAttribute('fill','none');
+    icon.setAttribute('stroke','currentColor');
+    icon.setAttribute('stroke-width','2');
+    icon.setAttribute('stroke-linecap','round');
+    icon.setAttribute('stroke-linejoin','round');
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d','M12 20h9 M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z');
+    icon.append(path);
+    edit.append(icon);
     edit.addEventListener('click',()=>this.openCatalogPriceDialog(row));
-    const actions=make('div',undefined,'dx-catalog-row-actions');
-    actions.style.display='flex';
-    actions.style.flexWrap='wrap';
-    actions.style.gap='6px';
-    actions.append(button,edit);
-    return actions;
+    wrapper.append(edit);
+    return wrapper;
   }
   openCatalogPriceDialog(row){
     if(!this.db||this.destroyed)return;
@@ -951,7 +974,7 @@ export default class OptimaDataWidget {
         {label:t('optima.product'),get:x=>x.name},
         {label:t('optima.supplier'),get:x=>suppliersById.get(String(x.supplierId))?.name},
         {label:t('optima.unit'),get:x=>x.unit},
-        {label:t('optima.price'),get:x=>money(x.price)},
+        {label:t('optima.price'),get:x=>this.catalogPriceCell(x)},
         {label:'Привязка',get:x=>this.catalogLinkCell(x)}
       ],entries);
       const linked=total('supplierCatalog').filter(x=>total('products').some(p=>String(p.id)===String(catalogProductId(x)))).length;
