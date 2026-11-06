@@ -1,4 +1,5 @@
 import { getCredential } from '../CredentialStore.js';
+import { attachWidgetInlineEditor } from '../WidgetInlineEditor.js?v=widget-editors-20261101b';
 import { loadOptima, optimaRequest, OPTIMA_POLL_MS, dateISO, norm } from '../OptimaAPI.js';
 const elem=(tag,cls,text)=>{
   const e=document.createElement(tag);
@@ -32,6 +33,9 @@ const remaining=(x,today)=>{
 export default class OptimaDeclarationsWidget{
   constructor(widget){
     this.widget=widget;this.id=widget.instanceId;this.store=window.dashboardxStore;
+    // User-facing title must stay readable; do not alter the persisted widget ID.
+    const heading=widget.querySelector('.window-title');
+    if(heading)heading.textContent='Декларации';
     const old=this.store?.getWidgetState(this.id)||{};
     this.filters={
       search:typeof old.declarationSearch==='string'?old.declarationSearch:'',
@@ -104,10 +108,10 @@ export default class OptimaDeclarationsWidget{
       if(button.dataset.action==='edit')this.openEditor(entry);
       if(button.dataset.action==='delete')this.deleteEntry(entry);
     });
-    this.onExternalUpdate=()=>{if(!this.dialog?.open)this.load();};
+    this.onExternalUpdate=()=>{if(!this.editorOpen)this.load();};
     window.addEventListener('dashboardx:optima-updated',this.onExternalUpdate);
     this.load();
-    this.poll=setInterval(()=>{if(!this.dialog?.open)this.load();},OPTIMA_POLL_MS);
+    this.poll=setInterval(()=>{if(!this.editorOpen)this.load();},OPTIMA_POLL_MS);
   }
   setStatus(msg){this.statusText.textContent=msg;}
   saveFilters(){
@@ -234,26 +238,43 @@ export default class OptimaDeclarationsWidget{
       group.append(content);this.list.append(group);
     }
   }
-  buildDialog(){
-    if(this.dialog)return;
-    const dialog=document.createElement('dialog');dialog.className='dx-decl-dialog';
-    dialog.innerHTML='<form data-role="declaration-form"><div class="dx-decl-dialog-head"><strong data-role="declaration-form-title">Добавить декларацию</strong><button type="button" data-role="declaration-form-close" aria-label="Закрыть">×</button></div><label>Поставщик<select name="supplierId" required></select></label><label>Тип продукции<input name="productType" type="text" maxlength="180" placeholder="Например, молочная продукция" autocomplete="off" required></label><div class="dx-decl-date-fields"><label>Начало действия<input name="startDate" type="date" required></label><label>Окончание действия<input name="endDate" type="date" required></label></div><p class="dx-decl-form-hint">Дата окончания включена в срок действия. Категорию продукции вводите вручную.</p><p class="dx-decl-form-feedback" data-role="declaration-form-feedback" aria-live="polite"></p><div class="dx-decl-dialog-actions"><button type="button" data-role="declaration-form-cancel">Отмена</button><button type="submit" data-role="declaration-form-save">Сохранить</button></div></form>';
-    document.body.append(dialog);this.dialog=dialog;
-    this.form=dialog.querySelector('form');
-    this.formFeedback=dialog.querySelector('[data-role="declaration-form-feedback"]');
-    this.saveButton=dialog.querySelector('[data-role="declaration-form-save"]');
-    this.listen(dialog.querySelector('[data-role="declaration-form-close"]'),'click',()=>{if(!this.saving)dialog.close();});
-    this.listen(dialog.querySelector('[data-role="declaration-form-cancel"]'),'click',()=>{if(!this.saving)dialog.close();});
-    this.listen(this.form,'submit',event=>{event.preventDefault();this.saveEntry();});
-    this.listen(dialog,'close',()=>{this.editId=null;this.form.reset();this.formFeedback.textContent='';});
-    this.listen(dialog,'cancel',event=>{if(this.saving)event.preventDefault();});
+  buildEditor(){
+    if(this.editorWindow)return;
+    // This is an inline, movable editor owned by the widget—not a modal dialog.
+    const form=document.createElement('form');
+    form.className='dx-decl-form';
+    form.setAttribute('data-role','declaration-form');
+    form.innerHTML='<label>Поставщик<select name="supplierId" required></select></label><label>Тип продукции<input name="productType" type="text" maxlength="180" placeholder="Например, молочная продукция" autocomplete="off" required></label><div class="dx-decl-date-fields"><label>Начало действия<input name="startDate" type="date" required></label><label>Окончание действия<input name="endDate" type="date" required></label></div><p class="dx-decl-form-hint">Дата окончания включена в срок действия. Категорию продукции вводите вручную.</p><p class="dx-decl-form-feedback" data-role="declaration-form-feedback" aria-live="polite"></p><div class="dx-decl-dialog-actions"><button type="button" data-role="declaration-form-cancel">Отмена</button><button type="submit" data-role="declaration-form-save">Сохранить</button></div>';
+    this.form=form;
+    this.formFeedback=form.querySelector('[data-role="declaration-form-feedback"]');
+    this.saveButton=form.querySelector('[data-role="declaration-form-save"]');
+    this.editorWindow=attachWidgetInlineEditor(this.widget,form,{
+      title:'Декларация',kind:'declarations',
+      host:this.widget.body,
+      onClose:()=>this.closeEditor()
+    });
+    this.listen(form.querySelector('[data-role="declaration-form-cancel"]'),'click',()=>this.closeEditor());
+    this.listen(form,'submit',event=>{event.preventDefault();this.saveEntry();});
+  }
+  closeEditor(force=false){
+    if(this.saving&&!force)return;
+    this.editorOpen=false;
+    this.editorWindow?.hide();
+    this.editId=null;
+    this.form?.reset();
+    if(this.formFeedback)this.formFeedback.textContent='';
   }
   openEditor(item){
     if(!this.db||this.revision==null){this.setStatus('Сначала подключитесь к базе PRO OPTIMA.');return;}
-    this.buildDialog();
+    this.buildEditor();
+    if(this.editorOpen){
+      this.editorWindow.open();
+      this.form.elements.namedItem('productType').focus({preventScroll:true});
+      return;
+    }
     this.editId=item?.id!=null?String(item.id):null;
     this.dialogRevision=this.revision;
-    this.form.querySelector('[data-role="declaration-form-title"]').textContent=item?'Изменить декларацию':'Новая декларация';
+    this.editorWindow.setTitle(item?'Изменить декларацию':'Добавить декларацию');
     const select=this.form.elements.namedItem('supplierId');
     select.replaceChildren(new Option('Выберите поставщика',''));
     for(const supplier of this.supplierItems())select.append(new Option(supplier.name,String(supplier.id)));
@@ -262,11 +283,12 @@ export default class OptimaDeclarationsWidget{
     this.form.elements.namedItem('startDate').value=item?.startDate||'';
     this.form.elements.namedItem('endDate').value=item?.endDate||'';
     this.formFeedback.textContent='';
-    this.dialog.showModal();
+    this.editorOpen=true;
+    this.editorWindow.open();
     (item?this.form.elements.namedItem('productType'):select).focus({preventScroll:true});
   }
   async saveEntry(){
-    if(this.saving||!this.dialog?.open||!this.form.reportValidity())return;
+    if(this.saving||!this.editorOpen||!this.form.reportValidity())return;
     const data={
       supplierId:this.form.elements.namedItem('supplierId').value,
       productType:this.form.elements.namedItem('productType').value.trim(),
@@ -279,7 +301,7 @@ export default class OptimaDeclarationsWidget{
       const response=await optimaRequest('/api/dashboardx/declarations',{method:'POST',
         body:JSON.stringify({action:'save',baseRevision:this.dialogRevision,
           declaration:{...(this.editId?{id:this.editId}:{}),...data}})});
-      this.dialog.close();
+      this.closeEditor(true);
       window.dispatchEvent(new CustomEvent('dashboardx:optima-updated',{detail:{revision:response.revision}}));
       await this.load();this.setStatus('Декларация сохранена · ревизия '+response.revision);
     }catch(error){
@@ -305,7 +327,6 @@ export default class OptimaDeclarationsWidget{
     clearTimeout(this.saveTimer);this.saveFilters();
     window.removeEventListener('dashboardx:optima-updated',this.onExternalUpdate);
     for(const fn of this.unbind)fn();
-    if(this.dialog?.open)this.dialog.close();
-    this.dialog?.remove();
+    this.editorWindow?.destroy();
   }
 }
