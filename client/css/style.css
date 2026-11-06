@@ -3086,3 +3086,20 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas .dx-decl-dialog-actions button[type="submit"]{border-color:var(--dx-accent);background:var(--bg-panel-light)}
 #workspace-canvas .dx-decl-dialog-actions button:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:430px){.dx-decl-date-fields{grid-template-columns:1fr}}
+
+/* Declaration editor: use the same searchable supplier combobox as the main filters. */
+#workspace-canvas .dx-decl-form .dx-decl-editor-supplier-label{
+  display:grid;gap:5px;min-width:0;
+}
+#workspace-canvas .dx-decl-form .dx-decl-editor-supplier{
+  position:relative;width:100%;min-width:0;
+}
+#workspace-canvas .dx-decl-form .dx-decl-editor-supplier input[type="search"]{
+  width:100%;min-width:0;
+}
+#workspace-canvas .dx-decl-form .dx-decl-editor-supplier input[type="hidden"]{
+  display:none!important;
+}
+#workspace-canvas .dx-decl-form .dx-decl-editor-supplier input[type="search"]:focus-visible{
+  outline:2px solid var(--dx-accent);outline-offset:1px;
+}
