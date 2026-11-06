@@ -4,7 +4,7 @@ import { openOptimaPrintPreview } from '../OptimaPrint.js?v=optima-catalog-refre
 import { getCredential } from '../CredentialStore.js';
 import { optimaRequest } from '../OptimaAPI.js';
 import {
-  loadOptima, patchOptima, OPTIMA_POLL_MS, norm, rows, branchNames, money,
+  loadOptima, patchOptima, OPTIMA_POLL_MS, norm, rows, branchNames, branchKey, money,
   stockCell, orderStatus, effectiveOffers, dateISO
 } from '../OptimaAPI.js';
 
@@ -304,18 +304,26 @@ export default class OptimaDataWidget {
       const info=widget.querySelector('[data-role="product-draft-info"]');
       const saveButton=widget.querySelector('[data-role="product-draft-save"]');
       const defaultInfo=info.textContent;
-      const branchList=['Анжерская','Горняк','Ермекова','Лободы','Нуркена','Пришахтинск','Сарань'];
+      let branchList=[];
       this.productEditId=null;
       this.productFormBaseRevision=null;
       this.productBusy=false;
       this.productAdd.setAttribute('aria-expanded','false');
-      for(const branchName of branchList){
-        const label=document.createElement('label');
-        const checkbox=document.createElement('input');
-        checkbox.type='checkbox';checkbox.name='excludedBranches';checkbox.value=branchName;
-        label.append(checkbox,document.createTextNode(branchName));
-        branchContainer.append(label);
-      }
+      this.syncProductBranches=()=>{
+        if(!this.productDraft.hidden)return;
+        const names=branchNames(this.db||{});
+        if(names.length===branchList.length&&names.every((v,i)=>v===branchList[i]))return;
+        branchList=names;
+        branchContainer.replaceChildren();
+        for(const branchName of branchList){
+          const label=document.createElement('label');
+          const checkbox=document.createElement('input');
+          checkbox.type='checkbox';checkbox.name='excludedBranches';checkbox.value=branchName;
+          label.append(checkbox,document.createTextNode(branchName));
+          branchContainer.append(label);
+        }
+      };
+      this.syncProductBranches();
       // Non-modal subwindow owned by this widget's body: other widgets stay usable.
       const editorPanel=attachWidgetInlineEditor(widget,this.productDraft,{
         title:'Редактор наименования',kind:'names',
@@ -348,7 +356,7 @@ export default class OptimaDataWidget {
         draftForm.elements.namedItem('unit').value=String(current?.unit||'');
         draftForm.elements.namedItem('note').value=String(current?.note||'');
         for(const checkbox of branchContainer.querySelectorAll('input[type="checkbox"]')){
-          checkbox.checked=rows(current?.excludedBranches).some(b=>norm(b)===norm(checkbox.value));
+          checkbox.checked=rows(current?.excludedBranches).some(b=>branchKey(b)===branchKey(checkbox.value));
         }
         info.textContent=current?'ID '+current.id+' сохранится. Связи с поставщиками останутся прежними.':defaultInfo;
         this.productDraft.hidden=false;
@@ -383,7 +391,7 @@ export default class OptimaDataWidget {
           info.textContent='Такое наименование уже существует.';return;
         }
         const selected=[...branchContainer.querySelectorAll('input:checked')].map(el=>el.value);
-        const retained=rows(old?.excludedBranches).filter(value=>!branchList.some(b=>norm(b)===norm(value)));
+        const retained=rows(old?.excludedBranches).filter(value=>!branchList.some(b=>branchKey(b)===branchKey(value)));
         const excludedBranches=[...retained,...selected];
         const id=old?old.id:products.reduce((max,item)=>{
           const value=Number(item.id);
@@ -498,7 +506,7 @@ export default class OptimaDataWidget {
     const branches=this.type==='optimaProducts'?uniqueBranches(branchNames(db)):branchNames(db);
     const offerChoices=isOffers?uniqueOfferBranchOptions(branches):[];
     const chosenBranch=isOffers
-      ?offerChoices.find(([value])=>norm(value).replace(/\s+/g,' ')===norm(f.branch).replace(/\s+/g,' '))?.[0]??f.branch
+      ?offerChoices.find(([value])=>branchKey(value)===branchKey(f.branch))?.[0]??f.branch
       :this.type==='optimaProducts'?displayBranch(f.branch):f.branch;
     const branchItems=isOffers?offerChoices:branches.map(x=>[x,x]);
     select(this.controls.branch,[['',t('optima.allBranches')],...branchItems],chosenBranch);
@@ -526,6 +534,7 @@ export default class OptimaDataWidget {
       const result=await loadOptima(ctrl.signal);
       if(this.destroyed||ctrl.signal.aborted||seq!==this.seq)return;
       this.db=result.data;this.revision=result.revision;
+      this.syncProductBranches?.();
       this.configureSelects();this.render();
       this.setState('connected',{revision:String(this.revision??'—')});
     }catch(error){
@@ -1011,7 +1020,7 @@ export default class OptimaDataWidget {
     if(!this.db)return [];
     const db=this.db,f=this.filters,q=norm(f.search),branch=f.branch,extra=f.extra;
     return rows(db.products).filter(x=>x&&
-      (!branch||!rows(x.excludedBranches).some(b=>norm(b)===norm(branch)))&&
+      (!branch||!rows(x.excludedBranches).some(b=>branchKey(b)===branchKey(branch)))&&
       (!extra||rows(x.orderSuppliers).some(link=>
         String(link.supplierId)===String(extra)||
         (!link.supplierId&&norm(link.supplier)===norm(rows(db.suppliers).find(s=>String(s.id)===String(extra))?.name))))
