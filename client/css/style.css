@@ -2847,3 +2847,24 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   outline:1px solid var(--dx-accent);outline-offset:1px;
 }
 .dx-catalog-add-dialog .dx-catalog-link-selection{margin:0}
+
+/* OPTIMA Offers uses the same supplier search dropdown and fixed filter/table layout as Price Lists. */
+#workspace-canvas .widget--element[data-widget-type="optimaOffers"]>.widget--element--body{
+  display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaOffers"]{
+  display:flex;flex-direction:column;flex:1 1 auto;height:100%;
+  min-width:0;min-height:0;overflow:hidden;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaOffers"]>.optima-data-filters,
+#workspace-canvas .optima-data[data-optima-module="optimaOffers"]>.optima-status,
+#workspace-canvas .optima-data[data-optima-module="optimaOffers"]>.optima-summary{
+  flex:0 0 auto;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaOffers"]>.optima-table-scroll{
+  flex:1 1 auto;min-width:0;min-height:0;max-height:none;overflow:auto;
+  overscroll-behavior:contain;
+}
+#workspace-canvas .optima-data[data-optima-module="optimaOffers"] .dx-product-supplier-picker{
+  position:relative;z-index:5;
+}
