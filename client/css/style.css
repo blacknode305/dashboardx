@@ -2829,3 +2829,19 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas .dx-picker-group-options .dx-picker-option:focus-visible{
  outline:2px solid var(--dx-accent,var(--blue));outline-offset:-1px
 }
+
+/* Manual catalog item modal. */
+.dx-catalog-add-dialog form{display:flex;flex-direction:column;gap:12px}
+.dx-catalog-add-dialog label{gap:6px}
+.dx-catalog-add-dialog input,
+.dx-catalog-add-dialog select{
+  box-sizing:border-box;width:100%;min-height:38px;padding:8px 10px;
+  border:1px solid var(--border);border-radius:8px;
+  background:var(--bg-panel-inside);color:var(--text-main);
+  font:500 13px/1.4 var(--f-family-inter);
+}
+.dx-catalog-add-dialog input:focus,
+.dx-catalog-add-dialog select:focus{
+  outline:1px solid var(--dx-accent);outline-offset:1px;
+}
+.dx-catalog-add-dialog .dx-catalog-link-selection{margin:0}
