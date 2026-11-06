@@ -2003,8 +2003,10 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 
 /* Material names: search is the primary filter; keep branch/supplier selects compact. */
 #workspace-canvas .optima-data[data-optima-module="optimaProducts"] .optima-data-filters .dx-product-search{flex:3 1 310px;min-width:190px;max-width:100%}
+#workspace-canvas .optima-data[data-optima-module="optimaProposals"] .optima-data-filters .dx-product-search{flex:3 1 310px;min-width:190px;max-width:100%}
 #workspace-canvas .optima-data[data-optima-module="optimaProducts"] .optima-data-filters>select:not([hidden]){flex:1 1 145px;min-width:0}
 @media(max-width:500px){#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .optima-data-filters .dx-product-search{flex:1 1 100%;min-width:0}}
+@media(max-width:500px){#workspace-canvas .optima-data[data-optima-module="optimaProposals"] .optima-data-filters .dx-product-search{flex:1 1 100%;min-width:0}}
 
 
 /* Names table: understated internal supplier navigation links */
