@@ -2,7 +2,7 @@ import eventBus from './module/EventBus.js';
 import ClientDB from './module/ClientDB.js';
 import learning from './module/EnglishLearningStore.js';
 import { installEnglishQuickWords } from './module/EnglishQuickWords.js?v=english-study-20261101';
-import WidgetElement from './module/WidgetElement.js?v=optima-declarations-20261106';
+import WidgetElement from './module/WidgetElement.js?v=declaration-editor-nonmodal-20261106';
 import NavigationBar from './module/NavigationBar.js';
 import installTableColumnResize from './module/TableColumnResize.js?v=optima-price-upload-20261031';
 import installTableSort from './module/TableSort.js?v=optima-price-upload-20261031';
@@ -91,7 +91,7 @@ async function loadTemplates() {
     if(id==='optimaProposals')url.searchParams.set('v','catalog-upload-20261031');
     if(id==='optimaOffers')url.searchParams.set('v','offers-filter-picker-20261106');
     if(id==='optimaBranches')url.searchParams.set('v','branch-manager-20261106');
-    if(id==='optimaDeclarations')url.searchParams.set('v','optima-declarations-20261106');
+    if(id==='optimaDeclarations')url.searchParams.set('v','declaration-editor-nonmodal-20261106');
     if(id==='segaEmulator')url.searchParams.set('v','sega-rom-compat-20261101c');
     if(id==='discordPortal')url.searchParams.set('v','discord-portal-20261101');
     if(id==='englishLanguage')url.searchParams.set('v','english-study-20261101');
