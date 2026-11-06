@@ -134,6 +134,7 @@ export default class OptimaDataWidget {
     this.productDraft=this.type==='optimaProducts'?widget.querySelector('[data-role="product-draft"]'):null;
     this.productPrint=this.type==='optimaProducts'?widget.querySelector('[data-role="product-print"]'):null;
     this.catalogPrint=this.type==='optimaProposals'?widget.querySelector('[data-role="catalog-print"]'):null;
+    this.catalogAdd=this.type==='optimaProposals'?widget.querySelector('[data-role="catalog-add"]'):null;
     this.productSupplierQuery=['optimaProducts','optimaProposals'].includes(this.type)?widget.querySelector('[data-role="data-supplier-query"]'):null;
     this.productSupplierOptions=['optimaProducts','optimaProposals'].includes(this.type)?widget.querySelector('[data-role="data-supplier-options"]'):null;
     this.productSupplierOpen=false;
@@ -174,6 +175,7 @@ export default class OptimaDataWidget {
     if(this.refresh)this.listen(this.refresh,'click',()=>this.load());
     if(this.productPrint)this.listen(this.productPrint,'click',()=>this.printProducts());
     if(this.catalogPrint)this.listen(this.catalogPrint,'click',()=>this.printCatalog());
+    if(this.catalogAdd)this.listen(this.catalogAdd,'click',()=>this.openCatalogAddDialog());
     if(this.type==='optimaProposals'){
       const input=widget.querySelector('[data-role="catalog-upgrade-file"]');
       this.listen(input,'change',async()=>{
@@ -639,6 +641,105 @@ export default class OptimaDataWidget {
     button.setAttribute('aria-label',linked?'Изменить привязку: '+linked.name:'Привязать «'+row.name+'»');
     button.addEventListener('click',()=>this.openCatalogLinkDialog(row));
     return button;
+  }
+  openCatalogAddDialog(){
+    if(!this.db||!Number.isFinite(Number(this.revision))){
+      window.alert('Сначала подключитесь к базе PRO OPTIMA.');return;
+    }
+    const suppliers=rows(this.db.suppliers).filter(item=>item&&item.id!=null)
+      .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ru'));
+    if(!suppliers.length){window.alert('В базе нет поставщиков. Добавьте поставщика сначала.');return;}
+    if(this.catalogAddDialog?.open)this.catalogAddDialog.close();
+    this.catalogAddDialog?.remove();
+    const dialog=make('dialog',undefined,'dx-catalog-link-dialog dx-catalog-add-dialog');
+    dialog.setAttribute('aria-label','Добавить позицию каталога прайс-листов');
+    const form=make('form');form.noValidate=true;
+    const title=make('h3','Добавить товар в каталог');
+    const subtitle=make('p','Ручная позиция поставщика — без привязки к наименованию.','dx-catalog-link-source');
+    const field=(name,labelText,control)=>{
+      const label=make('label',labelText);
+      control.name=name;label.append(control);return label;
+    };
+    const supplier=make('select');
+    supplier.required=true;
+    supplier.append(new Option('Выберите поставщика',''));
+    for(const item of suppliers)supplier.append(new Option(String(item.name||'ID '+item.id),String(item.id)));
+    if(this.filters.extra&&suppliers.some(item=>String(item.id)===String(this.filters.extra)))supplier.value=String(this.filters.extra);
+    const name=make('input');name.type='text';name.maxLength=240;name.required=true;
+    name.placeholder='Наименование из накладной';
+    const unit=make('input');unit.type='text';unit.maxLength=60;
+    unit.placeholder='кг, шт., л…';
+    const price=make('input');price.type='text';price.inputMode='decimal';
+    price.placeholder='Например, 1250,50';price.required=true;
+    const note=make('p','Укажите поставщика, название товара и цену.','dx-catalog-link-selection');
+    const actions=make('div',undefined,'dx-catalog-link-actions');
+    const cancel=make('button','Отмена');cancel.type='button';
+    const save=make('button','Добавить','dx-catalog-link-confirm');save.type='submit';
+    actions.append(cancel,save);
+    form.append(title,subtitle,field('supplierId','Поставщик',supplier),
+      field('name','Наименование товара',name),field('unit','Единица измерения',unit),
+      field('price','Цена, ₸',price),note,actions);
+    let busy=false;
+    cancel.addEventListener('click',()=>{if(!busy)dialog.close();});
+    dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});
+    dialog.addEventListener('click',event=>{if(!busy&&event.target===dialog)dialog.close();});
+    form.addEventListener('submit',async event=>{
+      event.preventDefault();
+      if(busy)return;
+      const supplierId=supplier.value;
+      const itemName=name.value.trim().replace(/\\s+/g,' ');
+      const itemUnit=unit.value.trim().replace(/\\s+/g,' ');
+      const raw=price.value.trim().replace(/[\\s\\u00a0\\u202f]/g,'').replace(',','.');
+      const amount=Number(raw);
+      if(!supplierId||!suppliers.some(item=>String(item.id)===supplierId)){
+        note.textContent='Выберите поставщика.';supplier.focus();return;
+      }
+      if(!itemName){note.textContent='Введите наименование товара.';name.focus();return;}
+      if(!raw||!/^\\d+(?:\\.\\d{1,3})?$/.test(raw)||!Number.isFinite(amount)||amount<0){
+        note.textContent='Введите корректную цену (не более трёх знаков после запятой).';price.focus();return;
+      }
+      const catalog=rows(this.db?.supplierCatalog);
+      if(catalog.some(item=>String(item.supplierId)===supplierId&&norm(item.name)===norm(itemName)&&norm(item.unit)===norm(itemUnit))){
+        note.textContent='Такая позиция с этой единицей измерения уже есть у поставщика.';name.focus();return;
+      }
+      if(!Number.isFinite(Number(this.revision))){
+        note.textContent='Версия базы неизвестна. Обновите каталог.';return;
+      }
+      const ids=new Set(catalog.map(item=>String(item.id)));
+      let id;
+      do{id='dxprice-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);}
+      while(ids.has(id));
+      const entry={id,supplierId,name:itemName,unit:itemUnit,price:amount,
+        branch:'*',availability:'unknown',source:'DashboardX: ручное добавление',usedProductId:null};
+      const revision=this.revision;
+      busy=true;save.disabled=true;cancel.disabled=true;
+      for(const control of [supplier,name,unit,price])control.disabled=true;
+      note.textContent='Сохранение товара в PRO OPTIMA…';
+      try{
+        await patchOptima({supplierCatalog:[...catalog,entry]},revision);
+        dialog.close();
+        this.filters.status='all';
+        this.filters.extra=supplierId;
+        this.filters.search='';
+        this.saveFilters();
+        await this.load();
+      }catch(error){
+        note.textContent=error.status===409
+          ?'База изменилась. Закройте окно, обновите каталог и добавьте товар заново.'
+          :'Не удалось добавить товар: '+(error.message||String(error));
+      }finally{
+        busy=false;save.disabled=false;cancel.disabled=false;
+        for(const control of [supplier,name,unit,price])control.disabled=false;
+      }
+    });
+    dialog.addEventListener('close',()=>{
+      if(this.catalogAddDialog===dialog)this.catalogAddDialog=null;
+      dialog.remove();
+    },{once:true});
+    dialog.append(form);document.body.append(dialog);this.catalogAddDialog=dialog;
+    try{dialog.showModal();(supplier.value?name:supplier).focus();}
+    catch(error){dialog.remove();this.catalogAddDialog=null;
+      this.statusText.textContent='Не удалось открыть форму добавления: '+error.message;}
   }
   catalogPriceCell(row){
     const wrapper=make('div',undefined,'dx-catalog-price-cell');
