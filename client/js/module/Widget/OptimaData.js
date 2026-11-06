@@ -94,6 +94,16 @@ const select=(element,items,selected)=>{
 const kindLabel=status=>t('optima.stage.'+status);
 const displayBranch=value=>{const name=String(value??'').replace(/\s+/g,' ').trim();return name?name.charAt(0).toLocaleUpperCase('ru')+name.slice(1).toLocaleLowerCase('ru'):'';};
 const uniqueBranches=values=>[...new Map(values.map(displayBranch).filter(Boolean).map(name=>[norm(name),name])).values()].sort((a,b)=>a.localeCompare(b,'ru'));
+// Keep the actual DB branch value for offers while deduplicating case/whitespace variants in the selector.
+const uniqueOfferBranchOptions=values=>{
+  const distinct=new Map();
+  for(const branch of values){
+    const value=String(branch??'').trim().replace(/\s+/g,' ');
+    const key=norm(value).replace(/\s+/g,' ');
+    if(key&&!distinct.has(key))distinct.set(key,[value,displayBranch(value)]);
+  }
+  return [...distinct.values()].sort((a,b)=>a[1].localeCompare(b[1],'ru'));
+};
 
 
 export function projectOptimaStockRows(db,branch,date,search='',supplierId=''){
@@ -135,8 +145,8 @@ export default class OptimaDataWidget {
     this.productPrint=this.type==='optimaProducts'?widget.querySelector('[data-role="product-print"]'):null;
     this.catalogPrint=this.type==='optimaProposals'?widget.querySelector('[data-role="catalog-print"]'):null;
     this.catalogAdd=this.type==='optimaProposals'?widget.querySelector('[data-role="catalog-add"]'):null;
-    this.productSupplierQuery=['optimaProducts','optimaProposals'].includes(this.type)?widget.querySelector('[data-role="data-supplier-query"]'):null;
-    this.productSupplierOptions=['optimaProducts','optimaProposals'].includes(this.type)?widget.querySelector('[data-role="data-supplier-options"]'):null;
+    this.productSupplierQuery=['optimaProducts','optimaProposals','optimaOffers'].includes(this.type)?widget.querySelector('[data-role="data-supplier-query"]'):null;
+    this.productSupplierOptions=['optimaProducts','optimaProposals','optimaOffers'].includes(this.type)?widget.querySelector('[data-role="data-supplier-options"]'):null;
     this.productSupplierOpen=false;
     this.productSupplierEditing=false;
     this.productSupplierChoices=[];
@@ -439,7 +449,7 @@ export default class OptimaDataWidget {
   }
   saveFilters(){this.store?.updateWidgetState(this.id,{...this.filters});}
   configureProductSupplierOptions(){
-    if(!['optimaProducts','optimaProposals'].includes(this.type))return;
+    if(!['optimaProducts','optimaProposals','optimaOffers'].includes(this.type))return;
     const suppliers=rows(this.db?.suppliers);
     const selected=suppliers.find(s=>String(s.id)===String(this.filters.extra));
     this.controls.extra.value=this.filters.extra;
@@ -484,11 +494,16 @@ export default class OptimaDataWidget {
     if(this.cfg.mode)select(this.controls.mode,this.cfg.mode.map(x=>[x,t('optima.mode.'+x)]),f.mode);
     else select(this.controls.mode,[['','—']],'');
     const db=this.db||{};
+    const isOffers=this.type==='optimaOffers';
     const branches=this.type==='optimaProducts'?uniqueBranches(branchNames(db)):branchNames(db);
-    const chosenBranch=this.type==='optimaProducts'?displayBranch(f.branch):f.branch;
-    select(this.controls.branch,[['',t('optima.allBranches')],...branches.map(x=>[x,x])],chosenBranch);
+    const offerChoices=isOffers?uniqueOfferBranchOptions(branches):[];
+    const chosenBranch=isOffers
+      ?offerChoices.find(([value])=>norm(value).replace(/\s+/g,' ')===norm(f.branch).replace(/\s+/g,' '))?.[0]??f.branch
+      :this.type==='optimaProducts'?displayBranch(f.branch):f.branch;
+    const branchItems=isOffers?offerChoices:branches.map(x=>[x,x]);
+    select(this.controls.branch,[['',t('optima.allBranches')],...branchItems],chosenBranch);
     if(this.cfg.extra){
-      if(['optimaProducts','optimaProposals'].includes(this.type))this.configureProductSupplierOptions();
+      if(['optimaProducts','optimaProposals','optimaOffers'].includes(this.type))this.configureProductSupplierOptions();
       else select(this.controls.extra,[['',t('optima.allSuppliers')],...rows(db.suppliers).map(s=>[s.id,s.name])],f.extra);
     }else select(this.controls.extra,[['','—']],'');
     this.controls.date.value=f.date;
