@@ -87,13 +87,14 @@ async function loadTemplates() {
     const url=new URL('../'+entry.file,import.meta.url);
     if(id==='optimaProducts')url.searchParams.set('v','names-optima-print-20261031');
     if(id==='optimaProposals')url.searchParams.set('v','catalog-upload-20261031');
+    if(id==='optimaOffers')url.searchParams.set('v','offers-filter-picker-20261106');
     if(id==='segaEmulator')url.searchParams.set('v','sega-rom-compat-20261101c');
     if(id==='discordPortal')url.searchParams.set('v','discord-portal-20261101');
     if(id==='englishLanguage')url.searchParams.set('v','english-study-20261101');
     if(['psychology','logic','mimic','economics'].includes(id))url.searchParams.set('v','mimic-social-20261101b');
     if(id==='realtyRadar')url.searchParams.set('v','realty-widget-name-20261101');
     if(id==='optimaSuppliers')url.searchParams.set('v','suppliers-optima-print-20261031');
-    const response=await fetch(url,{cache:(id==='optimaProducts'||id==='optimaSuppliers'||id==='optimaProposals')?'no-store':'default'});
+    const response=await fetch(url,{cache:(['optimaProducts','optimaSuppliers','optimaProposals','optimaOffers'].includes(id))?'no-store':'default'});
     if(!response.ok)throw Error(entry.file+': HTTP '+response.status);
     const doc=new DOMParser().parseFromString(await response.text(),'text/html');
     const source=doc.querySelector('template[data-widget][data-id="'+id+'"]');
