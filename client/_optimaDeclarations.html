@@ -1,0 +1,26 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Декларации</title></head><body>
+<template data-widget data-id="optimaDeclarations" data-category="optima" data-title="Декларации">
+<section class="dx-declarations">
+  <div class="dx-declarations-filters">
+    <div class="dx-declarations-search">
+      <button type="button" data-role="declaration-add" title="Добавить декларацию" aria-label="Добавить декларацию">+</button>
+      <input type="search" data-role="declaration-search" autocomplete="off" placeholder="Поиск продукции или поставщика…" aria-label="Поиск деклараций">
+    </div>
+    <div class="dx-declarations-supplier" data-role="declaration-supplier-picker">
+      <input type="search" data-role="declaration-supplier-query" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-label="Фильтр по поставщику" placeholder="Все поставщики" autocomplete="off" spellcheck="false">
+      <div data-role="declaration-supplier-list" role="listbox" aria-label="Список поставщиков" hidden></div>
+    </div>
+    <select data-role="declaration-status-filter" aria-label="Статус декларации">
+      <option value="all">Все сроки</option>
+      <option value="expired">Просрочены</option>
+      <option value="urgent">До 7 дней</option>
+      <option value="soon">До 30 дней</option>
+      <option value="valid">Действуют</option>
+      <option value="upcoming">Ещё не действуют</option>
+    </select>
+  </div>
+  <p class="optima-status" data-role="declaration-status-text" aria-live="polite"></p>
+  <div class="dx-declarations-counts" data-role="declaration-counts"></div>
+  <div class="dx-declarations-scroll" data-role="declaration-list"></div>
+</section>
+</template></body></html>
