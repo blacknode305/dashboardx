@@ -1,0 +1,27 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Филиалы PRO OPTIMA</title></head><body>
+<template data-widget data-id="optimaBranches" data-category="optima" data-title="Филиалы">
+<section class="dx-branches">
+  <div class="dx-branches-toolbar">
+    <button type="button" data-role="branch-add" title="Добавить филиал" aria-label="Добавить филиал">+</button>
+    <input type="search" data-role="branch-search" autocomplete="off" placeholder="Поиск филиала…">
+    <button type="button" data-role="branch-refresh" title="Обновить список" aria-label="Обновить список">↻</button>
+  </div>
+  <p class="optima-status" data-role="branch-status" aria-live="polite"></p>
+  <div class="dx-branches-duplicates" data-role="branch-duplicates" hidden></div>
+  <div class="dx-branches-list" data-role="branch-list"></div>
+  <section class="dx-branches-editor" data-role="branch-editor" hidden>
+    <div class="dx-branches-editor-header"><strong data-role="branch-editor-title">Изменить филиал</strong><button type="button" data-role="branch-close" aria-label="Закрыть">×</button></div>
+    <form data-role="branch-form">
+      <label data-role="branch-source-wrap">Исходный филиал<input name="source" readonly></label>
+      <label data-role="branch-target-wrap">Название филиала<input name="target" maxlength="100" required autocomplete="off" placeholder="Название филиала"></label>
+      <label data-role="branch-merge-wrap" hidden>Объединить с<select name="mergeTarget"></select></label>
+      <p data-role="branch-explain" class="dx-branches-hint"></p>
+      <div class="dx-branches-actions">
+        <button type="submit" data-role="branch-preview">Проверить связи</button>
+        <button type="button" data-role="branch-cancel">Отмена</button>
+      </div>
+    </form>
+    <div data-role="branch-plan" class="dx-branches-plan" hidden></div>
+  </section>
+</section>
+</template></body></html>
