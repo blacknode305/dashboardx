@@ -638,7 +638,83 @@ export default class OptimaDataWidget {
     button.title=linked?'Изменить привязку «'+linked.name+'»':'Привязать к нашему наименованию';
     button.setAttribute('aria-label',linked?'Изменить привязку: '+linked.name:'Привязать «'+row.name+'»');
     button.addEventListener('click',()=>this.openCatalogLinkDialog(row));
-    return button;
+    const edit=make('button','Изменить','dx-catalog-link-action');
+    edit.type='button';
+    edit.title='Ввести цену из накладной для «'+row.name+'»';
+    edit.setAttribute('aria-label','Изменить цену: '+row.name);
+    edit.addEventListener('click',()=>this.openCatalogPriceDialog(row));
+    const actions=make('div',undefined,'dx-catalog-row-actions');
+    actions.style.display='flex';
+    actions.style.flexWrap='wrap';
+    actions.style.gap='6px';
+    actions.append(button,edit);
+    return actions;
+  }
+  openCatalogPriceDialog(row){
+    if(!this.db||this.destroyed)return;
+    if(this.catalogPriceDialog?.open)this.catalogPriceDialog.close();
+    this.catalogPriceDialog?.remove();
+    const dialog=make('dialog',undefined,'dx-catalog-link-dialog');
+    dialog.setAttribute('aria-label','Изменение цены из накладной');
+    const heading=make('h3','Изменить цену');
+    const product=make('p',String(row.name||'Без названия'),'dx-catalog-link-source');
+    const label=make('label','Цена из накладной, ₸');
+    const input=make('input');
+    input.type='text';
+    input.inputMode='decimal';
+    input.autocomplete='off';
+    input.placeholder='Например, 1250,50';
+    input.value=row.price===null||row.price===undefined?'':String(row.price);
+    input.setAttribute('aria-label','Новая цена в тенге');
+    label.append(input);
+    const note=make('p','Цена изменится только у выбранной позиции каталога. Привязка сохранится.','dx-catalog-link-selection');
+    const actions=make('div',undefined,'dx-catalog-link-actions');
+    const cancel=make('button','Отмена');cancel.type='button';
+    const save=make('button','Сохранить','dx-catalog-link-confirm');save.type='submit';
+    const form=make('form');form.method='dialog';
+    form.append(heading,product,label,note,actions);
+    actions.append(cancel,save);
+    let busy=false;
+    cancel.addEventListener('click',()=>{if(!busy)dialog.close();});
+    form.addEventListener('submit',async event=>{
+      event.preventDefault();
+      if(busy)return;
+      const raw=input.value.trim().replace(/\\s/g,'').replace(',','.');
+      const price=Number(raw);
+      if(!raw||!Number.isFinite(price)||price<0||!/^\\d+(?:\\.\\d{1,2})?$/.test(raw)){
+        note.textContent='Укажите цену от 0 ₸, не более двух знаков после запятой.';
+        input.focus();return;
+      }
+      if(String(row.price??'')===String(price)){dialog.close();return;}
+      const catalog=rows(this.db?.supplierCatalog);
+      const current=catalog.find(item=>String(item.id)===String(row.id));
+      if(!current||!Number.isFinite(Number(this.revision))){
+        note.textContent='Позиция не найдена или база недоступна. Обновите каталог.';return;
+      }
+      const baseRevision=this.revision;
+      const updated=catalog.map(item=>String(item.id)===String(row.id)?{...item,price}:item);
+      busy=true;save.disabled=true;cancel.disabled=true;input.disabled=true;
+      note.textContent='Сохранение цены…';
+      try{
+        await patchOptima({supplierCatalog:updated},baseRevision);
+        dialog.close();
+        await this.load();
+      }catch(error){
+        note.textContent=error.status===409
+          ?'База изменилась. Закройте окно, обновите каталог и повторите действие.'
+          :'Не удалось сохранить цену: '+(error.message||String(error));
+      }finally{
+        busy=false;save.disabled=false;cancel.disabled=false;input.disabled=false;
+      }
+    });
+    dialog.addEventListener('close',()=>{
+      if(this.catalogPriceDialog===dialog)this.catalogPriceDialog=null;
+      dialog.remove();
+    },{once:true});
+    dialog.append(form);
+    document.body.append(dialog);this.catalogPriceDialog=dialog;
+    try{dialog.showModal();input.focus();input.select();}
+    catch(error){dialog.remove();this.catalogPriceDialog=null;this.statusText.textContent='Невозможно открыть редактор цены: '+error.message;}
   }
   openCatalogLinkDialog(row){
     if(!this.db||this.destroyed)return;
