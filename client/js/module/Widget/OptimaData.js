@@ -687,15 +687,15 @@ export default class OptimaDataWidget {
       event.preventDefault();
       if(busy)return;
       const supplierId=supplier.value;
-      const itemName=name.value.trim().replace(/\\s+/g,' ');
+      const itemName=name.value.trim().replace(/\s+/g,' ');
       const itemUnit=unit.value.trim().replace(/\\s+/g,' ');
-      const raw=price.value.trim().replace(/[\\s\\u00a0\\u202f]/g,'').replace(',','.');
+      const raw=price.value.trim().replace(/[\s\u00a0\u202f]/g,'').replace(',','.');
       const amount=Number(raw);
       if(!supplierId||!suppliers.some(item=>String(item.id)===supplierId)){
         note.textContent='Выберите поставщика.';supplier.focus();return;
       }
       if(!itemName){note.textContent='Введите наименование товара.';name.focus();return;}
-      if(!raw||!/^\\d+(?:\\.\\d{1,3})?$/.test(raw)||!Number.isFinite(amount)||amount<0){
+      if(!raw||!/^\d+(?:\.\d{1,3})?$/.test(raw)||!Number.isFinite(amount)||amount<0){
         note.textContent='Введите корректную цену (не более трёх знаков после запятой).';price.focus();return;
       }
       const catalog=rows(this.db?.supplierCatalog);
