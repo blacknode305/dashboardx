@@ -2868,3 +2868,41 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas .optima-data[data-optima-module="optimaOffers"] .dx-product-supplier-picker{
   position:relative;z-index:5;
 }
+
+/* PRO OPTIMA branches: audit-first management, no hidden writes. */
+#workspace-canvas .widget--element[data-widget-type="optimaBranches"]{width:min(720px,calc(100vw - 26px));min-width:min(330px,calc(100vw - 26px));height:min(76vh,690px)}
+#workspace-canvas .widget--element[data-widget-type="optimaBranches"]>.widget--element--body{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;padding:0}
+#workspace-canvas .dx-branches{box-sizing:border-box;display:flex;flex-direction:column;gap:10px;padding:13px;width:100%;height:100%;min-width:0;min-height:0;overflow:hidden;color:var(--text-main);font:500 12px/1.5 var(--f-family-inter)}
+#workspace-canvas .dx-branches-toolbar{display:flex;align-items:stretch;gap:7px;flex:0 0 auto;min-width:0}
+#workspace-canvas .dx-branches-toolbar input{box-sizing:border-box;flex:1 1 auto;min-width:0;min-height:38px;padding:8px 12px;background:var(--bg-panel-inside);color:var(--text-main);border:1px solid var(--border);border-radius:8px;font:inherit}
+#workspace-canvas .dx-branches-toolbar button{flex:0 0 33px;width:33px;height:38px;padding:0;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel-inside);color:var(--text-main);font:500 20px/1 var(--f-family-inter);cursor:pointer}
+#workspace-canvas .dx-branches-toolbar button:hover{background:var(--bg-panel-light);border-color:var(--dx-hover-border)}
+#workspace-canvas .dx-branches>.optima-status{flex:0 0 auto;margin:0;min-height:17px}
+#workspace-canvas .dx-branches-duplicates{flex:0 0 auto;border:1px solid var(--dx-accent);border-radius:8px;background:var(--bg-panel-inside);padding:9px 12px}
+#workspace-canvas .dx-branches-duplicates p{margin:4px 0 0;color:var(--text-muted)}
+#workspace-canvas .dx-branches-duplicates[hidden],#workspace-canvas .dx-branches-editor[hidden],#workspace-canvas .dx-branches-plan[hidden],#workspace-canvas .dx-branches-editor [hidden]{display:none!important}
+#workspace-canvas .dx-branches-list{display:flex;flex-direction:column;gap:8px;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
+#workspace-canvas .dx-branch-card{display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--bg-panel-inside)}
+#workspace-canvas .dx-branch-card-title{display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:6px}
+#workspace-canvas .dx-branch-card-title strong{font-size:13px}
+#workspace-canvas .dx-branch-count,#workspace-canvas .dx-branch-registered{color:var(--text-muted);font-size:10px}
+#workspace-canvas .dx-branch-usage{margin:0;overflow-wrap:anywhere;font-size:11px}
+#workspace-canvas .dx-branch-details{color:var(--text-muted);font-size:11px}
+#workspace-canvas .dx-branch-details ul,#workspace-canvas .dx-branches-plan ul{padding-left:17px;margin:6px 0;overflow-wrap:anywhere}
+#workspace-canvas .dx-branch-card-actions{display:flex;flex-wrap:wrap;gap:6px}
+#workspace-canvas .dx-branch-card-actions button,#workspace-canvas .dx-branches-actions button,#workspace-canvas .dx-branches-apply{min-height:30px;padding:5px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg-panel-inside);color:var(--text-main);font:inherit;cursor:pointer}
+#workspace-canvas .dx-branch-card-actions button:hover,#workspace-canvas .dx-branches-actions button:hover,#workspace-canvas .dx-branches-apply:hover:enabled{background:var(--bg-panel-light);border-color:var(--dx-accent)}
+#workspace-canvas .dx-branches-apply:disabled{opacity:.48;cursor:not-allowed}
+#workspace-canvas .dx-branches-editor{display:flex;flex-direction:column;flex:0 1 auto;min-height:0;max-height:68%;gap:9px;overflow:auto;padding:12px;border:1px solid var(--dx-accent);border-radius:10px;background:var(--bg-panel-inside)}
+#workspace-canvas .dx-branches-editor-header{display:flex;align-items:center;justify-content:space-between}
+#workspace-canvas .dx-branches-editor-header>button{border:0;background:transparent;color:var(--text-muted);font-size:19px;cursor:pointer}
+#workspace-canvas .dx-branches-editor form{display:grid;gap:9px}
+#workspace-canvas .dx-branches-editor label{display:grid;gap:4px}
+#workspace-canvas .dx-branches-editor input:not([type=checkbox]),#workspace-canvas .dx-branches-editor select{box-sizing:border-box;min-width:0;width:100%;min-height:34px;padding:7px 10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:7px;color:var(--text-main)}
+#workspace-canvas .dx-branches-hint{margin:4px 0;color:var(--text-muted);font-size:11px}
+#workspace-canvas .dx-branches-actions{display:flex;flex-wrap:wrap;gap:7px}
+#workspace-canvas .dx-branches-plan{display:grid;gap:8px;padding:10px;border:1px solid var(--border);border-radius:8px}
+#workspace-canvas .dx-branches-conflict{color:var(--dx-bad)}
+#workspace-canvas .dx-branches-confirm{display:flex!important;grid-template-columns:none;align-items:flex-start;flex-direction:row;gap:7px;font-size:11px}
+#workspace-canvas .dx-branches-confirm input{margin:3px 0 0}
+#workspace-canvas .dx-branches-apply{justify-self:start}
