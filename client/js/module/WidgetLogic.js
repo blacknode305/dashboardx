@@ -18,7 +18,7 @@ import ServerConsoleWidget from './Widget/ServerConsole.js?v=nes-interactions-20
 import TelegramBotWidget from './Widget/TelegramBot.js?v=nes-interactions-20261026';
 import DiscordPortalWidget from './Widget/DiscordPortal.js?v=discord-portal-20261101';
 import DashboardSettingsWidget from './Widget/DashboardSettings.js';
-import OptimaSuppliersWidget from './Widget/OptimaSuppliers.js?v=widget-inline-editors-20261101b';
+import OptimaSuppliersWidget from './Widget/OptimaSuppliers.js?v=optima-branches-suppliers-20261106';
 import OptimaBranchesWidget from './Widget/OptimaBranches.js?v=optima-branches-20261106';
 import OptimaDataWidget from './Widget/OptimaData.js?v=optima-branches-core-20261106';
 import OptimaOrdersWidget from './Widget/OptimaOrders.js';
