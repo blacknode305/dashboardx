@@ -1980,10 +1980,10 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 
 
 /* OPTIMA product catalogue: plus and search share the original search cell */
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-search{display:flex;gap:6px;min-width:0;align-items:stretch}
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-search input{flex:1 1 auto;width:0;min-width:0;min-height:38px;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel-inside);color:var(--text-main)}
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-search button{flex:0 0 32px;width:32px;min-width:32px;min-height:38px;padding:0;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel-inside);color:var(--text-main);font-size:21px;cursor:pointer}
-#workspace-canvas .optima-data[data-optima-module="optimaProducts"] .dx-product-search button:hover{border-color:var(--dx-hover-border);background:var(--bg-panel-light)}
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-search{display:flex;gap:6px;min-width:0;align-items:stretch}
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-search input{flex:1 1 auto;width:0;min-width:0;min-height:38px;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel-inside);color:var(--text-main)}
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-search button{flex:0 0 32px;width:32px;min-width:32px;min-height:38px;padding:0;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel-inside);color:var(--text-main);font-size:21px;cursor:pointer}
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-search button:hover{border-color:var(--dx-hover-border);background:var(--bg-panel-light)}
 #workspace-canvas .dx-product-draft[hidden]{display:none!important}
 #workspace-canvas .dx-product-draft{min-width:0;padding:12px;margin:10px 0;border:1px solid var(--border);border-radius:10px;background:var(--bg-panel-inside)}
 #workspace-canvas .dx-product-draft form{display:grid;gap:10px;min-width:0}
