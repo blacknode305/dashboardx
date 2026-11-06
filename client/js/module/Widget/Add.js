@@ -169,7 +169,8 @@ export default class AddWidget {
       options.className = 'dx-picker-group-options';
       for (const type of entries) {
         const note = type.serverOnly ? t('ui.serverOnly') :
-          type.id === 'psychology' ? 'Мнемоника' : type.id;
+          type.id === 'psychology' ? 'Мнемоника' :
+          type.id === 'optimaDeclarations' ? 'Учёт сроков действия' : type.id;
         const option = this.makeOption(widgetTitle(type.id,type.title), note, () => {
           this.selectedType = type.id;
           this.typeLabel.textContent = widgetTitle(type.id,type.title);
