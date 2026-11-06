@@ -270,10 +270,12 @@ export default class OptimaDeclarationsWidget{
     this.editorSupplierPicker=picker;
     this.editorSupplierId=supplierId;
     this.editorSupplierOpen=false;
+    this.editorSupplierEditing=false;
     this.editorSupplierActive=-1;
     this.editorSupplierOptions=[];
     const close=(restore=true)=>{
       this.editorSupplierOpen=false;
+      this.editorSupplierEditing=false;
       this.editorSupplierActive=-1;
       list.hidden=true;
       query.setAttribute('aria-expanded','false');
@@ -286,7 +288,7 @@ export default class OptimaDeclarationsWidget{
     this.closeEditorSupplier=close;
     const populate=()=>{
       if(!this.editorSupplierOpen){close(false);return;}
-      const typed=norm(query.value);
+      const typed=this.editorSupplierEditing?norm(query.value):'';
       const matches=this.supplierItems().filter(s=>!typed||norm(s.name).includes(typed));
       this.editorSupplierOptions=matches.slice(0,100).map(s=>({id:String(s.id),name:String(s.name)}));
       this.editorSupplierActive=-1;
@@ -305,6 +307,7 @@ export default class OptimaDeclarationsWidget{
     };
     const choose=item=>{
       supplierId.value=item.id;
+      this.editorSupplierEditing=false;
       query.value=item.name;
       query.setCustomValidity('');
       close(false);
@@ -312,6 +315,7 @@ export default class OptimaDeclarationsWidget{
     };
     this.listen(query,'focus',()=>{
       this.editorSupplierOpen=true;
+      this.editorSupplierEditing=false;
       if(supplierId.value)query.select();
       populate();
     });
@@ -320,6 +324,7 @@ export default class OptimaDeclarationsWidget{
     });
     this.listen(query,'input',()=>{
       supplierId.value='';
+      this.editorSupplierEditing=true;
       query.setCustomValidity('');
       this.editorSupplierOpen=true;populate();
     });
@@ -345,7 +350,7 @@ export default class OptimaDeclarationsWidget{
       }
       if(event.key==='Enter'&&this.editorSupplierOpen){
         const choice=this.editorSupplierOptions[this.editorSupplierActive]||
-          (this.editorSupplierOptions.length===1?this.editorSupplierOptions[0]:null);
+          (this.editorSupplierEditing&&this.editorSupplierOptions.length===1?this.editorSupplierOptions[0]:null);
         if(choice){event.preventDefault();choose(choice);}
         else event.preventDefault();
       }
