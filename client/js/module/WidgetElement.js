@@ -1,6 +1,6 @@
 import widgetRegistry from './WidgetRegistry.js';
 import WidgetBase from './WidgetBase.js';
-import WidgetLogic from './WidgetLogic.js?v=mimic-social-20261101b';
+import WidgetLogic from './WidgetLogic.js?v=optima-branches-20261106';
 import { translateElement, translateWidgetBody, t } from './i18n.js';
 
 export default class WidgetElement extends WidgetBase {
