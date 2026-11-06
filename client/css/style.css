@@ -1980,10 +1980,10 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 
 
 /* OPTIMA product catalogue: plus and search share the original search cell */
-#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-search{display:flex;gap:6px;min-width:0;align-items:stretch}
-#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-search input{flex:1 1 auto;width:0;min-width:0;min-height:38px;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel-inside);color:var(--text-main)}
-#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-search button{flex:0 0 32px;width:32px;min-width:32px;min-height:38px;padding:0;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel-inside);color:var(--text-main);font-size:21px;cursor:pointer}
-#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-search button:hover{border-color:var(--dx-hover-border);background:var(--bg-panel-light)}
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"],[data-optima-module="optimaOffers"]) .dx-product-search{display:flex;gap:6px;min-width:0;align-items:stretch}
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"],[data-optima-module="optimaOffers"]) .dx-product-search input{flex:1 1 auto;width:0;min-width:0;min-height:38px;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel-inside);color:var(--text-main)}
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"],[data-optima-module="optimaOffers"]) .dx-product-search button{flex:0 0 32px;width:32px;min-width:32px;min-height:38px;padding:0;border:1px solid var(--border);border-radius:8px;background:var(--bg-panel-inside);color:var(--text-main);font-size:21px;cursor:pointer}
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"],[data-optima-module="optimaOffers"]) .dx-product-search button:hover{border-color:var(--dx-hover-border);background:var(--bg-panel-light)}
 #workspace-canvas .dx-product-draft[hidden]{display:none!important}
 #workspace-canvas .dx-product-draft{min-width:0;padding:12px;margin:10px 0;border:1px solid var(--border);border-radius:10px;background:var(--bg-panel-inside)}
 #workspace-canvas .dx-product-draft form{display:grid;gap:10px;min-width:0}
@@ -2235,13 +2235,13 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 
 
 /* Optima Names only: one searchable supplier combobox with its own suggestion list. */
-#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-picker{
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"],[data-optima-module="optimaOffers"]) .dx-product-supplier-picker{
   position:relative;
   flex:1 1 185px;
   min-width:150px;
   z-index:5;
 }
-#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-picker [data-role="data-supplier-query"]{
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"],[data-optima-module="optimaOffers"]) .dx-product-supplier-picker [data-role="data-supplier-query"]{
   box-sizing:border-box;
   width:100%;
   min-width:0;
@@ -2253,11 +2253,11 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   color:var(--text-main);
   font:550 11px/1.4 var(--f-family-inter);
 }
-#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-picker [data-role="data-supplier-query"]:focus-visible{
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"],[data-optima-module="optimaOffers"]) .dx-product-supplier-picker [data-role="data-supplier-query"]:focus-visible{
   outline:2px solid var(--dx-accent);
   outline-offset:1px;
 }
-#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-options{
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"],[data-optima-module="optimaOffers"]) .dx-product-supplier-options{
   position:absolute;
   top:calc(100% + 4px);
   left:0;
@@ -2273,8 +2273,8 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   box-shadow:0 8px 24px rgba(0,0,0,.32);
   z-index:20;
 }
-#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-options[hidden]{display:none!important}
-#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-option{
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"],[data-optima-module="optimaOffers"]) .dx-product-supplier-options[hidden]{display:none!important}
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"],[data-optima-module="optimaOffers"]) .dx-product-supplier-option{
   display:block;
   width:100%;
   padding:8px 10px;
@@ -2286,19 +2286,19 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   font:inherit;
   cursor:pointer;
 }
-#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-option:is(:hover,:focus-visible,.is-active){
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"],[data-optima-module="optimaOffers"]) .dx-product-supplier-option:is(:hover,:focus-visible,.is-active){
   background:var(--bg-panel-light);
 }
-#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-option[aria-selected="true"]{
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"],[data-optima-module="optimaOffers"]) .dx-product-supplier-option[aria-selected="true"]{
   color:var(--dx-accent);
 }
-#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-empty{
+#workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"],[data-optima-module="optimaOffers"]) .dx-product-supplier-empty{
   padding:9px 10px;
   font-size:11px;
   color:var(--text-muted);
 }
 @media(max-width:440px){
-  #workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"]) .dx-product-supplier-picker{flex:1 1 100%}
+  #workspace-canvas .optima-data:is([data-optima-module="optimaProducts"],[data-optima-module="optimaProposals"],[data-optima-module="optimaOffers"]) .dx-product-supplier-picker{flex:1 1 100%}
 }
 
 
