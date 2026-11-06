@@ -1,13 +1,13 @@
 import { t } from '../i18n.js';
 import { attachWidgetInlineEditor } from '../WidgetInlineEditor.js?v=widget-editors-20261101b';
 import { getCredential } from '../CredentialStore.js';
-import { loadOptima, patchOptima, OPTIMA_POLL_MS, OPTIMA_BASE, getOptimaWritePassword } from '../OptimaAPI.js';
+import { loadOptima, patchOptima, OPTIMA_POLL_MS, OPTIMA_BASE, getOptimaWritePassword, branchNames, branchKey, canonicalBranch as canonicalOptimaBranch } from '../OptimaAPI.js';
 import { openOptimaPrintPreview } from '../OptimaPrint.js?v=optima-print-20261031';
 const DAYS=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const DAY_NAMES=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
 const parseDays=value=>new Set(String(value||'').split(/[,;/]+/).map(v=>v.trim().toLocaleLowerCase()).map(v=>DAY_NAMES.find(n=>n.toLocaleLowerCase()===v)||DAY_NAMES[DAYS.findIndex(d=>d.toLocaleLowerCase()===v)]).filter(Boolean));
 const normalize=value=>String(value??'').trim().toLocaleLowerCase();
-const canonicalBranch=value=>normalize(value)==='лободы'?'Лободы':String(value??'').trim();
+const displayBranch=(value,db)=>branchNames(db||{}).find(x=>branchKey(x)===branchKey(value))||canonicalOptimaBranch(value);
 const whatsappUrl=phone=>{
   const raw=String(phone||'').trim();
   if(!/^\+?[\d\s().-]+$/.test(raw))return null;
@@ -16,10 +16,10 @@ const whatsappUrl=phone=>{
   return digits.length>=10&&digits.length<=15?'https://wa.me/'+digits:null;
 };
 export function filterOptimaSuppliers(suppliers,search,branch){
-  const query=normalize(search),required=normalize(branch);
+  const query=normalize(search),required=branchKey(branch);
   return suppliers.filter(s=>{
     const schedules=Array.isArray(s.schedules)?s.schedules:[];
-    const branchMatches=!required||schedules.some(row=>normalize(row?.branch)===required);
+    const branchMatches=!required||schedules.some(row=>branchKey(row?.branch)===required);
     const textMatches=!query||[s.name,s.contact,s.phone].some(v=>normalize(v).includes(query));
     return branchMatches&&textMatches;
   });
@@ -42,7 +42,7 @@ export function prepareSupplierChanges(snapshot,supplierId,values,replaceSchedul
   if(replaceSchedules){
     if(!Array.isArray(values.schedules))throw new Error('schedule list required');
     changed.schedules=values.schedules.map(r=>{
-      const prior=(current.schedules||[]).find(x=>normalize(x.branch)===normalize(r.branch))||{};
+      const prior=(current.schedules||[]).find(x=>branchKey(x.branch)===branchKey(r.branch))||{};
       const rules=Object.fromEntries(Object.entries(r.deliveryTimingByDay||{}).filter(([day,timing])=>DAY_NAMES.includes(day)&&['same','next','two'].includes(timing)));
       const result={...prior,branch:String(r.branch||'').trim(),
         order:String(r.order||'').trim(),delivery:String(r.delivery||'').trim(),
@@ -54,7 +54,7 @@ export function prepareSupplierChanges(snapshot,supplierId,values,replaceSchedul
     if(changed.schedules.some(r=>!r.branch))throw new Error('branch required');
     const unique=new Set();
     for(const r of changed.schedules){
-      const key=r.branch.toLocaleLowerCase();
+      const key=branchKey(r.branch);
       if(unique.has(key))throw new Error('duplicate branch');
       unique.add(key);
     }
@@ -172,14 +172,17 @@ export default class OptimaSuppliersWidget {
 
   setStatus(key,values){this.status.textContent=t(key,values);}
   setBranches(){
-    const names=[...new Map(this.rows.flatMap(row=>
-      Array.isArray(row.schedules)?row.schedules.map(r=>canonicalBranch(r?.branch)).filter(Boolean):[]
-    ).map(name=>[normalize(name),name])).values()].sort((a,b)=>a.localeCompare(b,'ru'));
+    const scheduled=this.rows.flatMap(row=>
+      Array.isArray(row.schedules)?row.schedules.map(r=>displayBranch(r?.branch,this.database)).filter(Boolean):[]
+    );
+    const values=Array.isArray(this.database?.branches)?branchNames(this.database):scheduled;
+    const names=[...new Map(values.map(name=>[branchKey(name),name])).values()].sort((a,b)=>a.localeCompare(b,'ru'));
     this.branch.replaceChildren();
     const all=new Option(t('optima.allBranches'),'');
     this.branch.append(all);
     names.forEach(name=>this.branch.append(new Option(name,name)));
-    if(names.includes(this.selectedBranch))this.branch.value=this.selectedBranch;
+    const selected=names.find(name=>branchKey(name)===branchKey(this.selectedBranch));
+    if(selected){this.selectedBranch=selected;this.branch.value=selected;}
     else if(this.revision!==null){this.selectedBranch='';this.branch.value='';}
     else this.branch.value='';
   }
@@ -259,7 +262,7 @@ export default class OptimaSuppliersWidget {
     for(const name of ['branch','note']){
       const label=document.createElement('label');label.textContent=t('optima.'+name);
       const input=document.createElement('input');input.dataset.field=name;
-      input.value=name==='branch'?canonicalBranch(data?.[name]):String(data?.[name]||'');label.append(input);wrapper.append(label);
+      input.value=name==='branch'?displayBranch(data?.[name],this.database):String(data?.[name]||'');label.append(input);wrapper.append(label);
     }
     for(const name of ['order','delivery']){
       const group=document.createElement('fieldset');group.className='dx-day-fieldset';
@@ -386,7 +389,7 @@ export default class OptimaSuppliersWidget {
       const supplier=this.rows.find(item=>String(item.id)===card.dataset.supplierId);
       if(!supplier)return null;
       const schedules=(Array.isArray(supplier.schedules)?supplier.schedules:[]).filter(row=>
-        (!this.selectedBranch||normalize(row.branch)===normalize(this.selectedBranch))&&
+        (!this.selectedBranch||branchKey(row.branch)===branchKey(this.selectedBranch))&&
         (!this.selectedOrderDay||parseDays(row.order).has(this.selectedOrderDay))&&
         (!this.selectedDeliveryDay||parseDays(row.delivery).has(this.selectedDeliveryDay))
       ).map(row=>({
@@ -417,7 +420,7 @@ export default class OptimaSuppliersWidget {
       if(card.open)this.expanded.add(id);else this.expanded.delete(id);
     }
     const filtered=filterOptimaSuppliers(this.rows,this.search.value,this.selectedBranch).filter(s=>
-      (Array.isArray(s.schedules)?s.schedules:[]).some(row=>(!this.selectedBranch||normalize(row.branch)===normalize(this.selectedBranch))&&
+      (Array.isArray(s.schedules)?s.schedules:[]).some(row=>(!this.selectedBranch||branchKey(row.branch)===branchKey(this.selectedBranch))&&
       (!this.selectedOrderDay||parseDays(row.order).has(this.selectedOrderDay))&&
       (!this.selectedDeliveryDay||parseDays(row.delivery).has(this.selectedDeliveryDay))) ||
       (!this.selectedBranch&&!this.selectedOrderDay&&!this.selectedDeliveryDay)
@@ -465,7 +468,7 @@ export default class OptimaSuppliersWidget {
         body.append(row);
       }
       const visibleSchedules=schedules.filter(row=>
-        (!this.selectedBranch||normalize(row?.branch)===normalize(this.selectedBranch))&&
+        (!this.selectedBranch||branchKey(row?.branch)===branchKey(this.selectedBranch))&&
         (!this.selectedOrderDay||parseDays(row?.order).has(this.selectedOrderDay))&&
         (!this.selectedDeliveryDay||parseDays(row?.delivery).has(this.selectedDeliveryDay))
       );
