@@ -679,9 +679,9 @@ export default class OptimaDataWidget {
     form.addEventListener('submit',async event=>{
       event.preventDefault();
       if(busy)return;
-      const raw=input.value.trim().replace(/\\s/g,'').replace(',','.');
+      const raw=input.value.trim().replace(/\s/g,'').replace(',','.');
       const price=Number(raw);
-      if(!raw||!Number.isFinite(price)||price<0||!/^\\d+(?:\\.\\d{1,2})?$/.test(raw)){
+      if(!raw||!Number.isFinite(price)||price<0||!/^\d+(?:\.\d{1,2})?$/.test(raw)){
         note.textContent='Укажите цену от 0 ₸, не более двух знаков после запятой.';
         input.focus();return;
       }
