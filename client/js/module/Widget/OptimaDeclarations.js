@@ -244,7 +244,7 @@ export default class OptimaDeclarationsWidget{
     const form=document.createElement('form');
     form.className='dx-decl-form';
     form.setAttribute('data-role','declaration-form');
-    form.innerHTML='<label>Поставщик<select name="supplierId" required></select></label><label>Тип продукции<input name="productType" type="text" maxlength="180" placeholder="Например, молочная продукция" autocomplete="off" required></label><div class="dx-decl-date-fields"><label>Начало действия<input name="startDate" type="date" required></label><label>Окончание действия<input name="endDate" type="date" required></label></div><p class="dx-decl-form-hint">Дата окончания включена в срок действия. Категорию продукции вводите вручную.</p><p class="dx-decl-form-feedback" data-role="declaration-form-feedback" aria-live="polite"></p><div class="dx-decl-dialog-actions"><button type="button" data-role="declaration-form-cancel">Отмена</button><button type="submit" data-role="declaration-form-save">Сохранить</button></div>';
+    form.innerHTML='<label class="dx-decl-editor-supplier-label">Поставщик<div class="dx-declarations-supplier dx-decl-editor-supplier" data-role="declaration-editor-supplier-picker"><input type="search" data-role="declaration-editor-supplier-query" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-label="Поставщик" autocomplete="off" spellcheck="false" placeholder="Введите название поставщика…" required><input type="hidden" name="supplierId"><div data-role="declaration-editor-supplier-list" role="listbox" aria-label="Подходящие поставщики" hidden></div></div></label><label>Тип продукции<input name="productType" type="text" maxlength="180" placeholder="Например, молочная продукция" autocomplete="off" required></label><div class="dx-decl-date-fields"><label>Начало действия<input name="startDate" type="date" required></label><label>Окончание действия<input name="endDate" type="date" required></label></div><p class="dx-decl-form-hint">Дата окончания включена в срок действия. Категорию продукции вводите вручную.</p><p class="dx-decl-form-feedback" data-role="declaration-form-feedback" aria-live="polite"></p><div class="dx-decl-dialog-actions"><button type="button" data-role="declaration-form-cancel">Отмена</button><button type="submit" data-role="declaration-form-save">Сохранить</button></div>';
     this.form=form;
     this.formFeedback=form.querySelector('[data-role="declaration-form-feedback"]');
     this.saveButton=form.querySelector('[data-role="declaration-form-save"]');
@@ -254,14 +254,124 @@ export default class OptimaDeclarationsWidget{
       onClose:()=>this.closeEditor()
     });
     this.listen(form.querySelector('[data-role="declaration-form-cancel"]'),'click',()=>this.closeEditor());
+    this.installEditorSupplierPicker();
     this.listen(form,'submit',event=>{event.preventDefault();this.saveEntry();});
+  }
+  installEditorSupplierPicker(){
+    const get=role=>this.form.querySelector('[data-role="'+role+'"]');
+    const query=get('declaration-editor-supplier-query');
+    const list=get('declaration-editor-supplier-list');
+    const picker=get('declaration-editor-supplier-picker');
+    const supplierId=this.form.elements.namedItem('supplierId');
+    const listId='dx-decl-editor-suppliers-'+String(this.id).replace(/[^a-zA-Z0-9_-]/g,'-');
+    list.id=listId;query.setAttribute('aria-controls',listId);
+    this.editorSupplierQuery=query;
+    this.editorSupplierList=list;
+    this.editorSupplierPicker=picker;
+    this.editorSupplierId=supplierId;
+    this.editorSupplierOpen=false;
+    this.editorSupplierActive=-1;
+    this.editorSupplierOptions=[];
+    const close=(restore=true)=>{
+      this.editorSupplierOpen=false;
+      this.editorSupplierActive=-1;
+      list.hidden=true;
+      query.setAttribute('aria-expanded','false');
+      query.removeAttribute('aria-activedescendant');
+      if(restore){
+        const selected=this.supplierItems().find(s=>String(s.id)===supplierId.value);
+        query.value=selected?.name||'';
+      }
+    };
+    this.closeEditorSupplier=close;
+    const populate=()=>{
+      if(!this.editorSupplierOpen){close(false);return;}
+      const typed=norm(query.value);
+      const matches=this.supplierItems().filter(s=>!typed||norm(s.name).includes(typed));
+      this.editorSupplierOptions=matches.slice(0,100).map(s=>({id:String(s.id),name:String(s.name)}));
+      this.editorSupplierActive=-1;
+      query.removeAttribute('aria-activedescendant');
+      list.replaceChildren();
+      for(const [i,item] of this.editorSupplierOptions.entries()){
+        const button=elem('button','dx-decl-supplier-option',item.name);
+        button.type='button';button.dataset.index=String(i);
+        button.id=listId+'-'+i;button.setAttribute('role','option');
+        button.setAttribute('aria-selected',String(item.id===supplierId.value));
+        list.append(button);
+      }
+      if(!this.editorSupplierOptions.length)list.append(elem('div','dx-decl-supplier-empty','Совпадений нет'));
+      else if(matches.length>100)list.append(elem('div','dx-decl-supplier-empty','Уточните название для поиска'));
+      list.hidden=false;query.setAttribute('aria-expanded','true');
+    };
+    const choose=item=>{
+      supplierId.value=item.id;
+      query.value=item.name;
+      query.setCustomValidity('');
+      close(false);
+      query.focus({preventScroll:true});
+    };
+    this.listen(query,'focus',()=>{
+      this.editorSupplierOpen=true;
+      if(supplierId.value)query.select();
+      populate();
+    });
+    this.listen(query,'click',()=>{
+      if(!this.editorSupplierOpen){this.editorSupplierOpen=true;populate();}
+    });
+    this.listen(query,'input',()=>{
+      supplierId.value='';
+      query.setCustomValidity('');
+      this.editorSupplierOpen=true;populate();
+    });
+    this.listen(query,'keydown',event=>{
+      if(event.key==='Escape'){
+        if(this.editorSupplierOpen){event.preventDefault();event.stopPropagation();close();}
+        return;
+      }
+      if(event.key==='ArrowDown'||event.key==='ArrowUp'){
+        event.preventDefault();
+        if(!this.editorSupplierOpen)this.editorSupplierOpen=true;
+        if(!this.editorSupplierOptions.length)populate();
+        if(!this.editorSupplierOptions.length)return;
+        const step=event.key==='ArrowDown'?1:-1;
+        this.editorSupplierActive=this.editorSupplierActive<0?
+          (step>0?0:this.editorSupplierOptions.length-1):
+          (this.editorSupplierActive+step+this.editorSupplierOptions.length)%this.editorSupplierOptions.length;
+        const buttons=list.querySelectorAll('button[role="option"]');
+        buttons.forEach((button,i)=>button.classList.toggle('is-active',i===this.editorSupplierActive));
+        const selected=buttons[this.editorSupplierActive];
+        if(selected){query.setAttribute('aria-activedescendant',selected.id);selected.scrollIntoView({block:'nearest'});}
+        return;
+      }
+      if(event.key==='Enter'&&this.editorSupplierOpen){
+        const choice=this.editorSupplierOptions[this.editorSupplierActive]||
+          (this.editorSupplierOptions.length===1?this.editorSupplierOptions[0]:null);
+        if(choice){event.preventDefault();choose(choice);}
+        else event.preventDefault();
+      }
+    });
+    this.listen(list,'pointerdown',event=>{
+      const button=event.target.closest('button[data-index]');
+      if(!button)return;
+      event.preventDefault();
+      const choice=this.editorSupplierOptions[Number(button.dataset.index)];
+      if(choice)choose(choice);
+    });
+    this.listen(picker,'focusout',event=>{
+      if(!picker.contains(event.relatedTarget))close();
+    });
+    this.listen(document,'pointerdown',event=>{
+      if(this.editorSupplierOpen&&!picker.contains(event.target))close();
+    });
   }
   closeEditor(force=false){
     if(this.saving&&!force)return;
     this.editorOpen=false;
     this.editorWindow?.hide();
+    this.closeEditorSupplier?.(false);
     this.editId=null;
     this.form?.reset();
+    this.editorSupplierQuery?.setCustomValidity('');
     if(this.formFeedback)this.formFeedback.textContent='';
   }
   openEditor(item){
@@ -275,20 +385,25 @@ export default class OptimaDeclarationsWidget{
     this.editId=item?.id!=null?String(item.id):null;
     this.dialogRevision=this.revision;
     this.editorWindow.setTitle(item?'Изменить декларацию':'Добавить декларацию');
-    const select=this.form.elements.namedItem('supplierId');
-    select.replaceChildren(new Option('Выберите поставщика',''));
-    for(const supplier of this.supplierItems())select.append(new Option(supplier.name,String(supplier.id)));
-    select.value=item?String(item.supplierId):'';
+    const supplier=this.supplierItems().find(s=>String(s.id)===String(item?.supplierId??''));
+    this.editorSupplierId.value=item?String(item.supplierId):'';
+    this.editorSupplierQuery.value=supplier?.name||'';
+    this.editorSupplierQuery.setCustomValidity('');
+    this.closeEditorSupplier(false);
     this.form.elements.namedItem('productType').value=item?.productType||'';
     this.form.elements.namedItem('startDate').value=item?.startDate||'';
     this.form.elements.namedItem('endDate').value=item?.endDate||'';
     this.formFeedback.textContent='';
     this.editorOpen=true;
     this.editorWindow.open();
-    (item?this.form.elements.namedItem('productType'):select).focus({preventScroll:true});
+    (item?this.form.elements.namedItem('productType'):this.editorSupplierQuery).focus({preventScroll:true});
   }
   async saveEntry(){
-    if(this.saving||!this.editorOpen||!this.form.reportValidity())return;
+    if(this.saving||!this.editorOpen)return;
+    const chosenId=this.editorSupplierId?.value||'';
+    const hasSupplier=this.supplierItems().some(s=>String(s.id)===chosenId);
+    this.editorSupplierQuery.setCustomValidity(hasSupplier?'':'Выберите поставщика из выпадающего списка.');
+    if(!this.form.reportValidity())return;
     const data={
       supplierId:this.form.elements.namedItem('supplierId').value,
       productType:this.form.elements.namedItem('productType').value.trim(),
