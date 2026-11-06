@@ -2,7 +2,7 @@
 <template data-widget data-id="optimaProposals" data-category="optima" data-title="Каталог прайс-листов">
 <section class="optima-data" data-optima-module="optimaProposals">
   <div class="optima-data-filters">
-    <input type="search" data-role="data-search" data-i18n-placeholder="optima.searchSimple" placeholder="Поиск…">
+    <div class="dx-product-search"><button type="button" data-role="catalog-add" title="Добавить товар в каталог" aria-label="Добавить товар в каталог">+</button><input type="search" data-role="data-search" data-i18n-placeholder="optima.searchSimple" placeholder="Поиск…"></div>
     <select data-role="data-branch" aria-label="Филиал" hidden></select>
     <select data-role="data-status" data-i18n-aria="optima.status" aria-label="Фильтр привязки"></select>
     <div class="dx-product-supplier-picker">
@@ -17,7 +17,6 @@
   <div class="dx-optima-print-row">
     <p class="optima-summary" data-role="data-summary"></p>
     <div class="dx-catalog-toolbar-actions">
-      <button type="button" class="dx-catalog-upload-button dx-catalog-add-button" data-role="catalog-add" title="Добавить товар в каталог">+ Добавить</button>
       <label class="dx-catalog-upload-button dx-json-upload" title="Выбрать JSON-файл обновления каталога прайсов">
         Загрузить
         <input type="file" data-role="catalog-upgrade-file" accept=".json,application/json" aria-label="Выбрать JSON-файл обновления каталога" />
