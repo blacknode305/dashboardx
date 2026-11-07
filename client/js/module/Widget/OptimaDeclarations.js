@@ -147,8 +147,10 @@ export default class OptimaDeclarationsWidget{
     this.listen(get('declaration-files-actual'),'click',()=>this.setViewerActual());
     this.listen(get('declaration-files-zoom-in'),'click',()=>this.changeViewerZoom(0.25));
     this.listen(get('declaration-files-zoom-out'),'click',()=>this.changeViewerZoom(-0.25));
+    this.listen(this.filesViewer,'keydown',event=>{
+      if(event.key==='Escape'){event.preventDefault();event.stopPropagation();this.closeFiles();}
+    });
     this.listen(this.filesGrid,'keydown',event=>{
-      if(event.key==='Escape'){event.preventDefault();this.closeFiles();}
       if(event.key==='ArrowLeft'&&this.viewerEntries.length>1){event.preventDefault();this.selectViewerFile(this.viewerIndex-1);}
       if(event.key==='ArrowRight'&&this.viewerEntries.length>1){event.preventDefault();this.selectViewerFile(this.viewerIndex+1);}
       if(event.key==='+'||event.key==='='){event.preventDefault();this.changeViewerZoom(0.25);}
@@ -453,7 +455,12 @@ export default class OptimaDeclarationsWidget{
           const product=elem('details','dx-decl-product');
           product.dataset.productKey=recordKey;
           product.open=this.productOpen.get(recordKey)===true;
-          product.addEventListener('toggle',()=>this.productOpen.set(recordKey,product.open));
+          const inner=elem('div','dx-decl-product-content');
+          if(product.open)inner.append(this.renderDocumentDetail(item,all,name));
+          product.addEventListener('toggle',()=>{
+            this.productOpen.set(recordKey,product.open);
+            if(product.open&&!inner.firstChild)inner.append(this.renderDocumentDetail(item,all,name));
+          });
           const label=elem('summary','dx-decl-product-summary');
           const nameBox=elem('span','dx-decl-product-name',name);
           label.append(nameBox);
@@ -461,8 +468,7 @@ export default class OptimaDeclarationsWidget{
           const expiry=elem('span','dx-decl-product-date',prettyDate(item.endDate));
           expiry.title='Окончание действия · '+remaining(item,today);
           label.append(expiry);
-          product.append(label);
-          product.append(this.renderDocumentDetail(item,all,name));
+          product.append(label,inner);
           products.append(product);
         }
         branch.append(products);container.append(branch);
