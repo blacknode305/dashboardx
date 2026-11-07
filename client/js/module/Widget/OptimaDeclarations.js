@@ -67,7 +67,11 @@ export default class OptimaDeclarationsWidget{
     this.filesNext=get('declaration-files-next');
     this.filesZoomValue=get('declaration-files-zoom-value');
     this.viewerEntries=[];this.viewerIndex=0;this.viewerZoom=1;this.viewerNative=false;
-    this.viewerImage=null;this.viewerSavedLayout=null;
+    this.viewerImage=null;
+    this.viewerHome=this.filesViewer.parentNode;
+    this.filesShade=document.createElement('div');
+    this.filesShade.className='dx-decl-floating-shade';
+    this.filesShade.setAttribute('aria-hidden','true');
     this.fileUrls=[];this.importPack=null;
     this.archivePanel=get('declaration-archive-panel');
     this.archiveTitle=get('declaration-archive-title');
@@ -134,6 +138,7 @@ export default class OptimaDeclarationsWidget{
     this.listen(get('declaration-import-cancel'),'click',()=>this.closeImport());
     this.listen(this.importConfirm,'click',()=>this.commitImport());
     this.listen(get('declaration-files-close'),'click',()=>this.closeFiles());
+    this.listen(get('declaration-files-drag-handle'),'pointerdown',event=>this.startViewerDrag(event));
     this.listen(this.filesPrev,'click',()=>this.selectViewerFile(this.viewerIndex-1));
     this.listen(this.filesNext,'click',()=>this.selectViewerFile(this.viewerIndex+1));
     this.listen(get('declaration-files-fit'),'click',()=>this.setViewerFit());
@@ -518,59 +523,60 @@ export default class OptimaDeclarationsWidget{
         (error.status===409?' Обновите документы и повторите импорт.':'');
     }finally{this.importing=false;this.importConfirm.disabled=false;}
   }
-  expandForFiles(){
-    if(this.viewerSavedLayout)return;
-    const frame=this.widget;
-    const previous={width:frame.style.width,left:frame.style.left,
-      expandedWidth:null,shiftedLeft:null};
-    this.viewerSavedLayout=previous;
-    frame.classList.add('dx-decl-viewer-open');
-    frame.activate?.();
-    if(frame._spatialMode||frame.classList.contains('is-maximized')||window.innerWidth<980)return;
-    const canvas=document.getElementById('workspace-canvas');
-    const originalWidth=frame.getBoundingClientRect().width;
-    const viewportWidth=Math.max(0,Math.min(window.innerWidth,canvas?.clientWidth||window.innerWidth));
-    const expanded=Math.min(viewportWidth-28,Math.max(originalWidth+540,1110));
-    if(expanded<=originalWidth+35)return;
-    frame.style.width=Math.round(expanded)+'px';
-    previous.expandedWidth=frame.style.width;
-    const currentLeft=Number.parseFloat(frame.style.left)||frame.offsetLeft||0;
-    const visibleRight=(canvas?.scrollLeft||0)+(canvas?.clientWidth||window.innerWidth)-14;
-    const shifted=Math.max(0,Math.min(currentLeft,visibleRight-expanded));
-    if(shifted<currentLeft-4){
-      frame.style.left=Math.round(shifted)+'px';
-      previous.shiftedLeft=frame.style.left;
+  openFloatingFiles(){
+    if(!this.filesViewer.isConnected||this.filesViewer.parentNode!==document.body){
+      document.body.append(this.filesShade,this.filesViewer);
     }
-    window.dashboardxUpdateWorkspaceBounds?.();
+    // The shade is decorative only; it never intercepts clicks on DashboardX.
+    this.filesShade.hidden=false;
+    this.filesViewer.style.left='50%';
+    this.filesViewer.style.top='50%';
+    this.filesViewer.style.transform='translate(-50%, -50%)';
+    this.filesViewer.style.width='';
+    this.filesViewer.style.height='';
+    this.filesViewer.hidden=false;
+    this.filesViewer.focus({preventScroll:true});
   }
-  collapseFiles(){
-    const previous=this.viewerSavedLayout;
-    this.viewerSavedLayout=null;
-    this.widget.classList.remove('dx-decl-viewer-open');
-    if(!previous)return;
-    // If the user maximized the widget while viewing, repair its pending restore
-    // size without shrinking the currently maximized window.
-    if(this.widget.classList.contains('is-maximized')){
-      const back=this.widget._restoreSize;
-      if(back){
-        if(previous.expandedWidth&&back.width===previous.expandedWidth)back.width=previous.width;
-        if(previous.shiftedLeft&&back.left===previous.shiftedLeft)back.left=previous.left;
-      }
-      return;
-    }
-    if(this.widget._spatialMode)return;
-    // Preserve any size/position the user manually changed with the usual widget controls.
-    let restored=false;
-    if(previous.expandedWidth&&this.widget.style.width===previous.expandedWidth){
-      this.widget.style.width=previous.width;
-      restored=true;
-    }
-    if(previous.shiftedLeft&&this.widget.style.left===previous.shiftedLeft){
-      this.widget.style.left=previous.left;
-      restored=true;
-    }
-    if(restored&&!this.destroyed)this.widget.saveWidget?.();
-    window.dashboardxUpdateWorkspaceBounds?.();
+  closeFloatingFiles(){
+    this.viewerDragCleanup?.();
+    this.viewerDragCleanup=null;
+    this.filesShade.remove();
+    this.filesViewer.style.transform='';
+    this.filesViewer.style.left='';
+    this.filesViewer.style.top='';
+    this.filesViewer.style.width='';
+    this.filesViewer.style.height='';
+    if(this.viewerHome?.isConnected)this.viewerHome.append(this.filesViewer);
+    else this.filesViewer.remove();
+  }
+  startViewerDrag(event){
+    if(event.button!==0||event.target.closest('button,a,input'))return;
+    if(event.pointerType==='touch'&&event.isPrimary===false)return;
+    event.preventDefault();
+    const rect=this.filesViewer.getBoundingClientRect();
+    const startX=event.clientX,startY=event.clientY;
+    this.filesViewer.style.transform='none';
+    this.filesViewer.style.left=Math.round(rect.left)+'px';
+    this.filesViewer.style.top=Math.round(rect.top)+'px';
+    const onMove=e=>{
+      if(e.pointerId!==event.pointerId)return;
+      this.filesViewer.style.left=Math.max(8,Math.min(window.innerWidth-100,
+        Math.round(rect.left+e.clientX-startX)))+'px';
+      this.filesViewer.style.top=Math.max(8,Math.min(window.innerHeight-85,
+        Math.round(rect.top+e.clientY-startY)))+'px';
+    };
+    const cleanup=()=>{
+      document.removeEventListener('pointermove',onMove);
+      document.removeEventListener('pointerup',onEnd);
+      document.removeEventListener('pointercancel',onEnd);
+      this.viewerDragCleanup=null;
+    };
+    const onEnd=e=>{if(e.pointerId===event.pointerId)cleanup();};
+    this.viewerDragCleanup?.();
+    this.viewerDragCleanup=cleanup;
+    document.addEventListener('pointermove',onMove);
+    document.addEventListener('pointerup',onEnd);
+    document.addEventListener('pointercancel',onEnd);
   }
   closeFiles(){
     this.fileSeq=(this.fileSeq||0)+1;
@@ -581,7 +587,7 @@ export default class OptimaDeclarationsWidget{
     this.filesGrid.replaceChildren();this.filesViewer.hidden=true;
     this.filesCounter.textContent='';this.filesFilename.textContent='';
     this.filesDownload.hidden=true;this.filesDownload.removeAttribute('href');
-    this.collapseFiles();
+    this.closeFloatingFiles();
   }
   viewerFitWidth(image){
     const availableWidth=Math.max(120,this.filesGrid.clientWidth-24);
@@ -684,8 +690,7 @@ export default class OptimaDeclarationsWidget{
     this.filesTitle.textContent='Оригинал: '+item.productType;
     this.viewerEntries=(item.attachments||[]).map(attachment=>({attachment,url:null,error:null}));
     this.viewerIndex=0;
-    this.filesViewer.hidden=false;
-    this.expandForFiles();
+    this.openFloatingFiles();
     this.renderViewerFile();
     const seq=++this.fileSeq;
     for(let index=0;index<this.viewerEntries.length;index++){
