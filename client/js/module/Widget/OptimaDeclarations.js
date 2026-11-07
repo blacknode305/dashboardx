@@ -332,6 +332,66 @@ export default class OptimaDeclarationsWidget{
       group.append(container);this.list.append(group);
     }
   }
+  showArchivePanel(item){
+    if(this.lifecycleBusy||this.saving||!item)return;
+    this.archiveId=String(item.id);
+    this.archiveTitle.textContent='Перенести в архив: '+item.productType+
+      (item.documentNumber?' · № '+item.documentNumber:'');
+    this.archiveReason.value=item.endDate<dateISO()?'expired':'replaced';
+    this.archiveNote.value='';
+    this.archivePanel.hidden=false;
+    this.archivePanel.scrollIntoView({block:'nearest'});
+  }
+  closeArchivePanel(){
+    if(this.lifecycleBusy)return;
+    this.archivePanel.hidden=true;this.archiveId=null;
+    this.archiveNote.value='';
+  }
+  async commitArchive(){
+    if(!this.archiveId||this.lifecycleBusy||this.saving)return;
+    const id=this.archiveId;
+    const item=this.db?.declarations?.find(entry=>String(entry.id)===id);
+    if(!item){this.setStatus('Документ больше не найден. Обновите список.');return;}
+    this.lifecycleBusy=true;this.archiveConfirm.disabled=true;
+    this.setStatus('Переношу документ в архив, сохраняя реквизиты и фотографии…');
+    try{
+      const result=await optimaRequest('/api/dashboardx/declarations',{
+        method:'POST',
+        body:JSON.stringify({action:'archive',id,baseRevision:this.revision,
+          reason:this.archiveReason.value,note:this.archiveNote.value.trim()})
+      });
+      this.archiveId=null;this.archivePanel.hidden=true;this.archiveNote.value='';
+      window.dispatchEvent(new CustomEvent('dashboardx:optima-updated',{detail:{revision:result.revision}}));
+      await this.load();
+      this.setStatus('Документ сохранён в архиве. Оригиналы и фотографии доступны во вкладке «Архив».');
+    }catch(error){
+      this.setStatus('Перенос не выполнен: '+error.message);
+    }finally{
+      this.lifecycleBusy=false;this.archiveConfirm.disabled=false;
+    }
+  }
+  async updateLifecycle(action,item){
+    if(this.lifecycleBusy||this.saving||!item)return;
+    this.lifecycleBusy=true;
+    const label={
+      restore:'Возвращаю документ из архива…',
+      request_replacement:'Сохраняю отметку запроса нового документа…',
+      cancel_replacement:'Снимаю отметку запроса…'
+    };
+    this.setStatus(label[action]||'Сохраняю изменение…');
+    try{
+      const result=await optimaRequest('/api/dashboardx/declarations',{
+        method:'POST',
+        body:JSON.stringify({action,id:item.id,baseRevision:this.revision})
+      });
+      window.dispatchEvent(new CustomEvent('dashboardx:optima-updated',{detail:{revision:result.revision}}));
+      await this.load();
+      this.setStatus(action==='restore'?'Документ возвращён в рабочий список.':
+        action==='request_replacement'?'Отмечено: новый документ запрошен. Старый остаётся в базе.':
+        'Отметка запроса снята.');
+    }catch(error){this.setStatus('Не удалось изменить статус документа: '+error.message);}
+    finally{this.lifecycleBusy=false;}
+  }
   closeImport(){
     this.importPack=null;this.importReview.hidden=true;
     this.importFile.value='';
@@ -702,6 +762,7 @@ export default class OptimaDeclarationsWidget{
     window.removeEventListener('dashboardx:optima-updated',this.onExternalUpdate);
     for(const fn of this.unbind)fn();
     this.closeImport();this.closeFiles();
+    this.archivePanel.hidden=true;
     this.editorWindow?.destroy();
   }
 }
