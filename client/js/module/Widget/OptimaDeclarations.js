@@ -458,8 +458,11 @@ export default class OptimaDeclarationsWidget{
       group.append(summary);
       const companies=new Map();
       for(const item of entries){
+        // A specification's author is not automatically its commercial supplier.
         const rawFirm=item.supplierId?
-          item.supplierName:(item.applicantName||item.supplierNameHint||item.manufacturerName||'Организация не указана');
+          item.supplierName:item.documentType==='specification'?
+            'Спецификации без привязки к поставщику':
+            (item.applicantName||item.supplierNameHint||item.manufacturerName||'Организация не указана');
         const firm=String(rawFirm).trim()||'Организация не указана';
         const firmKey=item.supplierId?'supplier:'+String(item.supplierId):'document:'+norm(firm);
         if(!companies.has(firmKey))companies.set(firmKey,{name:firm,rows:[],documents:0});
@@ -644,7 +647,9 @@ export default class OptimaDeclarationsWidget{
         details.append(elem('span','',DOCUMENT_TYPES[record.documentType]||'Документ'));
         details.append(elem('span','','№ '+(record.documentNumber||'не указан')));
         details.append(elem('span','','Срок: '+prettyDate(record.startDate)+' – '+prettyDate(record.endDate)));
-        details.append(elem('span','','Заявитель: '+(record.applicantName||'не указан')));
+        details.append(elem('span','',
+          (record.documentType==='specification'?'Разработчик документа: ':'Заявитель: ')+
+          (record.applicantName||'не указан')));
         if(record.productItems?.length){
           const list=elem('ul','dx-decl-import-itemnames');
           for(const name of record.productItems)list.append(elem('li','',name));
