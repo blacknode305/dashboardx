@@ -305,6 +305,9 @@ export default class OptimaDeclarationsWidget{
           const previous=all.find(x=>String(x.id)===String(item.replacesId));
           main.append(elem('div','dx-decl-applicant','Взамен документа: '+(previous?.documentNumber||previous?.productType||item.replacesId)));
         }
+        const later=all.filter(x=>String(x.replacesId||'')===String(item.id));
+        if(later.length)main.append(elem('div','dx-decl-applicant',
+          'Новый документ: '+later.map(x=>x.documentNumber||x.productType).join(' · ')));
         if(item.archivedAt){
           const reason=ARCHIVE_REASONS[item.archiveReason]||'Архив';
           main.append(elem('div','dx-decl-applicant','Причина: '+reason+
