@@ -465,14 +465,15 @@ export default class OptimaDeclarationsWidget{
           const label=elem('summary','dx-decl-product-summary');
           const nameBox=elem('span','dx-decl-product-name');
           nameBox.append(elem('span','dx-decl-product-text',name));
-          const quickFrozen=/быстрозамороженн/i.test(String(item.productType||''));
-          if(quickFrozen&&!/быстрозамороженн/i.test(String(name||''))){
-            const category=elem('small','dx-decl-product-category','Быстрозамороженная продукция');
-            category.title='Указано в категории документа: '+item.productType;
-            nameBox.append(category);
-          }
-          if(item.reviewStatus==='needs_review'){
-            nameBox.append(elem('small','dx-decl-product-review','На проверке'));
+          const quickFrozen=/быстрозамороженн/i.test(String(item.productType||''))&&
+            !/быстрозамороженн/i.test(String(name||''));
+          const hints=[];
+          if(quickFrozen)hints.push('Быстрозамороженная продукция');
+          if(item.reviewStatus==='needs_review')hints.push('На проверке');
+          if(hints.length){
+            const hint=elem('small','dx-decl-product-category',hints.join(' · '));
+            if(quickFrozen)hint.title='Общая категория из декларации: '+item.productType;
+            nameBox.append(hint);
           }
           const number=elem('span','dx-decl-product-number',item.documentNumber||'№ не указан');
           number.title=item.documentNumber?
