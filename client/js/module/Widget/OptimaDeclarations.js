@@ -60,6 +60,14 @@ export default class OptimaDeclarationsWidget{
     this.filesViewer=get('declaration-files-viewer');
     this.filesGrid=get('declaration-files-grid');
     this.filesTitle=get('declaration-files-title');
+    this.filesCounter=get('declaration-files-counter');
+    this.filesFilename=get('declaration-files-filename');
+    this.filesDownload=get('declaration-files-download');
+    this.filesPrev=get('declaration-files-prev');
+    this.filesNext=get('declaration-files-next');
+    this.filesZoomValue=get('declaration-files-zoom-value');
+    this.viewerEntries=[];this.viewerIndex=0;this.viewerZoom=1;this.viewerNative=false;
+    this.viewerImage=null;this.viewerSavedLayout=null;
     this.fileUrls=[];this.importPack=null;
     this.archivePanel=get('declaration-archive-panel');
     this.archiveTitle=get('declaration-archive-title');
@@ -126,6 +134,23 @@ export default class OptimaDeclarationsWidget{
     this.listen(get('declaration-import-cancel'),'click',()=>this.closeImport());
     this.listen(this.importConfirm,'click',()=>this.commitImport());
     this.listen(get('declaration-files-close'),'click',()=>this.closeFiles());
+    this.listen(this.filesPrev,'click',()=>this.selectViewerFile(this.viewerIndex-1));
+    this.listen(this.filesNext,'click',()=>this.selectViewerFile(this.viewerIndex+1));
+    this.listen(get('declaration-files-fit'),'click',()=>this.setViewerFit());
+    this.listen(get('declaration-files-actual'),'click',()=>this.setViewerActual());
+    this.listen(get('declaration-files-zoom-in'),'click',()=>this.changeViewerZoom(0.25));
+    this.listen(get('declaration-files-zoom-out'),'click',()=>this.changeViewerZoom(-0.25));
+    this.listen(this.filesGrid,'keydown',event=>{
+      if(event.key==='Escape'){event.preventDefault();this.closeFiles();}
+      if(event.key==='ArrowLeft'&&this.viewerEntries.length>1){event.preventDefault();this.selectViewerFile(this.viewerIndex-1);}
+      if(event.key==='ArrowRight'&&this.viewerEntries.length>1){event.preventDefault();this.selectViewerFile(this.viewerIndex+1);}
+      if(event.key==='+'||event.key==='='){event.preventDefault();this.changeViewerZoom(0.25);}
+      if(event.key==='-'){event.preventDefault();this.changeViewerZoom(-0.25);}
+    });
+    this.filesResizeObserver=typeof ResizeObserver==='function'?new ResizeObserver(()=>{
+      if(this.viewerImage&&!this.viewerNative&&this.viewerZoom!==1)this.updateViewerImageSize();
+    }):null;
+    this.filesResizeObserver?.observe(this.filesGrid);
     this.listen(get('declaration-archive-cancel'),'click',()=>this.closeArchivePanel());
     this.listen(get('declaration-archive-cancel-secondary'),'click',()=>this.closeArchivePanel());
     this.listen(this.archiveConfirm,'click',()=>this.commitArchive());
@@ -493,39 +518,183 @@ export default class OptimaDeclarationsWidget{
         (error.status===409?' Обновите документы и повторите импорт.':'');
     }finally{this.importing=false;this.importConfirm.disabled=false;}
   }
+  expandForFiles(){
+    if(this.viewerSavedLayout)return;
+    const frame=this.widget;
+    const previous={width:frame.style.width,left:frame.style.left,
+      expandedWidth:null,shiftedLeft:null};
+    this.viewerSavedLayout=previous;
+    frame.classList.add('dx-decl-viewer-open');
+    frame.activate?.();
+    if(frame._spatialMode||frame.classList.contains('is-maximized')||window.innerWidth<980)return;
+    const canvas=document.getElementById('workspace-canvas');
+    const originalWidth=frame.getBoundingClientRect().width;
+    const viewportWidth=Math.max(0,Math.min(window.innerWidth,canvas?.clientWidth||window.innerWidth));
+    const expanded=Math.min(viewportWidth-28,Math.max(originalWidth+540,1110));
+    if(expanded<=originalWidth+35)return;
+    frame.style.width=Math.round(expanded)+'px';
+    previous.expandedWidth=frame.style.width;
+    const currentLeft=Number.parseFloat(frame.style.left)||frame.offsetLeft||0;
+    const visibleRight=(canvas?.scrollLeft||0)+(canvas?.clientWidth||window.innerWidth)-14;
+    const shifted=Math.max(0,Math.min(currentLeft,visibleRight-expanded));
+    if(shifted<currentLeft-4){
+      frame.style.left=Math.round(shifted)+'px';
+      previous.shiftedLeft=frame.style.left;
+    }
+    window.dashboardxUpdateWorkspaceBounds?.();
+  }
+  collapseFiles(){
+    const previous=this.viewerSavedLayout;
+    this.viewerSavedLayout=null;
+    this.widget.classList.remove('dx-decl-viewer-open');
+    if(!previous)return;
+    // Preserve any size/position the user manually changed with the usual widget controls.
+    let restored=false;
+    if(previous.expandedWidth&&this.widget.style.width===previous.expandedWidth){
+      this.widget.style.width=previous.width;
+      restored=true;
+    }
+    if(previous.shiftedLeft&&this.widget.style.left===previous.shiftedLeft){
+      this.widget.style.left=previous.left;
+      restored=true;
+    }
+    if(restored&&!this.destroyed&&!this.widget._spatialMode)this.widget.saveWidget?.();
+    window.dashboardxUpdateWorkspaceBounds?.();
+  }
   closeFiles(){
     this.fileSeq=(this.fileSeq||0)+1;
     for(const url of this.fileUrls)URL.revokeObjectURL(url);
-    this.fileUrls=[];this.filesGrid.replaceChildren();this.filesViewer.hidden=true;
+    this.fileUrls=[];
+    this.viewerEntries=[];this.viewerImage=null;this.viewerIndex=0;
+    this.viewerZoom=1;this.viewerNative=false;
+    this.filesGrid.replaceChildren();this.filesViewer.hidden=true;
+    this.filesCounter.textContent='';this.filesFilename.textContent='';
+    this.filesDownload.hidden=true;this.filesDownload.removeAttribute('href');
+    this.collapseFiles();
+  }
+  viewerFitWidth(image){
+    const availableWidth=Math.max(120,this.filesGrid.clientWidth-24);
+    const availableHeight=Math.max(120,this.filesGrid.clientHeight-24);
+    return Math.max(50,Math.min(availableWidth,
+      availableHeight*image.naturalWidth/Math.max(1,image.naturalHeight)));
+  }
+  updateViewerImageSize(){
+    const image=this.viewerImage;
+    if(!image||!image.naturalWidth)return;
+    if(this.viewerNative){
+      image.style.width=image.naturalWidth+'px';
+      image.style.height=image.naturalHeight+'px';
+      image.classList.remove('dx-decl-image-fit');
+      this.filesZoomValue.textContent='1:1';
+    }else if(this.viewerZoom===1){
+      image.style.width='';image.style.height='';
+      image.classList.add('dx-decl-image-fit');
+      this.filesZoomValue.textContent='100%';
+    }else{
+      const width=this.viewerFitWidth(image)*this.viewerZoom;
+      image.style.width=Math.round(width)+'px';
+      image.style.height='auto';
+      image.classList.remove('dx-decl-image-fit');
+      this.filesZoomValue.textContent=Math.round(this.viewerZoom*100)+'%';
+    }
+  }
+  setViewerFit(){
+    this.viewerNative=false;this.viewerZoom=1;
+    this.updateViewerImageSize();
+    this.filesGrid.scrollTo({left:0,top:0});
+  }
+  setViewerActual(){
+    this.viewerNative=true;
+    this.updateViewerImageSize();
+    this.filesGrid.scrollTo({left:0,top:0});
+  }
+  changeViewerZoom(delta){
+    if(!this.viewerImage||!this.viewerImage.naturalWidth)return;
+    if(this.viewerNative){
+      this.viewerZoom=Math.max(1,this.viewerImage.naturalWidth/this.viewerFitWidth(this.viewerImage));
+      this.viewerNative=false;
+    }
+    const next=Math.max(0.5,Math.min(10,Math.round((this.viewerZoom+delta)*100)/100));
+    if(next===this.viewerZoom)return;
+    const stage=this.filesGrid;
+    const centerX=(stage.scrollLeft+stage.clientWidth/2)/Math.max(1,stage.scrollWidth);
+    const centerY=(stage.scrollTop+stage.clientHeight/2)/Math.max(1,stage.scrollHeight);
+    this.viewerZoom=next;
+    this.updateViewerImageSize();
+    stage.scrollLeft=centerX*stage.scrollWidth-stage.clientWidth/2;
+    stage.scrollTop=centerY*stage.scrollHeight-stage.clientHeight/2;
+  }
+  selectViewerFile(index){
+    if(!this.viewerEntries.length)return;
+    const count=this.viewerEntries.length;
+    this.viewerIndex=(index+count)%count;
+    this.viewerNative=false;this.viewerZoom=1;
+    this.renderViewerFile();
+  }
+  renderViewerFile(){
+    if(this.filesViewer.hidden)return;
+    const count=this.viewerEntries.length;
+    const entry=this.viewerEntries[this.viewerIndex];
+    this.filesPrev.disabled=count<=1;
+    this.filesNext.disabled=count<=1;
+    this.filesCounter.textContent=count?'Файл '+(this.viewerIndex+1)+' из '+count:'Нет вложений';
+    this.filesGrid.replaceChildren();this.viewerImage=null;
+    this.filesFilename.textContent=entry?.attachment?.name||'';
+    this.filesDownload.hidden=!entry?.url;
+    if(entry?.url){
+      this.filesDownload.href=entry.url;
+      this.filesDownload.download=entry.attachment.name||'Оригинал';
+    }else this.filesDownload.removeAttribute('href');
+    if(!entry){this.filesGrid.append(elem('p','dx-decl-file-load','У документа нет прикреплённых файлов.'));return;}
+    if(entry.error){this.filesGrid.append(elem('p','dx-decl-file-error','Файл недоступен: '+entry.error));return;}
+    if(!entry.url){this.filesGrid.append(elem('p','dx-decl-file-load','Загружаю оригинал…'));return;}
+    if(!String(entry.attachment.mime).startsWith('image/')){
+      this.filesGrid.append(elem('p','dx-decl-file-load','Это PDF. Нажмите «Скачать оригинал», чтобы открыть полный документ.'));
+      this.filesZoomValue.textContent='—';return;
+    }
+    const image=document.createElement('img');
+    this.viewerImage=image;
+    image.alt='Оригинал: '+(entry.attachment.name||'документ');
+    image.decoding='async';
+    image.onload=()=>{
+      if(this.viewerImage!==image)return;
+      this.updateViewerImageSize();
+    };
+    image.onerror=()=>{
+      if(this.viewerImage===image)this.filesGrid.replaceChildren(elem('p','dx-decl-file-error','Не удалось отобразить фотографию.'));
+    };
+    image.src=entry.url;
+    this.filesGrid.append(image);
+    this.filesGrid.scrollTo({left:0,top:0});
+    this.filesZoomValue.textContent='100%';
   }
   async openFiles(item){
     this.closeFiles();
+    this.filesTitle.textContent='Оригинал: '+item.productType;
+    this.viewerEntries=(item.attachments||[]).map(attachment=>({attachment,url:null,error:null}));
+    this.viewerIndex=0;
     this.filesViewer.hidden=false;
-    this.filesTitle.textContent='Оригиналы: '+item.productType;
-    this.filesGrid.append(elem('p','dx-decl-file-load','Открываю файлы из защищённого хранилища…'));
-    const seq=this.fileSeq=(this.fileSeq||0)+1;
-    const photos=[];
-    for(const attachment of item.attachments||[]){
+    this.expandForFiles();
+    this.renderViewerFile();
+    const seq=++this.fileSeq;
+    for(let index=0;index<this.viewerEntries.length;index++){
+      const entry=this.viewerEntries[index];
       try{
-        const resp=await fetch(OPTIMA_BASE+'/api/dashboardx/declarations/attachments/'+
-          encodeURIComponent(item.id)+'/'+encodeURIComponent(attachment.id),{
+        const response=await fetch(OPTIMA_BASE+'/api/dashboardx/declarations/attachments/'+
+          encodeURIComponent(item.id)+'/'+encodeURIComponent(entry.attachment.id),{
           headers:{Authorization:'Bearer '+getCredential('optima')},cache:'no-store'
         });
-        if(!resp.ok)throw Error('HTTP '+resp.status);
-        const blob=await resp.blob();
+        if(!response.ok)throw Error('HTTP '+response.status);
+        const blob=await response.blob();
         if(this.destroyed||this.fileSeq!==seq)return;
-        const url=URL.createObjectURL(blob);this.fileUrls.push(url);
-        const figure=elem('figure','dx-decl-file');
-        if(String(attachment.mime).startsWith('image/')){
-          const image=document.createElement('img');image.src=url;image.alt=attachment.name;figure.append(image);
-        }
-        const link=elem('a','',attachment.name||'Открыть документ');
-        link.href=url;link.download=attachment.name||'документ';link.target='_blank';link.rel='noopener';
-        figure.append(link);photos.push(figure);
-      }catch(error){photos.push(elem('p','dx-decl-file-error','Файл недоступен: '+error.message));}
+        const url=URL.createObjectURL(blob);
+        entry.url=url;this.fileUrls.push(url);
+      }catch(error){
+        if(this.destroyed||this.fileSeq!==seq)return;
+        entry.error=error?.message||'Ошибка загрузки';
+      }
+      if(this.viewerIndex===index)this.renderViewerFile();
     }
-    if(this.destroyed||this.fileSeq!==seq)return;
-    this.filesGrid.replaceChildren(...photos);
   }
   buildEditor(){
     if(this.editorWindow)return;
@@ -824,6 +993,7 @@ export default class OptimaDeclarationsWidget{
     clearTimeout(this.saveTimer);this.saveFilters();
     window.removeEventListener('dashboardx:optima-updated',this.onExternalUpdate);
     for(const fn of this.unbind)fn();
+    this.filesResizeObserver?.disconnect();
     this.closeImport();this.closeFiles();
     this.archivePanel.hidden=true;
     this.editorWindow?.destroy();
