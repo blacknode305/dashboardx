@@ -7,6 +7,8 @@
       <button type="button" data-role="declaration-type-tab" data-type="all" aria-pressed="true">Все</button>
       <button type="button" data-role="declaration-type-tab" data-type="eaeu" aria-pressed="false">ЕАЭС</button>
       <button type="button" data-role="declaration-type-tab" data-type="veterinary" aria-pressed="false">Ветсправки</button>
+      <button type="button" data-role="declaration-type-tab" data-type="certificate" aria-pressed="false">Сертификаты</button>
+      <button type="button" data-role="declaration-type-tab" data-type="specification" aria-pressed="false">Спецификации</button>
       <button type="button" data-role="declaration-type-tab" data-type="archive" aria-pressed="false">Архив</button>
     </div>
     <button type="button" class="dx-decl-import-trigger" data-role="declaration-import-trigger" title="Импортировать фотографии и реквизиты из подготовленного пакета">Импорт</button>
@@ -41,14 +43,14 @@
   </section>
   <div class="dx-declarations-filters">
     <div class="dx-declarations-search">
-      <button type="button" data-role="declaration-add" title="Добавить декларацию" aria-label="Добавить декларацию">+</button>
-      <input type="search" data-role="declaration-search" autocomplete="off" placeholder="Поиск продукции или поставщика…" aria-label="Поиск деклараций">
+      <button type="button" data-role="declaration-add" title="Добавить документ" aria-label="Добавить документ">+</button>
+      <input type="search" data-role="declaration-search" autocomplete="off" placeholder="Поиск продукции, организации или номера…" aria-label="Поиск документов">
     </div>
     <div class="dx-declarations-supplier" data-role="declaration-supplier-picker">
       <input type="search" data-role="declaration-supplier-query" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-label="Фильтр по поставщику" placeholder="Все поставщики" autocomplete="off" spellcheck="false">
       <div data-role="declaration-supplier-list" role="listbox" aria-label="Список поставщиков" hidden></div>
     </div>
-    <select data-role="declaration-status-filter" aria-label="Статус декларации">
+    <select data-role="declaration-status-filter" aria-label="Состояние документа">
       <option value="all">Все сроки</option>
       <option value="expired">Просрочены</option>
       <option value="urgent">До 7 дней</option>
