@@ -17,6 +17,7 @@ const GROUPS=[
   ['valid','Действуют'],
   ['upcoming','Ещё не действуют']
 ];
+const ARCHIVE_REASONS={expired:'Истёк срок',replaced:'Получен новый документ',other:'Другая причина'};
 const classify=(x,today)=>{
   if(x.endDate<today)return 'expired';
   if(x.startDate>today)return 'upcoming';
@@ -226,11 +227,17 @@ export default class OptimaDeclarationsWidget{
       status:classify(entry,today),
       reviewStatus:entry.reviewStatus||'confirmed'
     }));
-    const pool=all.filter(x=>this.filters.type==='all'||this.filters.type===x.documentType);
-    this.counts.append(elem('span','dx-decl-count','Всего: '+pool.length));
+    const inArchive=this.filters.type==='archive';
+    const pool=all.filter(x=>inArchive?Boolean(x.archivedAt):
+      !x.archivedAt&&(this.filters.type==='all'||this.filters.type===x.documentType));
+    this.counts.append(elem('span','dx-decl-count',inArchive?'В архиве: '+pool.length:'В работе: '+pool.length));
+    if(!inArchive)this.counts.append(elem('span','dx-decl-count dx-decl-archive-chip',
+      'Архив: '+all.filter(x=>Boolean(x.archivedAt)).length));
+    if(!inArchive)this.counts.append(elem('span','dx-decl-count dx-decl-urgent',
+      'Запрошены новые: '+pool.filter(x=>Boolean(x.replacementRequestedAt)).length));
     this.counts.append(elem('span','dx-decl-count dx-decl-unreviewed',
       'На проверке: '+pool.filter(x=>x.reviewStatus==='needs_review').length));
-    for(const [id,title] of GROUPS){
+    for(const [id,title] of (inArchive?[]:GROUPS)){
       this.counts.append(elem('span','dx-decl-count dx-decl-'+id,
         title+': '+pool.filter(x=>x.status===id).length));
     }
@@ -238,7 +245,9 @@ export default class OptimaDeclarationsWidget{
     const filtered=pool.filter(x=>
       (!this.filters.supplierId||String(x.supplierId)===this.filters.supplierId)&&
       (!supplierTyped||norm(x.supplierName).includes(supplierTyped))&&
-      (this.filters.status==='all'||this.filters.status===x.status||this.filters.status===x.reviewStatus)&&
+      (this.filters.status==='all'||this.filters.status===x.status||
+       this.filters.status===x.reviewStatus||
+       (this.filters.status==='replacement_requested'&&Boolean(x.replacementRequestedAt)))&&
       (!typed||norm([x.productType,x.supplierName,x.applicantName,x.documentNumber,x.productDescription].join(' ')).includes(typed))
     );
     if(!filtered.length){
@@ -247,8 +256,10 @@ export default class OptimaDeclarationsWidget{
         'Документов пока нет. Нажмите «+» или импортируйте пакет фотографий.'));
       return;
     }
-    for(const [id,title] of GROUPS){
-      const entries=filtered.filter(x=>x.status===id).sort((a,b)=>
+    for(const [id,title] of (inArchive?[['archive','Архивные документы']]:GROUPS)){
+      const entries=(inArchive?filtered:filtered.filter(x=>x.status===id)).sort((a,b)=>
+        inArchive?String(b.archivedAt).localeCompare(String(a.archivedAt)):
+
         String(a.endDate).localeCompare(String(b.endDate))||
         a.supplierName.localeCompare(b.supplierName,'ru')||
         String(a.productType).localeCompare(String(b.productType),'ru'));
@@ -270,6 +281,10 @@ export default class OptimaDeclarationsWidget{
         const meta=elem('div','dx-decl-metadata');
         meta.append(elem('span','dx-decl-kind',item.documentType==='veterinary'?'Ветсправка':'ЕАЭС'));
         if(item.reviewStatus==='needs_review')meta.append(elem('span','dx-decl-review-badge','На проверке'));
+        if(item.replacementRequestedAt)meta.append(elem('span','dx-decl-renew-requested',
+          'Запрошен новый · '+prettyDate(item.replacementRequestedAt.slice(0,10))));
+        if(item.archivedAt)meta.append(elem('span','dx-decl-archived-badge',
+          'В архиве · '+prettyDate(item.archivedAt.slice(0,10))));
         if(item.documentNumber)meta.append(elem('span','dx-decl-number',item.documentNumber));
         main.append(meta);
         main.append(elem('div','dx-decl-supplier-name',item.supplierName));
@@ -286,12 +301,28 @@ export default class OptimaDeclarationsWidget{
           elem('span','','Окончание: '+prettyDate(item.endDate)));
         main.append(dates);
         if(item.reviewStatus==='needs_review'&&item.notes)main.append(elem('p','dx-decl-review-notes',item.notes));
+        if(item.replacesId){
+          const previous=all.find(x=>String(x.id)===String(item.replacesId));
+          main.append(elem('div','dx-decl-applicant','Взамен документа: '+(previous?.documentNumber||previous?.productType||item.replacesId)));
+        }
+        if(item.archivedAt){
+          const reason=ARCHIVE_REASONS[item.archiveReason]||'Архив';
+          main.append(elem('div','dx-decl-applicant','Причина: '+reason+
+            (item.archiveNote?' · '+item.archiveNote:'')));
+        }
         const actions=elem('div','dx-decl-card-actions');
         const buttons=[['edit','✎','Проверить / изменить']];
         if(item.attachments?.length)buttons.push(['photos','▧','Фотографии ('+item.attachments.length+')']);
-        buttons.push(['delete','×','Удалить']);
+        if(item.archivedAt)buttons.push(['restore','Вернуть','Вернуть в рабочий список']);
+        else{
+          buttons.push([item.replacementRequestedAt?'cancel_request':'request',
+            item.replacementRequestedAt?'Отменить запрос':'Запросил новый',
+            item.replacementRequestedAt?'Снять отметку запроса':'Отметить, что запрошен новый документ']);
+          buttons.push(['renew','Новый взамен','Создать новую запись взамен этой']);
+          buttons.push(['archive','В архив','Перенести документ в архив без удаления']);
+        }
         for(const [action,txt,label] of buttons){
-          const button=elem('button','dx-decl-action',txt);button.type='button';
+          const button=elem('button','dx-decl-action'+(txt.length>2?' dx-decl-action-label':''),txt);button.type='button';
           button.title=label;button.setAttribute('aria-label',label+' '+item.productType);
           button.dataset.action=action;button.dataset.id=String(item.id);
           actions.append(button);
