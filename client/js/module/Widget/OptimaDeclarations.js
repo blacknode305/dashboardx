@@ -46,7 +46,9 @@ export default class OptimaDeclarationsWidget{
     };
     this.db=null;this.revision=null;this.seq=0;this.destroyed=false;this.saving=false;
     this.supplierEditing=false;this.supplierOpen=false;this.supplierActive=-1;this.supplierOptions=[];
-    this.groupOpen={...Object.fromEntries(GROUPS.map(([k])=>[k,true])),archive:true};
+    this.groupOpen={expired:true,urgent:true,soon:false,valid:false,upcoming:false,archive:false};
+    this.companyOpen=new Map();
+    this.productOpen=new Map();
     const get=r=>widget.querySelector('[data-role="'+r+'"]');
     this.search=get('declaration-search');this.supplier=get('declaration-supplier-query');
     this.supplierList=get('declaration-supplier-list');this.supplierWrap=get('declaration-supplier-picker');
@@ -67,7 +69,11 @@ export default class OptimaDeclarationsWidget{
     this.filesNext=get('declaration-files-next');
     this.filesZoomValue=get('declaration-files-zoom-value');
     this.viewerEntries=[];this.viewerIndex=0;this.viewerZoom=1;this.viewerNative=false;
-    this.viewerImage=null;this.viewerSavedLayout=null;
+    this.viewerImage=null;
+    this.viewerHome=this.filesViewer.parentNode;
+    this.filesShade=document.createElement('div');
+    this.filesShade.className='dx-decl-floating-shade';
+    this.filesShade.setAttribute('aria-hidden','true');
     this.fileUrls=[];this.importPack=null;
     this.archivePanel=get('declaration-archive-panel');
     this.archiveTitle=get('declaration-archive-title');
@@ -134,14 +140,17 @@ export default class OptimaDeclarationsWidget{
     this.listen(get('declaration-import-cancel'),'click',()=>this.closeImport());
     this.listen(this.importConfirm,'click',()=>this.commitImport());
     this.listen(get('declaration-files-close'),'click',()=>this.closeFiles());
+    this.listen(get('declaration-files-drag-handle'),'pointerdown',event=>this.startViewerDrag(event));
     this.listen(this.filesPrev,'click',()=>this.selectViewerFile(this.viewerIndex-1));
     this.listen(this.filesNext,'click',()=>this.selectViewerFile(this.viewerIndex+1));
     this.listen(get('declaration-files-fit'),'click',()=>this.setViewerFit());
     this.listen(get('declaration-files-actual'),'click',()=>this.setViewerActual());
     this.listen(get('declaration-files-zoom-in'),'click',()=>this.changeViewerZoom(0.25));
     this.listen(get('declaration-files-zoom-out'),'click',()=>this.changeViewerZoom(-0.25));
+    this.listen(this.filesViewer,'keydown',event=>{
+      if(event.key==='Escape'){event.preventDefault();event.stopPropagation();this.closeFiles();}
+    });
     this.listen(this.filesGrid,'keydown',event=>{
-      if(event.key==='Escape'){event.preventDefault();this.closeFiles();}
       if(event.key==='ArrowLeft'&&this.viewerEntries.length>1){event.preventDefault();this.selectViewerFile(this.viewerIndex-1);}
       if(event.key==='ArrowRight'&&this.viewerEntries.length>1){event.preventDefault();this.selectViewerFile(this.viewerIndex+1);}
       if(event.key==='+'||event.key==='='){event.preventDefault();this.changeViewerZoom(0.25);}
@@ -245,6 +254,112 @@ export default class OptimaDeclarationsWidget{
       this.setStatus('Не удалось загрузить декларации: '+error.message);
     }
   }
+  addDocumentField(container,label,value){
+    if(value===undefined||value===null||String(value).trim()==='')return;
+    const row=elem('div','dx-decl-field');
+    row.append(elem('dt','',label),elem('dd','',value));
+    container.append(row);
+  }
+  renderDocumentDetail(item,all,selectedProduct){
+    const panel=elem('section','dx-decl-document-detail');
+    const badges=elem('div','dx-decl-metadata');
+    badges.append(elem('span','dx-decl-kind',item.documentType==='veterinary'?'Ветеринарная справка':'Декларация ЕАЭС'));
+    if(item.reviewStatus==='needs_review')badges.append(elem('span','dx-decl-review-badge','На проверке'));
+    if(item.replacementRequestedAt)badges.append(elem('span','dx-decl-renew-requested',
+      'Запрошен новый · '+prettyDate(String(item.replacementRequestedAt).slice(0,10))));
+    if(item.archivedAt)badges.append(elem('span','dx-decl-archived-badge','Архив · '+prettyDate(String(item.archivedAt).slice(0,10))));
+    panel.append(badges);
+    const fields=elem('dl','dx-decl-fields');
+    const rows=[
+      ['Выбранная продукция',selectedProduct],
+      ['Общая категория',item.productType],
+      ['Поставщик PRO OPTIMA',item.supplierName],
+      ['Наименование организации в документе',item.applicantName],
+      ['Изготовитель',item.manufacturerName],
+      ['Страна происхождения',item.originCountry],
+      ['Точное описание продукции',item.productDescription],
+      ['Номер документа',item.documentNumber],
+      ['Начало действия',prettyDate(item.startDate)],
+      ['Окончание действия',prettyDate(item.endDate)],
+      ['Дата регистрации',item.registrationDate?prettyDate(item.registrationDate):''],
+      ['Дата выдачи',item.issueDate?prettyDate(item.issueDate):''],
+      ['Технические регламенты',item.technicalRegulations],
+      ['QR на бланке',item.qrPresent?'Есть':''],
+      ['Получатель',item.recipientName],
+      ['Мест',item.quantityPlaces],
+      ['Вес нетто',item.netWeight],
+      ['Партия / транспортировка',item.batchDetails],
+      ['Дата фактического поступления',item.receiptDate?prettyDate(item.receiptDate):''],
+      ['Поступление 1С',item.receiptReference],
+      ['Название из исходного файла',item.supplierNameHint],
+      ['Примечания к проверке',item.notes],
+      ['Время создания',item.createdAt?String(item.createdAt).slice(0,16).replace('T',' '):''],
+      ['Время изменения',item.updatedAt?String(item.updatedAt).slice(0,16).replace('T',' '):'']
+    ];
+    for(const [label,value] of rows)this.addDocumentField(fields,label,value);
+    if(item.documentType==='veterinary'&&item.receiptDate){
+      const end=new Date(item.receiptDate+'T12:00:00Z');
+      if(!Number.isNaN(end.getTime())){
+        end.setUTCFullYear(end.getUTCFullYear()+3);
+        this.addDocumentField(fields,'Ориентир окончания хранения',
+          prettyDate(end.toISOString().slice(0,10)));
+      }
+    }
+    if(item.replacesId){
+      const old=all.find(x=>String(x.id)===String(item.replacesId));
+      this.addDocumentField(fields,'Взамен документа',old?.documentNumber||old?.productType||item.replacesId);
+    }
+    const later=all.filter(x=>String(x.replacesId||'')===String(item.id));
+    if(later.length)this.addDocumentField(fields,'Новые документы',
+      later.map(x=>x.documentNumber||x.productType).join(' · '));
+    if(item.archivedAt){
+      this.addDocumentField(fields,'Перенесён в архив',prettyDate(String(item.archivedAt).slice(0,10)));
+      this.addDocumentField(fields,'Причина архива',ARCHIVE_REASONS[item.archiveReason]||'Другая причина');
+      this.addDocumentField(fields,'Примечание к архиву',item.archiveNote);
+    }
+    panel.append(fields);
+    if(item.qrUrl&&/^https:\/\//i.test(item.qrUrl)){
+      const link=elem('a','dx-decl-qr-link','Открыть запись по QR');
+      link.href=item.qrUrl;link.target='_blank';link.rel='noopener noreferrer';
+      panel.append(link);
+    }
+    if(Array.isArray(item.productItems)&&item.productItems.length){
+      const positions=elem('div','dx-decl-positions');
+      positions.append(elem('strong','dx-decl-positions-title',
+        'Позиции, перечисленные в документе ('+item.productItems.length+')'));
+      const names=elem('ul','dx-decl-positions-list');
+      for(const [index,name] of item.productItems.entries()){
+        const row=elem('li','dx-decl-position');
+        row.append(elem('span','',name));
+        const copy=elem('button','dx-decl-copy-item','Копировать');
+        copy.type='button';copy.dataset.action='copy_product';
+        copy.dataset.id=String(item.id);copy.dataset.index=String(index);
+        copy.title='Копировать название для переноса в «Наименования»';
+        row.append(copy);names.append(row);
+      }
+      positions.append(names);panel.append(positions);
+    }
+    const actions=elem('div','dx-decl-card-actions');
+    const buttons=[['edit','✎ Изменить','Проверить или изменить документ']];
+    if(item.attachments?.length)buttons.push(['photos','▧ Оригинал','Посмотреть фотографии и файлы']);
+    if(item.archivedAt){
+      buttons.push(['renew','Новый взамен','Создать новый документ взамен архивного']);
+      buttons.push(['restore','Вернуть','Вернуть в рабочий список']);
+    }else{
+      buttons.push([item.replacementRequestedAt?'cancel_request':'request',
+        item.replacementRequestedAt?'Отменить запрос':'Запросил новый',
+        item.replacementRequestedAt?'Снять отметку запроса':'Отметить запрос нового документа']);
+      buttons.push(['renew','Новый взамен','Создать новый документ взамен этого']);
+      buttons.push(['archive','В архив','Перенести в архив без удаления']);
+    }
+    for(const [action,label,title] of buttons){
+      const button=elem('button','dx-decl-action dx-decl-action-label',label);
+      button.type='button';button.title=title;button.dataset.action=action;
+      button.dataset.id=String(item.id);actions.append(button);
+    }
+    panel.append(actions);
+    return panel;
+  }
   render(){
     this.list.replaceChildren();this.counts.replaceChildren();
     for(const button of this.widget.querySelectorAll('[data-role="declaration-type-tab"]')){
@@ -264,7 +379,7 @@ export default class OptimaDeclarationsWidget{
     const inArchive=this.filters.type==='archive';
     const pool=all.filter(x=>inArchive?Boolean(x.archivedAt):
       !x.archivedAt&&(this.filters.type==='all'||this.filters.type===x.documentType));
-    this.counts.append(elem('span','dx-decl-count',inArchive?'В архиве: '+pool.length:'В работе: '+pool.length));
+    this.counts.append(elem('span','dx-decl-count',inArchive?'В архиве: '+pool.length:'Документов в работе: '+pool.length));
     if(!inArchive)this.counts.append(elem('span','dx-decl-count dx-decl-archive-chip',
       'Архив: '+all.filter(x=>Boolean(x.archivedAt)).length));
     if(!inArchive)this.counts.append(elem('span','dx-decl-count dx-decl-urgent',
@@ -282,7 +397,8 @@ export default class OptimaDeclarationsWidget{
       (this.filters.status==='all'||this.filters.status===x.status||
        this.filters.status===x.reviewStatus||
        (this.filters.status==='replacement_requested'&&Boolean(x.replacementRequestedAt)))&&
-      (!typed||norm([x.productType,...(x.productItems||[]),x.supplierName,x.applicantName,x.documentNumber,x.productDescription].join(' ')).includes(typed))
+      (!typed||norm([x.productType,...(x.productItems||[]),x.supplierName,x.applicantName,
+        x.supplierNameHint,x.manufacturerName,x.documentNumber,x.productDescription].join(' ')).includes(typed))
     );
     if(!filtered.length){
       this.list.append(elem('p','dx-decl-empty',all.length?
@@ -290,101 +406,72 @@ export default class OptimaDeclarationsWidget{
         'Документов пока нет. Нажмите «+» или импортируйте пакет фотографий.'));
       return;
     }
-    for(const [id,title] of (inArchive?[['archive','Архивные документы']]:GROUPS)){
-      const entries=(inArchive?filtered:filtered.filter(x=>x.status===id)).sort((a,b)=>
+    for(const [status,title] of (inArchive?[['archive','Архивные документы']]:GROUPS)){
+      const entries=(inArchive?filtered:filtered.filter(x=>x.status===status)).slice().sort((a,b)=>
         inArchive?String(b.archivedAt).localeCompare(String(a.archivedAt)):
-
         String(a.endDate).localeCompare(String(b.endDate))||
         a.supplierName.localeCompare(b.supplierName,'ru')||
         String(a.productType).localeCompare(String(b.productType),'ru'));
       if(!entries.length)continue;
-      const group=elem('details','dx-decl-group dx-decl-'+id);
-      group.dataset.group=id;group.open=this.groupOpen[id]!==false;
-      group.addEventListener('toggle',()=>{this.groupOpen[id]=group.open;});
+      const group=elem('details','dx-decl-group dx-decl-'+status);
+      group.dataset.group=status;group.open=this.groupOpen[status]===true;
+      group.addEventListener('toggle',()=>{this.groupOpen[status]=group.open;});
       const summary=elem('summary','dx-decl-group-title');
-      summary.append(elem('span','',title),elem('span','dx-decl-total',entries.length));
+      summary.append(elem('span','',title),elem('span','dx-decl-total',entries.length+' док.'));
       group.append(summary);
-      const container=elem('div','dx-decl-group-body');
+      const companies=new Map();
       for(const item of entries){
-        const card=elem('article','dx-decl-card');
-        const main=elem('div','dx-decl-card-main');
-        const head=elem('div','dx-decl-card-head');
-        const heading=elem('strong','',item.productType);
-        head.append(heading,elem('span','dx-decl-pill dx-decl-'+item.status,remaining(item,today)));
-        main.append(head);
-        const meta=elem('div','dx-decl-metadata');
-        meta.append(elem('span','dx-decl-kind',item.documentType==='veterinary'?'Ветсправка':'ЕАЭС'));
-        if(item.reviewStatus==='needs_review')meta.append(elem('span','dx-decl-review-badge','На проверке'));
-        if(item.replacementRequestedAt)meta.append(elem('span','dx-decl-renew-requested',
-          'Запрошен новый · '+prettyDate(item.replacementRequestedAt.slice(0,10))));
-        if(item.archivedAt)meta.append(elem('span','dx-decl-archived-badge',
-          'В архиве · '+prettyDate(item.archivedAt.slice(0,10))));
-        if(item.documentNumber)meta.append(elem('span','dx-decl-number',item.documentNumber));
-        main.append(meta);
-        main.append(elem('div','dx-decl-supplier-name',item.supplierName));
-        if(item.applicantName)main.append(elem('div','dx-decl-applicant','Документ: '+item.applicantName));
-        if(Array.isArray(item.productItems)&&item.productItems.length){
-          const positions=elem('div','dx-decl-positions');
-          positions.append(elem('strong','dx-decl-positions-title',
-            'Конкретные позиции ('+item.productItems.length+')'));
-          const names=elem('ul','dx-decl-positions-list');
-          for(const [index,name] of item.productItems.entries()){
-            const row=elem('li','dx-decl-position');
-            row.append(elem('span','',name));
-            const copy=elem('button','dx-decl-copy-item','Копировать');
-            copy.type='button';copy.dataset.action='copy_product';
-            copy.dataset.id=String(item.id);copy.dataset.index=String(index);
-            copy.title='Скопировать название для переноса в «Наименования»';
-            copy.setAttribute('aria-label','Копировать позицию '+name);
-            row.append(copy);names.append(row);
-          }
-          positions.append(names);main.append(positions);
+        const rawFirm=item.supplierId?
+          item.supplierName:(item.applicantName||item.supplierNameHint||item.manufacturerName||'Организация не указана');
+        const firm=String(rawFirm).trim()||'Организация не указана';
+        const firmKey=item.supplierId?'supplier:'+String(item.supplierId):'document:'+norm(firm);
+        if(!companies.has(firmKey))companies.set(firmKey,{name:firm,rows:[],documents:0});
+        const company=companies.get(firmKey);
+        company.documents++;
+        const positions=Array.isArray(item.productItems)&&item.productItems.length?
+          item.productItems:[item.productType||'Продукция не указана'];
+        for(const [index,name] of positions.entries())company.rows.push({item,name,index});
+      }
+      const container=elem('div','dx-decl-group-body dx-decl-companies');
+      const ordered=[...companies.entries()].sort((a,b)=>
+        a[1].name.localeCompare(b[1].name,'ru'));
+      for(const [key,company] of ordered){
+        const companyState=status+'::'+key;
+        const branch=elem('details','dx-decl-company');
+        branch.dataset.companyKey=companyState;
+        branch.open=this.companyOpen.get(companyState)===true;
+        branch.addEventListener('toggle',()=>this.companyOpen.set(companyState,branch.open));
+        const head=elem('summary','dx-decl-company-summary');
+        head.append(elem('strong','dx-decl-company-name',company.name));
+        const meta=elem('span','dx-decl-company-count',
+          company.rows.length+' поз. · '+company.documents+' док.');
+        head.append(meta);branch.append(head);
+        const products=elem('div','dx-decl-company-products');
+        company.rows.sort((a,b)=>
+          String(a.item.endDate).localeCompare(String(b.item.endDate))||
+          String(a.name).localeCompare(String(b.name),'ru'));
+        for(const {item,name,index} of company.rows){
+          const recordKey=status+'::'+String(item.id)+'::'+index;
+          const product=elem('details','dx-decl-product');
+          product.dataset.productKey=recordKey;
+          product.open=this.productOpen.get(recordKey)===true;
+          const inner=elem('div','dx-decl-product-content');
+          if(product.open)inner.append(this.renderDocumentDetail(item,all,name));
+          product.addEventListener('toggle',()=>{
+            this.productOpen.set(recordKey,product.open);
+            if(product.open&&!inner.firstChild)inner.append(this.renderDocumentDetail(item,all,name));
+          });
+          const label=elem('summary','dx-decl-product-summary');
+          const nameBox=elem('span','dx-decl-product-name',name);
+          label.append(nameBox);
+          if(item.reviewStatus==='needs_review')label.append(elem('span','dx-decl-product-review','Проверить'));
+          const expiry=elem('span','dx-decl-product-date',prettyDate(item.endDate));
+          expiry.title='Окончание действия · '+remaining(item,today);
+          label.append(expiry);
+          product.append(label,inner);
+          products.append(product);
         }
-        if(item.documentType==='veterinary'&&item.receiptDate){
-          const deadline=new Date(item.receiptDate+'T12:00:00Z');
-          deadline.setUTCFullYear(deadline.getUTCFullYear()+3);
-          main.append(elem('div','dx-decl-applicant',
-            'Архивный ориентир: '+prettyDate(deadline.toISOString().slice(0,10))+
-            ' (3 года со дня фактического поступления)'));
-        }
-        const dates=elem('div','dx-decl-dates');
-        dates.append(elem('span','','Начало: '+prettyDate(item.startDate)),
-          elem('span','','Окончание: '+prettyDate(item.endDate)));
-        main.append(dates);
-        if(item.reviewStatus==='needs_review'&&item.notes)main.append(elem('p','dx-decl-review-notes',item.notes));
-        if(item.replacesId){
-          const previous=all.find(x=>String(x.id)===String(item.replacesId));
-          main.append(elem('div','dx-decl-applicant','Взамен документа: '+(previous?.documentNumber||previous?.productType||item.replacesId)));
-        }
-        const later=all.filter(x=>String(x.replacesId||'')===String(item.id));
-        if(later.length)main.append(elem('div','dx-decl-applicant',
-          'Новый документ: '+later.map(x=>x.documentNumber||x.productType).join(' · ')));
-        if(item.archivedAt){
-          const reason=ARCHIVE_REASONS[item.archiveReason]||'Архив';
-          main.append(elem('div','dx-decl-applicant','Причина: '+reason+
-            (item.archiveNote?' · '+item.archiveNote:'')));
-        }
-        const actions=elem('div','dx-decl-card-actions');
-        const buttons=[['edit','✎','Проверить / изменить']];
-        if(item.attachments?.length)buttons.push(['photos','▧','Фотографии ('+item.attachments.length+')']);
-        if(item.archivedAt){
-          buttons.push(['renew','Новый взамен','Создать новую запись взамен архивного документа']);
-          buttons.push(['restore','Вернуть','Вернуть в рабочий список']);
-        }
-        else{
-          buttons.push([item.replacementRequestedAt?'cancel_request':'request',
-            item.replacementRequestedAt?'Отменить запрос':'Запросил новый',
-            item.replacementRequestedAt?'Снять отметку запроса':'Отметить, что запрошен новый документ']);
-          buttons.push(['renew','Новый взамен','Создать новую запись взамен этой']);
-          buttons.push(['archive','В архив','Перенести документ в архив без удаления']);
-        }
-        for(const [action,txt,label] of buttons){
-          const button=elem('button','dx-decl-action'+(txt.length>2?' dx-decl-action-label':''),txt);button.type='button';
-          button.title=label;button.setAttribute('aria-label',label+' '+item.productType);
-          button.dataset.action=action;button.dataset.id=String(item.id);
-          actions.append(button);
-        }
-        card.append(main,actions);container.append(card);
+        branch.append(products);container.append(branch);
       }
       group.append(container);this.list.append(group);
     }
@@ -518,59 +605,60 @@ export default class OptimaDeclarationsWidget{
         (error.status===409?' Обновите документы и повторите импорт.':'');
     }finally{this.importing=false;this.importConfirm.disabled=false;}
   }
-  expandForFiles(){
-    if(this.viewerSavedLayout)return;
-    const frame=this.widget;
-    const previous={width:frame.style.width,left:frame.style.left,
-      expandedWidth:null,shiftedLeft:null};
-    this.viewerSavedLayout=previous;
-    frame.classList.add('dx-decl-viewer-open');
-    frame.activate?.();
-    if(frame._spatialMode||frame.classList.contains('is-maximized')||window.innerWidth<980)return;
-    const canvas=document.getElementById('workspace-canvas');
-    const originalWidth=frame.getBoundingClientRect().width;
-    const viewportWidth=Math.max(0,Math.min(window.innerWidth,canvas?.clientWidth||window.innerWidth));
-    const expanded=Math.min(viewportWidth-28,Math.max(originalWidth+540,1110));
-    if(expanded<=originalWidth+35)return;
-    frame.style.width=Math.round(expanded)+'px';
-    previous.expandedWidth=frame.style.width;
-    const currentLeft=Number.parseFloat(frame.style.left)||frame.offsetLeft||0;
-    const visibleRight=(canvas?.scrollLeft||0)+(canvas?.clientWidth||window.innerWidth)-14;
-    const shifted=Math.max(0,Math.min(currentLeft,visibleRight-expanded));
-    if(shifted<currentLeft-4){
-      frame.style.left=Math.round(shifted)+'px';
-      previous.shiftedLeft=frame.style.left;
+  openFloatingFiles(){
+    if(!this.filesViewer.isConnected||this.filesViewer.parentNode!==document.body){
+      document.body.append(this.filesShade,this.filesViewer);
     }
-    window.dashboardxUpdateWorkspaceBounds?.();
+    // The shade is decorative only; it never intercepts clicks on DashboardX.
+    this.filesShade.hidden=false;
+    this.filesViewer.style.left='50%';
+    this.filesViewer.style.top='50%';
+    this.filesViewer.style.transform='translate(-50%, -50%)';
+    this.filesViewer.style.width='';
+    this.filesViewer.style.height='';
+    this.filesViewer.hidden=false;
+    this.filesViewer.focus({preventScroll:true});
   }
-  collapseFiles(){
-    const previous=this.viewerSavedLayout;
-    this.viewerSavedLayout=null;
-    this.widget.classList.remove('dx-decl-viewer-open');
-    if(!previous)return;
-    // If the user maximized the widget while viewing, repair its pending restore
-    // size without shrinking the currently maximized window.
-    if(this.widget.classList.contains('is-maximized')){
-      const back=this.widget._restoreSize;
-      if(back){
-        if(previous.expandedWidth&&back.width===previous.expandedWidth)back.width=previous.width;
-        if(previous.shiftedLeft&&back.left===previous.shiftedLeft)back.left=previous.left;
-      }
-      return;
-    }
-    if(this.widget._spatialMode)return;
-    // Preserve any size/position the user manually changed with the usual widget controls.
-    let restored=false;
-    if(previous.expandedWidth&&this.widget.style.width===previous.expandedWidth){
-      this.widget.style.width=previous.width;
-      restored=true;
-    }
-    if(previous.shiftedLeft&&this.widget.style.left===previous.shiftedLeft){
-      this.widget.style.left=previous.left;
-      restored=true;
-    }
-    if(restored&&!this.destroyed)this.widget.saveWidget?.();
-    window.dashboardxUpdateWorkspaceBounds?.();
+  closeFloatingFiles(){
+    this.viewerDragCleanup?.();
+    this.viewerDragCleanup=null;
+    this.filesShade.remove();
+    this.filesViewer.style.transform='';
+    this.filesViewer.style.left='';
+    this.filesViewer.style.top='';
+    this.filesViewer.style.width='';
+    this.filesViewer.style.height='';
+    if(this.viewerHome?.isConnected)this.viewerHome.append(this.filesViewer);
+    else this.filesViewer.remove();
+  }
+  startViewerDrag(event){
+    if(event.button!==0||event.target.closest('button,a,input'))return;
+    if(event.pointerType==='touch'&&event.isPrimary===false)return;
+    event.preventDefault();
+    const rect=this.filesViewer.getBoundingClientRect();
+    const startX=event.clientX,startY=event.clientY;
+    this.filesViewer.style.transform='none';
+    this.filesViewer.style.left=Math.round(rect.left)+'px';
+    this.filesViewer.style.top=Math.round(rect.top)+'px';
+    const onMove=e=>{
+      if(e.pointerId!==event.pointerId)return;
+      this.filesViewer.style.left=Math.max(8,Math.min(window.innerWidth-100,
+        Math.round(rect.left+e.clientX-startX)))+'px';
+      this.filesViewer.style.top=Math.max(8,Math.min(window.innerHeight-85,
+        Math.round(rect.top+e.clientY-startY)))+'px';
+    };
+    const cleanup=()=>{
+      document.removeEventListener('pointermove',onMove);
+      document.removeEventListener('pointerup',onEnd);
+      document.removeEventListener('pointercancel',onEnd);
+      this.viewerDragCleanup=null;
+    };
+    const onEnd=e=>{if(e.pointerId===event.pointerId)cleanup();};
+    this.viewerDragCleanup?.();
+    this.viewerDragCleanup=cleanup;
+    document.addEventListener('pointermove',onMove);
+    document.addEventListener('pointerup',onEnd);
+    document.addEventListener('pointercancel',onEnd);
   }
   closeFiles(){
     this.fileSeq=(this.fileSeq||0)+1;
@@ -581,7 +669,7 @@ export default class OptimaDeclarationsWidget{
     this.filesGrid.replaceChildren();this.filesViewer.hidden=true;
     this.filesCounter.textContent='';this.filesFilename.textContent='';
     this.filesDownload.hidden=true;this.filesDownload.removeAttribute('href');
-    this.collapseFiles();
+    this.closeFloatingFiles();
   }
   viewerFitWidth(image){
     const availableWidth=Math.max(120,this.filesGrid.clientWidth-24);
@@ -684,8 +772,7 @@ export default class OptimaDeclarationsWidget{
     this.filesTitle.textContent='Оригинал: '+item.productType;
     this.viewerEntries=(item.attachments||[]).map(attachment=>({attachment,url:null,error:null}));
     this.viewerIndex=0;
-    this.filesViewer.hidden=false;
-    this.expandForFiles();
+    this.openFloatingFiles();
     this.renderViewerFile();
     const seq=++this.fileSeq;
     for(let index=0;index<this.viewerEntries.length;index++){
