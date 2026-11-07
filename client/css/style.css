@@ -3110,7 +3110,8 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;flex:0 0 auto;
 }
 #workspace-canvas .dx-declarations-tab-group{
-  display:flex;flex:1 1 auto;gap:4px;min-width:0;
+  display:flex;flex:1 1 auto;gap:4px;min-width:0;max-width:100%;
+  overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;
   border:1px solid var(--border);border-radius:8px;padding:3px;background:var(--bg-panel-inside);
 }
 #workspace-canvas .dx-declarations-tab-group button,
@@ -3119,7 +3120,7 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   border-radius:6px;background:transparent;color:var(--text-muted);font:600 11px/1.5 var(--f-family-inter);
   white-space:nowrap;cursor:pointer;
 }
-#workspace-canvas .dx-declarations-tab-group button{flex:1 1 0}
+#workspace-canvas .dx-declarations-tab-group button{flex:1 0 auto;min-width:max-content}
 #workspace-canvas .dx-declarations-tab-group button[aria-pressed="true"]{
   color:var(--text-main);border-color:var(--border);background:var(--bg-panel-light);
 }
