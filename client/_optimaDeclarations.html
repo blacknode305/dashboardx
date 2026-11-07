@@ -1,6 +1,7 @@
 <!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Декларации</title></head><body>
 <template data-widget data-id="optimaDeclarations" data-category="optima" data-title="Декларации">
 <section class="dx-declarations">
+  <div class="dx-declarations-main" data-role="declaration-main">
   <div class="dx-declarations-tabs">
     <div class="dx-declarations-tab-group" role="group" aria-label="Типы документов">
       <button type="button" data-role="declaration-type-tab" data-type="all" aria-pressed="true">Все</button>
@@ -62,9 +63,29 @@
   <p class="optima-status" data-role="declaration-status-text" aria-live="polite"></p>
   <div class="dx-declarations-counts" data-role="declaration-counts"></div>
   <div class="dx-declarations-scroll" data-role="declaration-list"></div>
-  <section class="dx-decl-files-viewer" data-role="declaration-files-viewer" hidden>
-    <div class="dx-decl-import-head"><strong data-role="declaration-files-title">Фотографии документа</strong><button type="button" data-role="declaration-files-close" aria-label="Закрыть">×</button></div>
-    <div class="dx-decl-files-grid" data-role="declaration-files-grid"></div>
-  </section>
+  </div>
+  <aside class="dx-decl-files-viewer" data-role="declaration-files-viewer" hidden aria-label="Оригинал документа">
+    <header class="dx-decl-viewer-header">
+      <div class="dx-decl-viewer-heading">
+        <strong data-role="declaration-files-title">Оригинал документа</strong>
+        <small data-role="declaration-files-counter"></small>
+      </div>
+      <button type="button" class="dx-decl-viewer-close" data-role="declaration-files-close" title="Закрыть оригинал" aria-label="Закрыть оригинал">×</button>
+    </header>
+    <div class="dx-decl-files-toolbar" role="toolbar" aria-label="Управление просмотром">
+      <button type="button" data-role="declaration-files-prev" title="Предыдущая страница" aria-label="Предыдущее фото">‹</button>
+      <button type="button" data-role="declaration-files-next" title="Следующая страница" aria-label="Следующее фото">›</button>
+      <button type="button" class="dx-decl-files-fit" data-role="declaration-files-fit" title="Вписать целиком">Вписать</button>
+      <button type="button" data-role="declaration-files-zoom-out" title="Уменьшить" aria-label="Уменьшить">−</button>
+      <output data-role="declaration-files-zoom-value" aria-live="polite">100%</output>
+      <button type="button" data-role="declaration-files-zoom-in" title="Увеличить" aria-label="Увеличить">+</button>
+      <button type="button" class="dx-decl-files-actual" data-role="declaration-files-actual" title="Исходное разрешение: один пиксель фотографии на один пиксель экрана">1:1</button>
+    </div>
+    <div class="dx-decl-files-stage" data-role="declaration-files-grid" tabindex="0" aria-label="Область просмотра оригинала"></div>
+    <div class="dx-decl-viewer-footer">
+      <span data-role="declaration-files-filename"></span>
+      <a data-role="declaration-files-download" href="#" download hidden>Скачать оригинал</a>
+    </div>
+  </aside>
 </section>
 </template></body></html>
