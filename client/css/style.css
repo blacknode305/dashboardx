@@ -3103,3 +3103,119 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas .dx-decl-form .dx-decl-editor-supplier input[type="search"]:focus-visible{
   outline:2px solid var(--dx-accent);outline-offset:1px;
 }
+
+
+/* Optima document archives: EAEU vs veterinary certificates, review-first private imports. */
+#workspace-canvas .dx-declarations-tabs{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;flex:0 0 auto;
+}
+#workspace-canvas .dx-declarations-tab-group{
+  display:flex;flex:1 1 auto;gap:4px;min-width:0;
+  border:1px solid var(--border);border-radius:8px;padding:3px;background:var(--bg-panel-inside);
+}
+#workspace-canvas .dx-declarations-tab-group button,
+#workspace-canvas .dx-decl-import-trigger{
+  box-sizing:border-box;min-height:30px;padding:5px 10px;border:1px solid transparent;
+  border-radius:6px;background:transparent;color:var(--text-muted);font:600 11px/1.5 var(--f-family-inter);
+  white-space:nowrap;cursor:pointer;
+}
+#workspace-canvas .dx-declarations-tab-group button{flex:1 1 0}
+#workspace-canvas .dx-declarations-tab-group button[aria-pressed="true"]{
+  color:var(--text-main);border-color:var(--border);background:var(--bg-panel-light);
+}
+#workspace-canvas .dx-declarations-tab-group button:hover,
+#workspace-canvas .dx-decl-import-trigger:hover{
+  color:var(--text-main);background:var(--bg-panel-light);
+}
+#workspace-canvas .dx-decl-import-trigger{
+  border-color:var(--border);background:var(--bg-panel-inside);
+}
+#workspace-canvas .dx-decl-import-review,
+#workspace-canvas .dx-decl-files-viewer{
+  box-sizing:border-box;display:flex;flex-direction:column;flex:0 1 auto;gap:9px;min-height:0;
+  max-height:60%;overflow:auto;padding:11px;border:1px solid var(--dx-accent);
+  border-radius:9px;background:var(--bg-panel-inside);
+}
+#workspace-canvas .dx-decl-import-review[hidden],
+#workspace-canvas .dx-decl-files-viewer[hidden],
+#workspace-canvas .dx-decl-form [hidden]{display:none!important}
+#workspace-canvas .dx-decl-import-head{
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+}
+#workspace-canvas .dx-decl-import-head strong{font-size:12px}
+#workspace-canvas .dx-decl-import-head button{
+  background:transparent;color:var(--text-main);border:0;padding:2px 6px;
+  font-size:20px;cursor:pointer;
+}
+#workspace-canvas .dx-decl-import-review>p{margin:0;font-size:11px;color:var(--text-muted)}
+#workspace-canvas .dx-decl-import-items,
+#workspace-canvas .dx-decl-files-grid{
+  display:grid;gap:7px;min-height:0;overflow:auto;
+}
+#workspace-canvas .dx-decl-import-card{
+  display:flex;gap:9px;align-items:flex-start;min-width:0;
+  border:1px solid var(--border);border-radius:8px;padding:7px;
+}
+#workspace-canvas .dx-decl-import-card>img{
+  flex:0 0 72px;width:72px;height:93px;object-fit:cover;border-radius:5px;background:var(--bg-panel-light);
+}
+#workspace-canvas .dx-decl-import-card-body{display:flex;flex-direction:column;gap:3px;min-width:0}
+#workspace-canvas .dx-decl-import-card-body strong{font-size:11px}
+#workspace-canvas .dx-decl-import-card-body :is(span,small){color:var(--text-muted);font-size:10px;overflow-wrap:anywhere}
+#workspace-canvas .dx-decl-import-review>button[data-role="declaration-import-confirm"]{
+  align-self:flex-start;padding:8px 12px;border:1px solid var(--dx-accent);
+  border-radius:7px;background:var(--bg-panel-light);color:var(--text-main);
+  font:600 11px/1.4 var(--f-family-inter);cursor:pointer;
+}
+#workspace-canvas .dx-decl-import-review>button:disabled{opacity:.5;cursor:wait}
+#workspace-canvas .dx-decl-metadata{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+#workspace-canvas .dx-decl-kind,
+#workspace-canvas .dx-decl-review-badge,
+#workspace-canvas .dx-decl-number{
+  display:inline-flex;padding:2px 6px;border-radius:5px;font-size:10px;line-height:1.45;
+  background:var(--bg-panel-light);color:var(--text-muted);overflow-wrap:anywhere;
+}
+#workspace-canvas .dx-decl-review-badge{color:#edc988;background:rgba(174,132,41,.15)}
+#workspace-canvas .dx-decl-number{font-variant-numeric:tabular-nums}
+#workspace-canvas .dx-decl-applicant{
+  font-size:10px;color:var(--text-muted);overflow-wrap:anywhere;
+}
+#workspace-canvas .dx-decl-review-notes{
+  margin:0;color:var(--text-muted);font-size:10px;overflow-wrap:anywhere;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+}
+#workspace-canvas .dx-decl-file{
+  display:grid;gap:6px;min-width:0;margin:0;padding:7px;
+  border:1px solid var(--border);border-radius:8px;
+}
+#workspace-canvas .dx-decl-file img{
+  display:block;max-width:100%;width:auto;max-height:350px;margin:auto;
+  object-fit:contain;border-radius:5px;
+}
+#workspace-canvas .dx-decl-file a{
+  color:var(--text-main);overflow-wrap:anywhere;text-decoration:underline;
+}
+#workspace-canvas .dx-decl-form textarea{
+  box-sizing:border-box;display:block;width:100%;min-height:68px;padding:9px;
+  border:1px solid var(--border);border-radius:8px;background:var(--bg-panel-inside);
+  color:var(--text-main);font:500 12px/1.5 var(--f-family-inter);resize:vertical;
+}
+#workspace-canvas .dx-decl-form>label{
+  display:grid;gap:5px;min-width:0;font-size:11px;
+}
+#workspace-canvas .dx-decl-form .dx-decl-date-fields{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+}
+#workspace-canvas .dx-decl-form .dx-decl-qr-checkbox{
+  display:flex;gap:8px;align-items:flex-start;
+}
+#workspace-canvas .dx-decl-form .dx-decl-qr-checkbox input[type="checkbox"]{
+  width:16px;min-width:16px;min-height:16px;height:16px;
+}
+#workspace-canvas .dx-decl-form input[type="file"]{
+  width:100%;min-height:0;padding:9px 0;border:0;background:transparent;
+}
+@media(max-width:540px){
+  #workspace-canvas .dx-decl-form .dx-decl-date-fields{grid-template-columns:1fr}
+  #workspace-canvas .dx-decl-import-card>img{flex-basis:55px;width:55px;height:78px}
+}
