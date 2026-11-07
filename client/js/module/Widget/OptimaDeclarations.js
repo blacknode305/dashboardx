@@ -332,6 +332,8 @@ export default class OptimaDeclarationsWidget{
         body:JSON.stringify({action:'import',baseRevision:this.revision,records:this.importPack.records})});
       this.closeImport();
       this.filters.type='all';this.filters.status='needs_review';this.statusFilter.value='needs_review';
+      this.filters.search='';this.search.value='';
+      this.filters.supplierId='';this.supplierEditing=false;this.supplier.value='';this.closeSupplier();
       this.scheduleSave();await this.load();
       this.setStatus('Импортировано черновиков: '+response.imported.length+
         ' · пропущено повторов: '+response.skipped.length+'. Проверьте реквизиты и привяжите поставщиков.');
@@ -341,6 +343,7 @@ export default class OptimaDeclarationsWidget{
     }finally{this.importing=false;this.importConfirm.disabled=false;}
   }
   closeFiles(){
+    this.fileSeq=(this.fileSeq||0)+1;
     for(const url of this.fileUrls)URL.revokeObjectURL(url);
     this.fileUrls=[];this.filesGrid.replaceChildren();this.filesViewer.hidden=true;
   }
@@ -556,7 +559,7 @@ export default class OptimaDeclarationsWidget{
     this.dialogRevision=this.revision;
     this.editorWindow.setTitle(item?'Изменить декларацию':'Добавить декларацию');
     const supplier=this.supplierItems().find(s=>String(s.id)===String(item?.supplierId??''));
-    this.editorSupplierId.value=item?String(item.supplierId):'';
+    this.editorSupplierId.value=item?.supplierId!=null?String(item.supplierId):'';
     this.editorSupplierQuery.value=supplier?.name||'';
     this.editorSupplierQuery.setCustomValidity('');
     this.closeEditorSupplier(false);
