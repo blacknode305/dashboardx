@@ -3652,7 +3652,11 @@ body>.dx-decl-floating-viewer .dx-decl-viewer-footer>a[hidden]{display:none!impo
   align-items:center;column-gap:9px;row-gap:4px;
 }
 #workspace-canvas .dx-decl-product-summary::before{
-  grid-column:1;grid-row:1;position:absolute;pointer-events:none;
+  position:absolute;left:11px;top:50%;pointer-events:none;
+  transform:translateY(-50%);
+}
+#workspace-canvas .dx-decl-product[open]>.dx-decl-product-summary::before{
+  transform:translateY(-50%) rotate(90deg);
 }
 #workspace-canvas .dx-decl-product-summary{
   position:relative;padding-left:31px;
