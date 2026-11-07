@@ -1,6 +1,6 @@
 import { getCredential } from '../CredentialStore.js';
 import { attachWidgetInlineEditor } from '../WidgetInlineEditor.js?v=widget-editors-20261101b';
-import { loadOptima, optimaRequest, OPTIMA_POLL_MS, dateISO, norm } from '../OptimaAPI.js';
+import { loadOptima, optimaRequest, OPTIMA_POLL_MS, OPTIMA_BASE, dateISO, norm } from '../OptimaAPI.js';
 const elem=(tag,cls,text)=>{
   const e=document.createElement(tag);
   if(cls)e.className=cls;
@@ -40,7 +40,8 @@ export default class OptimaDeclarationsWidget{
     this.filters={
       search:typeof old.declarationSearch==='string'?old.declarationSearch:'',
       supplierId:typeof old.declarationSupplierId==='string'?old.declarationSupplierId:'',
-      status:['all','expired','urgent','soon','valid','upcoming'].includes(old.declarationStatus)?old.declarationStatus:'all'
+      status:['all','expired','urgent','soon','valid','upcoming','needs_review','confirmed'].includes(old.declarationStatus)?old.declarationStatus:'all',
+      type:['all','eaeu','veterinary'].includes(old.declarationType)?old.declarationType:'all'
     };
     this.db=null;this.revision=null;this.seq=0;this.destroyed=false;this.saving=false;
     this.supplierEditing=false;this.supplierOpen=false;this.supplierActive=-1;this.supplierOptions=[];
@@ -50,6 +51,15 @@ export default class OptimaDeclarationsWidget{
     this.supplierList=get('declaration-supplier-list');this.supplierWrap=get('declaration-supplier-picker');
     this.statusFilter=get('declaration-status-filter');this.statusText=get('declaration-status-text');
     this.counts=get('declaration-counts');this.list=get('declaration-list');
+    this.importReview=get('declaration-import-review');
+    this.importItems=get('declaration-import-items');
+    this.importMessage=get('declaration-import-message');
+    this.importConfirm=get('declaration-import-confirm');
+    this.importFile=get('declaration-import-file');
+    this.filesViewer=get('declaration-files-viewer');
+    this.filesGrid=get('declaration-files-grid');
+    this.filesTitle=get('declaration-files-title');
+    this.fileUrls=[];this.importPack=null;
     this.search.value=this.filters.search;this.statusFilter.value=this.filters.status;
     this.unbind=[];
     this.listen=(node,event,fn)=>{
@@ -99,6 +109,16 @@ export default class OptimaDeclarationsWidget{
     this.listen(this.supplierWrap,'focusout',event=>{
       if(!this.supplierWrap.contains(event.relatedTarget))this.closeSupplier();
     });
+    for(const button of widget.querySelectorAll('[data-role="declaration-type-tab"]')){
+      this.listen(button,'click',()=>{
+        this.filters.type=button.dataset.type;this.render();this.scheduleSave();
+      });
+    }
+    this.listen(get('declaration-import-trigger'),'click',()=>this.importFile.click());
+    this.listen(this.importFile,'change',()=>this.readImportFile());
+    this.listen(get('declaration-import-cancel'),'click',()=>this.closeImport());
+    this.listen(this.importConfirm,'click',()=>this.commitImport());
+    this.listen(get('declaration-files-close'),'click',()=>this.closeFiles());
     this.listen(get('declaration-add'),'click',()=>this.openEditor(null));
     this.listen(this.list,'click',event=>{
       const button=event.target.closest('button[data-action][data-id]');
@@ -106,6 +126,7 @@ export default class OptimaDeclarationsWidget{
       const entry=(this.db?.declarations||[]).find(x=>String(x.id)===button.dataset.id);
       if(!entry)return;
       if(button.dataset.action==='edit')this.openEditor(entry);
+      if(button.dataset.action==='photos')this.openFiles(entry);
       if(button.dataset.action==='delete')this.deleteEntry(entry);
     });
     this.onExternalUpdate=()=>{if(!this.editorOpen)this.load();};
@@ -117,7 +138,8 @@ export default class OptimaDeclarationsWidget{
   saveFilters(){
     this.store?.updateWidgetState(this.id,{
       declarationSearch:this.filters.search,declarationSupplierId:this.filters.supplierId,
-      declarationStatus:this.filters.status
+      declarationStatus:this.filters.status,
+      declarationType:this.filters.type
     });
   }
   scheduleSave(){clearTimeout(this.saveTimer);this.saveTimer=setTimeout(()=>this.saveFilters(),250);}
@@ -177,66 +199,179 @@ export default class OptimaDeclarationsWidget{
   }
   render(){
     this.list.replaceChildren();this.counts.replaceChildren();
-    if(!this.db)return;
-    const suppliers=new Map(this.supplierItems().map(s=>[String(s.id),String(s.name)]));
-    const today=dateISO();
-    const all=(Array.isArray(this.db.declarations)?this.db.declarations:[]).map(item=>({
-      ...item,supplierName:suppliers.get(String(item.supplierId))||'Поставщик удалён · ID '+item.supplierId,
-      status:classify(item,today)
-    }));
-    for(const [key,title] of GROUPS){
-      const count=all.filter(x=>x.status===key).length;
-      this.counts.append(elem('span','dx-decl-count dx-decl-'+key,title+': '+count));
+    for(const button of this.widget.querySelectorAll('[data-role="declaration-type-tab"]')){
+      button.setAttribute('aria-pressed',String(button.dataset.type===this.filters.type));
     }
-    const query=norm(this.filters.search);
-    const supplierText=this.supplierEditing?norm(this.supplier.value):'';
-    const rows=all.filter(x=>
+    if(!this.db)return;
+    const suppliers=new Map(this.supplierItems().map(x=>[String(x.id),String(x.name)]));
+    const today=dateISO();
+    const all=(Array.isArray(this.db.declarations)?this.db.declarations:[]).map(entry=>({
+      ...entry,documentType:entry.documentType||'eaeu',
+      supplierName:entry.supplierId?
+        (suppliers.get(String(entry.supplierId))||'Поставщик не найден · ID '+entry.supplierId):
+        'Поставщик ещё не выбран',
+      status:classify(entry,today),
+      reviewStatus:entry.reviewStatus||'confirmed'
+    }));
+    const pool=all.filter(x=>this.filters.type==='all'||this.filters.type===x.documentType);
+    this.counts.append(elem('span','dx-decl-count','Всего: '+pool.length));
+    this.counts.append(elem('span','dx-decl-count dx-decl-unreviewed',
+      'На проверке: '+pool.filter(x=>x.reviewStatus==='needs_review').length));
+    for(const [id,title] of GROUPS){
+      this.counts.append(elem('span','dx-decl-count dx-decl-'+id,
+        title+': '+pool.filter(x=>x.status===id).length));
+    }
+    const typed=norm(this.filters.search),supplierTyped=this.supplierEditing?norm(this.supplier.value):'';
+    const filtered=pool.filter(x=>
       (!this.filters.supplierId||String(x.supplierId)===this.filters.supplierId)&&
-      (!supplierText||norm(x.supplierName).includes(supplierText))&&
-      (this.filters.status==='all'||x.status===this.filters.status)&&
-      (!query||norm(x.productType+' '+x.supplierName).includes(query)));
-    if(!rows.length){
+      (!supplierTyped||norm(x.supplierName).includes(supplierTyped))&&
+      (this.filters.status==='all'||this.filters.status===x.status||this.filters.status===x.reviewStatus)&&
+      (!typed||norm([x.productType,x.supplierName,x.applicantName,x.documentNumber,x.productDescription].join(' ')).includes(typed))
+    );
+    if(!filtered.length){
       this.list.append(elem('p','dx-decl-empty',all.length?
-        'По выбранным фильтрам декларации не найдены.':
-        'Деклараций пока нет. Нажмите «+», чтобы добавить первую.'));
+        'По выбранным фильтрам документы не найдены.':
+        'Документов пока нет. Нажмите «+» или импортируйте пакет фотографий.'));
       return;
     }
-    for(const [key,title] of GROUPS){
-      const entries=rows.filter(x=>x.status===key).sort((a,b)=>
+    for(const [id,title] of GROUPS){
+      const entries=filtered.filter(x=>x.status===id).sort((a,b)=>
         String(a.endDate).localeCompare(String(b.endDate))||
         a.supplierName.localeCompare(b.supplierName,'ru')||
         String(a.productType).localeCompare(String(b.productType),'ru'));
       if(!entries.length)continue;
-      const group=elem('details','dx-decl-group dx-decl-'+key);
-      group.dataset.group=key;group.open=this.groupOpen[key]!==false;
-      group.addEventListener('toggle',()=>{this.groupOpen[key]=group.open;});
+      const group=elem('details','dx-decl-group dx-decl-'+id);
+      group.dataset.group=id;group.open=this.groupOpen[id]!==false;
+      group.addEventListener('toggle',()=>{this.groupOpen[id]=group.open;});
       const summary=elem('summary','dx-decl-group-title');
       summary.append(elem('span','',title),elem('span','dx-decl-total',entries.length));
       group.append(summary);
-      const content=elem('div','dx-decl-group-body');
+      const container=elem('div','dx-decl-group-body');
       for(const item of entries){
         const card=elem('article','dx-decl-card');
         const main=elem('div','dx-decl-card-main');
         const head=elem('div','dx-decl-card-head');
-        head.append(elem('strong','',item.productType),
-          elem('span','dx-decl-pill dx-decl-'+item.status,remaining(item,today)));
-        main.append(head,elem('div','dx-decl-supplier-name',item.supplierName));
+        const heading=elem('strong','',item.productType);
+        head.append(heading,elem('span','dx-decl-pill dx-decl-'+item.status,remaining(item,today)));
+        main.append(head);
+        const meta=elem('div','dx-decl-metadata');
+        meta.append(elem('span','dx-decl-kind',item.documentType==='veterinary'?'Ветсправка':'ЕАЭС'));
+        if(item.reviewStatus==='needs_review')meta.append(elem('span','dx-decl-review-badge','На проверке'));
+        if(item.documentNumber)meta.append(elem('span','dx-decl-number',item.documentNumber));
+        main.append(meta);
+        main.append(elem('div','dx-decl-supplier-name',item.supplierName));
+        if(item.applicantName)main.append(elem('div','dx-decl-applicant','Документ: '+item.applicantName));
         const dates=elem('div','dx-decl-dates');
         dates.append(elem('span','','Начало: '+prettyDate(item.startDate)),
           elem('span','','Окончание: '+prettyDate(item.endDate)));
         main.append(dates);
+        if(item.reviewStatus==='needs_review'&&item.notes)main.append(elem('p','dx-decl-review-notes',item.notes));
         const actions=elem('div','dx-decl-card-actions');
-        for(const [action,label,title] of [['edit','✎','Изменить'],['delete','×','Удалить']]){
-          const button=elem('button','dx-decl-action',label);
-          button.type='button';button.title=title+' декларацию';
-          button.setAttribute('aria-label',title+' декларацию '+item.productType);
+        const buttons=[['edit','✎','Проверить / изменить']];
+        if(item.attachments?.length)buttons.push(['photos','▧','Фотографии ('+item.attachments.length+')']);
+        buttons.push(['delete','×','Удалить']);
+        for(const [action,txt,label] of buttons){
+          const button=elem('button','dx-decl-action',txt);button.type='button';
+          button.title=label;button.setAttribute('aria-label',label+' '+item.productType);
           button.dataset.action=action;button.dataset.id=String(item.id);
           actions.append(button);
         }
-        card.append(main,actions);content.append(card);
+        card.append(main,actions);container.append(card);
       }
-      group.append(content);this.list.append(group);
+      group.append(container);this.list.append(group);
     }
+  }
+  closeImport(){
+    this.importPack=null;this.importReview.hidden=true;
+    this.importFile.value='';
+    this.importItems.replaceChildren();
+    this.importConfirm.disabled=false;
+  }
+  async readImportFile(){
+    const file=this.importFile.files?.[0];
+    if(!file)return;
+    this.closeImport();
+    if(file.size>20*1024*1024){this.setStatus('Пакет слишком большой (максимум 20 МБ).');return;}
+    try{
+      const text=await file.text(),data=JSON.parse(text);
+      if(data.format!=='dashboardx-optima-documents-v1'||!Array.isArray(data.records)||!data.records.length||data.records.length>12)
+        throw Error('Это не пакет документов DashboardX.');
+      for(const record of data.records){
+        if(!['eaeu','veterinary'].includes(record.documentType)||!record.productType||!record.endDate||
+           !Array.isArray(record.files)||!record.files.length)throw Error('В пакете отсутствуют обязательные поля.');
+      }
+      this.importPack=data;
+      this.importReview.hidden=false;this.importItems.replaceChildren();
+      for(const record of data.records){
+        const card=elem('article','dx-decl-import-card');
+        const picture=record.files.find(x=>x.mime?.startsWith('image/')&&x.base64);
+        if(picture){
+          const image=document.createElement('img');image.alt='Исходная фотография';
+          image.src='data:'+picture.mime+';base64,'+picture.base64;card.append(image);
+        }
+        const details=elem('div','dx-decl-import-card-body');
+        details.append(elem('strong','',record.productType));
+        details.append(elem('span','',record.documentType==='veterinary'?'Ветеринарная справка':'Декларация ЕАЭС'));
+        details.append(elem('span','','№ '+(record.documentNumber||'не указан')));
+        details.append(elem('span','','Срок: '+prettyDate(record.startDate)+' – '+prettyDate(record.endDate)));
+        details.append(elem('span','','Заявитель: '+(record.applicantName||'не указан')));
+        if(record.notes)details.append(elem('small','',record.notes));
+        card.append(details);this.importItems.append(card);
+      }
+      this.importMessage.textContent='Найдено документов: '+data.records.length+
+        '. Данные и фотографии сохранятся в закрытой базе как «На проверке». Сначала сравните реквизиты с оригиналами.';
+      this.importReview.scrollIntoView({block:'nearest'});
+    }catch(error){this.setStatus('Не удалось прочитать пакет: '+error.message);}
+  }
+  async commitImport(){
+    if(this.importing||!this.importPack||this.revision==null)return;
+    this.importing=true;this.importConfirm.disabled=true;
+    this.importMessage.textContent='Сохраняю фотографии и черновики в PRO OPTIMA…';
+    try{
+      const response=await optimaRequest('/api/dashboardx/declarations',{method:'POST',
+        body:JSON.stringify({action:'import',baseRevision:this.revision,records:this.importPack.records})});
+      this.closeImport();
+      this.filters.type='all';this.filters.status='needs_review';this.statusFilter.value='needs_review';
+      this.scheduleSave();await this.load();
+      this.setStatus('Импортировано черновиков: '+response.imported.length+
+        ' · пропущено повторов: '+response.skipped.length+'. Проверьте реквизиты и привяжите поставщиков.');
+    }catch(error){
+      this.importMessage.textContent='Импорт не выполнен: '+error.message+
+        (error.status===409?' Обновите документы и повторите импорт.':'');
+    }finally{this.importing=false;this.importConfirm.disabled=false;}
+  }
+  closeFiles(){
+    for(const url of this.fileUrls)URL.revokeObjectURL(url);
+    this.fileUrls=[];this.filesGrid.replaceChildren();this.filesViewer.hidden=true;
+  }
+  async openFiles(item){
+    this.closeFiles();
+    this.filesViewer.hidden=false;
+    this.filesTitle.textContent='Оригиналы: '+item.productType;
+    this.filesGrid.append(elem('p','dx-decl-file-load','Открываю файлы из защищённого хранилища…'));
+    const seq=this.fileSeq=(this.fileSeq||0)+1;
+    const photos=[];
+    for(const attachment of item.attachments||[]){
+      try{
+        const resp=await fetch(OPTIMA_BASE+'/api/dashboardx/declarations/attachments/'+
+          encodeURIComponent(item.id)+'/'+encodeURIComponent(attachment.id),{
+          headers:{Authorization:'Bearer '+getCredential('optima')},cache:'no-store'
+        });
+        if(!resp.ok)throw Error('HTTP '+resp.status);
+        const blob=await resp.blob();
+        if(this.destroyed||this.fileSeq!==seq)return;
+        const url=URL.createObjectURL(blob);this.fileUrls.push(url);
+        const figure=elem('figure','dx-decl-file');
+        if(String(attachment.mime).startsWith('image/')){
+          const image=document.createElement('img');image.src=url;image.alt=attachment.name;figure.append(image);
+        }
+        const link=elem('a','',attachment.name||'Открыть документ');
+        link.href=url;link.download=attachment.name||'документ';link.target='_blank';link.rel='noopener';
+        figure.append(link);photos.push(figure);
+      }catch(error){photos.push(elem('p','dx-decl-file-error','Файл недоступен: '+error.message));}
+    }
+    if(this.destroyed||this.fileSeq!==seq)return;
+    this.filesGrid.replaceChildren(...photos);
   }
   buildEditor(){
     if(this.editorWindow)return;
@@ -447,6 +582,7 @@ export default class OptimaDeclarationsWidget{
     clearTimeout(this.saveTimer);this.saveFilters();
     window.removeEventListener('dashboardx:optima-updated',this.onExternalUpdate);
     for(const fn of this.unbind)fn();
+    this.closeImport();this.closeFiles();
     this.editorWindow?.destroy();
   }
 }
