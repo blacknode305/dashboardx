@@ -39,10 +39,10 @@ html,body{margin:0;background:#e9edef;color:#20252a;font:12px/1.45 Arial,Helveti
 .print-grid tbody tr:nth-child(even){background:#f7f8f9}
 .print-declarations-company{margin:13px 0 16px;break-inside:auto;page-break-inside:auto}
 .print-declarations-company-title{margin:0;padding:7px 9px;border:1px solid #cbd3d9;background:#edf1f3;font-size:13px;font-weight:700;break-after:avoid;page-break-after:avoid}
-.print-declarations th:nth-child(1){width:40%}
-.print-declarations th:nth-child(2){width:34%}
+.print-declarations th:nth-child(1){width:36%}
+.print-declarations th:nth-child(2){width:31%}
 .print-declarations th:nth-child(3){width:13%}
-.print-declarations th:nth-child(4){width:13%}
+.print-declarations th:nth-child(4){width:20%;white-space:nowrap;overflow-wrap:normal}
 .print-declarations td{font-size:11px}
 .print-declarations td:nth-child(2){font-size:10px;overflow-wrap:anywhere}
 .print-declarations thead{display:table-header-group}
