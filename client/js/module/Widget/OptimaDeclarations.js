@@ -40,12 +40,12 @@ export default class OptimaDeclarationsWidget{
     this.filters={
       search:typeof old.declarationSearch==='string'?old.declarationSearch:'',
       supplierId:typeof old.declarationSupplierId==='string'?old.declarationSupplierId:'',
-      status:['all','expired','urgent','soon','valid','upcoming','needs_review','confirmed'].includes(old.declarationStatus)?old.declarationStatus:'all',
-      type:['all','eaeu','veterinary'].includes(old.declarationType)?old.declarationType:'all'
+      status:['all','expired','urgent','soon','valid','upcoming','needs_review','confirmed','replacement_requested'].includes(old.declarationStatus)?old.declarationStatus:'all',
+      type:['all','eaeu','veterinary','archive'].includes(old.declarationType)?old.declarationType:'all'
     };
     this.db=null;this.revision=null;this.seq=0;this.destroyed=false;this.saving=false;
     this.supplierEditing=false;this.supplierOpen=false;this.supplierActive=-1;this.supplierOptions=[];
-    this.groupOpen=Object.fromEntries(GROUPS.map(([k])=>[k,true]));
+    this.groupOpen={...Object.fromEntries(GROUPS.map(([k])=>[k,true])),archive:true};
     const get=r=>widget.querySelector('[data-role="'+r+'"]');
     this.search=get('declaration-search');this.supplier=get('declaration-supplier-query');
     this.supplierList=get('declaration-supplier-list');this.supplierWrap=get('declaration-supplier-picker');
@@ -60,6 +60,12 @@ export default class OptimaDeclarationsWidget{
     this.filesGrid=get('declaration-files-grid');
     this.filesTitle=get('declaration-files-title');
     this.fileUrls=[];this.importPack=null;
+    this.archivePanel=get('declaration-archive-panel');
+    this.archiveTitle=get('declaration-archive-title');
+    this.archiveReason=get('declaration-archive-reason');
+    this.archiveNote=get('declaration-archive-note');
+    this.archiveConfirm=get('declaration-archive-confirm');
+    this.archiveId=null;this.replacesId=null;this.lifecycleBusy=false;
     this.search.value=this.filters.search;this.statusFilter.value=this.filters.status;
     this.unbind=[];
     this.listen=(node,event,fn)=>{
@@ -119,6 +125,9 @@ export default class OptimaDeclarationsWidget{
     this.listen(get('declaration-import-cancel'),'click',()=>this.closeImport());
     this.listen(this.importConfirm,'click',()=>this.commitImport());
     this.listen(get('declaration-files-close'),'click',()=>this.closeFiles());
+    this.listen(get('declaration-archive-cancel'),'click',()=>this.closeArchivePanel());
+    this.listen(get('declaration-archive-cancel-secondary'),'click',()=>this.closeArchivePanel());
+    this.listen(this.archiveConfirm,'click',()=>this.commitArchive());
     this.listen(get('declaration-add'),'click',()=>this.openEditor(null));
     this.listen(this.list,'click',event=>{
       const button=event.target.closest('button[data-action][data-id]');
@@ -127,7 +136,11 @@ export default class OptimaDeclarationsWidget{
       if(!entry)return;
       if(button.dataset.action==='edit')this.openEditor(entry);
       if(button.dataset.action==='photos')this.openFiles(entry);
-      if(button.dataset.action==='delete')this.deleteEntry(entry);
+      if(button.dataset.action==='archive')this.showArchivePanel(entry);
+      if(button.dataset.action==='restore')this.updateLifecycle('restore',entry);
+      if(button.dataset.action==='request')this.updateLifecycle('request_replacement',entry);
+      if(button.dataset.action==='cancel_request')this.updateLifecycle('cancel_replacement',entry);
+      if(button.dataset.action==='renew')this.openEditor(null,entry);
     });
     this.onExternalUpdate=()=>{if(!this.editorOpen)this.load();};
     window.addEventListener('dashboardx:optima-updated',this.onExternalUpdate);
