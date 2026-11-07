@@ -3219,3 +3219,66 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   #workspace-canvas .dx-decl-form .dx-decl-date-fields{grid-template-columns:1fr}
   #workspace-canvas .dx-decl-import-card>img{flex-basis:55px;width:55px;height:78px}
 }
+
+
+/* Supplier document history: archival lifecycle is independent of validity/expiry. */
+#workspace-canvas .dx-decl-archive-panel{
+  display:flex;flex-direction:column;gap:9px;flex:0 1 auto;max-height:65%;
+  overflow-y:auto;padding:12px;border:1px solid var(--dx-accent);
+  border-radius:9px;background:var(--bg-panel-inside);
+}
+#workspace-canvas .dx-decl-archive-panel[hidden]{display:none!important}
+#workspace-canvas .dx-decl-archive-panel>label{
+  display:grid;gap:5px;font-size:11px;color:var(--text-main);
+}
+#workspace-canvas .dx-decl-archive-panel :is(select,textarea){
+  box-sizing:border-box;width:100%;min-height:34px;padding:7px 9px;
+  border:1px solid var(--border);border-radius:7px;
+  background:var(--bg-panel-inside);color:var(--text-main);
+  font:500 11px/1.5 var(--f-family-inter);
+}
+#workspace-canvas .dx-decl-archive-panel textarea{resize:vertical;min-height:56px}
+#workspace-canvas .dx-decl-archive-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#workspace-canvas .dx-decl-archive-actions button{
+  min-height:32px;padding:6px 11px;border:1px solid var(--border);
+  border-radius:7px;background:var(--bg-panel-inside);
+  color:var(--text-main);font:600 11px/1.5 var(--f-family-inter);cursor:pointer;
+}
+#workspace-canvas .dx-decl-archive-actions button:first-child{
+  border-color:var(--dx-accent);background:var(--bg-panel-light);
+}
+#workspace-canvas .dx-decl-archive-actions button:hover:enabled{
+  border-color:var(--dx-hover-border);background:var(--bg-panel-light);
+}
+#workspace-canvas .dx-decl-archive-actions button:disabled{opacity:.5;cursor:wait}
+#workspace-canvas .dx-decl-archive-panel>small{color:var(--text-muted);font-size:10px}
+#workspace-canvas .dx-decl-group.dx-decl-archive{border-left:3px solid #8c9aaa}
+#workspace-canvas .dx-decl-archived-badge,
+#workspace-canvas .dx-decl-renew-requested{
+  display:inline-flex;align-items:center;padding:2px 7px;border-radius:5px;
+  border:1px solid var(--border);font-size:10px;line-height:1.4;
+  color:#b8c4d4;background:rgba(102,118,140,.14);
+}
+#workspace-canvas .dx-decl-renew-requested{
+  color:#efd096;border-color:rgba(195,150,65,.25);background:rgba(180,129,34,.12);
+}
+#workspace-canvas .dx-decl-archive-chip{color:#bac6d1;border-color:rgba(135,156,179,.4)}
+#workspace-canvas .dx-decl-card-actions{
+  flex-wrap:wrap;justify-content:flex-end;max-width:190px;
+}
+#workspace-canvas .dx-decl-action.dx-decl-action-label{
+  width:auto;min-width:50px;height:27px;padding:3px 8px;
+  font:600 10px/1.3 var(--f-family-inter);white-space:normal;
+  text-align:center;
+}
+#workspace-canvas .dx-decl-renewal-hint{
+  margin:0;padding:8px 10px;border:1px solid var(--dx-accent);
+  border-radius:7px;color:var(--text-main);font-size:11px;
+  background:var(--bg-panel-light);
+}
+#workspace-canvas .dx-decl-renewal-hint[hidden]{display:none!important}
+@media(max-width:520px){
+  #workspace-canvas .dx-decl-card{flex-wrap:wrap}
+  #workspace-canvas .dx-decl-card-actions{max-width:none;justify-content:flex-start;width:100%}
+  #workspace-canvas .dx-declarations-tab-group button{padding:5px 6px}
+}
