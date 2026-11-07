@@ -6,6 +6,7 @@
       <button type="button" data-role="declaration-type-tab" data-type="all" aria-pressed="true">Все</button>
       <button type="button" data-role="declaration-type-tab" data-type="eaeu" aria-pressed="false">ЕАЭС</button>
       <button type="button" data-role="declaration-type-tab" data-type="veterinary" aria-pressed="false">Ветсправки</button>
+      <button type="button" data-role="declaration-type-tab" data-type="archive" aria-pressed="false">Архив</button>
     </div>
     <button type="button" class="dx-decl-import-trigger" data-role="declaration-import-trigger" title="Импортировать фотографии и реквизиты из подготовленного пакета">Импорт</button>
     <input type="file" data-role="declaration-import-file" accept=".json,application/json" hidden>
@@ -15,6 +16,27 @@
     <p data-role="declaration-import-message">Проверьте реквизиты перед загрузкой. Документы сохранятся с пометкой «На проверке».</p>
     <div data-role="declaration-import-items" class="dx-decl-import-items"></div>
     <button type="button" data-role="declaration-import-confirm">Импортировать черновики</button>
+  </section>
+  <section class="dx-decl-archive-panel" data-role="declaration-archive-panel" hidden>
+    <div class="dx-decl-import-head">
+      <strong data-role="declaration-archive-title">Перенести документ в архив</strong>
+      <button type="button" data-role="declaration-archive-cancel" title="Закрыть" aria-label="Отмена">×</button>
+    </div>
+    <label>Причина
+      <select data-role="declaration-archive-reason">
+        <option value="expired">Истёк срок действия</option>
+        <option value="replaced">Получен новый документ</option>
+        <option value="other">Другая причина</option>
+      </select>
+    </label>
+    <label>Примечание (необязательно)
+      <textarea data-role="declaration-archive-note" rows="2" maxlength="300" placeholder="Например, запросили новый сертификат 07.11.2026"></textarea>
+    </label>
+    <div class="dx-decl-archive-actions">
+      <button type="button" data-role="declaration-archive-confirm">Сохранить в архив</button>
+      <button type="button" data-role="declaration-archive-cancel-secondary">Отмена</button>
+    </div>
+    <small>Номер, сроки, связанные фотографии и история запроса останутся в базе. Из рабочего списка запись исчезнет.</small>
   </section>
   <div class="dx-declarations-filters">
     <div class="dx-declarations-search">
@@ -34,6 +56,7 @@
       <option value="upcoming">Ещё не действуют</option>
       <option value="needs_review">На проверке</option>
       <option value="confirmed">Проверенные вручную</option>
+      <option value="replacement_requested">Запрошен новый документ</option>
     </select>
   </div>
   <p class="optima-status" data-role="declaration-status-text" aria-live="polite"></p>

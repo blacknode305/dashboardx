@@ -17,6 +17,7 @@ const GROUPS=[
   ['valid','Действуют'],
   ['upcoming','Ещё не действуют']
 ];
+const ARCHIVE_REASONS={expired:'Истёк срок',replaced:'Получен новый документ',other:'Другая причина'};
 const classify=(x,today)=>{
   if(x.endDate<today)return 'expired';
   if(x.startDate>today)return 'upcoming';
@@ -40,12 +41,12 @@ export default class OptimaDeclarationsWidget{
     this.filters={
       search:typeof old.declarationSearch==='string'?old.declarationSearch:'',
       supplierId:typeof old.declarationSupplierId==='string'?old.declarationSupplierId:'',
-      status:['all','expired','urgent','soon','valid','upcoming','needs_review','confirmed'].includes(old.declarationStatus)?old.declarationStatus:'all',
-      type:['all','eaeu','veterinary'].includes(old.declarationType)?old.declarationType:'all'
+      status:['all','expired','urgent','soon','valid','upcoming','needs_review','confirmed','replacement_requested'].includes(old.declarationStatus)?old.declarationStatus:'all',
+      type:['all','eaeu','veterinary','archive'].includes(old.declarationType)?old.declarationType:'all'
     };
     this.db=null;this.revision=null;this.seq=0;this.destroyed=false;this.saving=false;
     this.supplierEditing=false;this.supplierOpen=false;this.supplierActive=-1;this.supplierOptions=[];
-    this.groupOpen=Object.fromEntries(GROUPS.map(([k])=>[k,true]));
+    this.groupOpen={...Object.fromEntries(GROUPS.map(([k])=>[k,true])),archive:true};
     const get=r=>widget.querySelector('[data-role="'+r+'"]');
     this.search=get('declaration-search');this.supplier=get('declaration-supplier-query');
     this.supplierList=get('declaration-supplier-list');this.supplierWrap=get('declaration-supplier-picker');
@@ -60,6 +61,12 @@ export default class OptimaDeclarationsWidget{
     this.filesGrid=get('declaration-files-grid');
     this.filesTitle=get('declaration-files-title');
     this.fileUrls=[];this.importPack=null;
+    this.archivePanel=get('declaration-archive-panel');
+    this.archiveTitle=get('declaration-archive-title');
+    this.archiveReason=get('declaration-archive-reason');
+    this.archiveNote=get('declaration-archive-note');
+    this.archiveConfirm=get('declaration-archive-confirm');
+    this.archiveId=null;this.replacesId=null;this.lifecycleBusy=false;
     this.search.value=this.filters.search;this.statusFilter.value=this.filters.status;
     this.unbind=[];
     this.listen=(node,event,fn)=>{
@@ -119,6 +126,9 @@ export default class OptimaDeclarationsWidget{
     this.listen(get('declaration-import-cancel'),'click',()=>this.closeImport());
     this.listen(this.importConfirm,'click',()=>this.commitImport());
     this.listen(get('declaration-files-close'),'click',()=>this.closeFiles());
+    this.listen(get('declaration-archive-cancel'),'click',()=>this.closeArchivePanel());
+    this.listen(get('declaration-archive-cancel-secondary'),'click',()=>this.closeArchivePanel());
+    this.listen(this.archiveConfirm,'click',()=>this.commitArchive());
     this.listen(get('declaration-add'),'click',()=>this.openEditor(null));
     this.listen(this.list,'click',event=>{
       const button=event.target.closest('button[data-action][data-id]');
@@ -127,7 +137,11 @@ export default class OptimaDeclarationsWidget{
       if(!entry)return;
       if(button.dataset.action==='edit')this.openEditor(entry);
       if(button.dataset.action==='photos')this.openFiles(entry);
-      if(button.dataset.action==='delete')this.deleteEntry(entry);
+      if(button.dataset.action==='archive')this.showArchivePanel(entry);
+      if(button.dataset.action==='restore')this.updateLifecycle('restore',entry);
+      if(button.dataset.action==='request')this.updateLifecycle('request_replacement',entry);
+      if(button.dataset.action==='cancel_request')this.updateLifecycle('cancel_replacement',entry);
+      if(button.dataset.action==='renew')this.openEditor(null,entry);
     });
     this.onExternalUpdate=()=>{if(!this.editorOpen)this.load();};
     window.addEventListener('dashboardx:optima-updated',this.onExternalUpdate);
@@ -213,11 +227,17 @@ export default class OptimaDeclarationsWidget{
       status:classify(entry,today),
       reviewStatus:entry.reviewStatus||'confirmed'
     }));
-    const pool=all.filter(x=>this.filters.type==='all'||this.filters.type===x.documentType);
-    this.counts.append(elem('span','dx-decl-count','Всего: '+pool.length));
+    const inArchive=this.filters.type==='archive';
+    const pool=all.filter(x=>inArchive?Boolean(x.archivedAt):
+      !x.archivedAt&&(this.filters.type==='all'||this.filters.type===x.documentType));
+    this.counts.append(elem('span','dx-decl-count',inArchive?'В архиве: '+pool.length:'В работе: '+pool.length));
+    if(!inArchive)this.counts.append(elem('span','dx-decl-count dx-decl-archive-chip',
+      'Архив: '+all.filter(x=>Boolean(x.archivedAt)).length));
+    if(!inArchive)this.counts.append(elem('span','dx-decl-count dx-decl-urgent',
+      'Запрошены новые: '+pool.filter(x=>Boolean(x.replacementRequestedAt)).length));
     this.counts.append(elem('span','dx-decl-count dx-decl-unreviewed',
       'На проверке: '+pool.filter(x=>x.reviewStatus==='needs_review').length));
-    for(const [id,title] of GROUPS){
+    for(const [id,title] of (inArchive?[]:GROUPS)){
       this.counts.append(elem('span','dx-decl-count dx-decl-'+id,
         title+': '+pool.filter(x=>x.status===id).length));
     }
@@ -225,7 +245,9 @@ export default class OptimaDeclarationsWidget{
     const filtered=pool.filter(x=>
       (!this.filters.supplierId||String(x.supplierId)===this.filters.supplierId)&&
       (!supplierTyped||norm(x.supplierName).includes(supplierTyped))&&
-      (this.filters.status==='all'||this.filters.status===x.status||this.filters.status===x.reviewStatus)&&
+      (this.filters.status==='all'||this.filters.status===x.status||
+       this.filters.status===x.reviewStatus||
+       (this.filters.status==='replacement_requested'&&Boolean(x.replacementRequestedAt)))&&
       (!typed||norm([x.productType,x.supplierName,x.applicantName,x.documentNumber,x.productDescription].join(' ')).includes(typed))
     );
     if(!filtered.length){
@@ -234,8 +256,10 @@ export default class OptimaDeclarationsWidget{
         'Документов пока нет. Нажмите «+» или импортируйте пакет фотографий.'));
       return;
     }
-    for(const [id,title] of GROUPS){
-      const entries=filtered.filter(x=>x.status===id).sort((a,b)=>
+    for(const [id,title] of (inArchive?[['archive','Архивные документы']]:GROUPS)){
+      const entries=(inArchive?filtered:filtered.filter(x=>x.status===id)).sort((a,b)=>
+        inArchive?String(b.archivedAt).localeCompare(String(a.archivedAt)):
+
         String(a.endDate).localeCompare(String(b.endDate))||
         a.supplierName.localeCompare(b.supplierName,'ru')||
         String(a.productType).localeCompare(String(b.productType),'ru'));
@@ -257,6 +281,10 @@ export default class OptimaDeclarationsWidget{
         const meta=elem('div','dx-decl-metadata');
         meta.append(elem('span','dx-decl-kind',item.documentType==='veterinary'?'Ветсправка':'ЕАЭС'));
         if(item.reviewStatus==='needs_review')meta.append(elem('span','dx-decl-review-badge','На проверке'));
+        if(item.replacementRequestedAt)meta.append(elem('span','dx-decl-renew-requested',
+          'Запрошен новый · '+prettyDate(item.replacementRequestedAt.slice(0,10))));
+        if(item.archivedAt)meta.append(elem('span','dx-decl-archived-badge',
+          'В архиве · '+prettyDate(item.archivedAt.slice(0,10))));
         if(item.documentNumber)meta.append(elem('span','dx-decl-number',item.documentNumber));
         main.append(meta);
         main.append(elem('div','dx-decl-supplier-name',item.supplierName));
@@ -273,12 +301,34 @@ export default class OptimaDeclarationsWidget{
           elem('span','','Окончание: '+prettyDate(item.endDate)));
         main.append(dates);
         if(item.reviewStatus==='needs_review'&&item.notes)main.append(elem('p','dx-decl-review-notes',item.notes));
+        if(item.replacesId){
+          const previous=all.find(x=>String(x.id)===String(item.replacesId));
+          main.append(elem('div','dx-decl-applicant','Взамен документа: '+(previous?.documentNumber||previous?.productType||item.replacesId)));
+        }
+        const later=all.filter(x=>String(x.replacesId||'')===String(item.id));
+        if(later.length)main.append(elem('div','dx-decl-applicant',
+          'Новый документ: '+later.map(x=>x.documentNumber||x.productType).join(' · ')));
+        if(item.archivedAt){
+          const reason=ARCHIVE_REASONS[item.archiveReason]||'Архив';
+          main.append(elem('div','dx-decl-applicant','Причина: '+reason+
+            (item.archiveNote?' · '+item.archiveNote:'')));
+        }
         const actions=elem('div','dx-decl-card-actions');
         const buttons=[['edit','✎','Проверить / изменить']];
         if(item.attachments?.length)buttons.push(['photos','▧','Фотографии ('+item.attachments.length+')']);
-        buttons.push(['delete','×','Удалить']);
+        if(item.archivedAt){
+          buttons.push(['renew','Новый взамен','Создать новую запись взамен архивного документа']);
+          buttons.push(['restore','Вернуть','Вернуть в рабочий список']);
+        }
+        else{
+          buttons.push([item.replacementRequestedAt?'cancel_request':'request',
+            item.replacementRequestedAt?'Отменить запрос':'Запросил новый',
+            item.replacementRequestedAt?'Снять отметку запроса':'Отметить, что запрошен новый документ']);
+          buttons.push(['renew','Новый взамен','Создать новую запись взамен этой']);
+          buttons.push(['archive','В архив','Перенести документ в архив без удаления']);
+        }
         for(const [action,txt,label] of buttons){
-          const button=elem('button','dx-decl-action',txt);button.type='button';
+          const button=elem('button','dx-decl-action'+(txt.length>2?' dx-decl-action-label':''),txt);button.type='button';
           button.title=label;button.setAttribute('aria-label',label+' '+item.productType);
           button.dataset.action=action;button.dataset.id=String(item.id);
           actions.append(button);
@@ -287,6 +337,66 @@ export default class OptimaDeclarationsWidget{
       }
       group.append(container);this.list.append(group);
     }
+  }
+  showArchivePanel(item){
+    if(this.lifecycleBusy||this.saving||!item)return;
+    this.archiveId=String(item.id);
+    this.archiveTitle.textContent='Перенести в архив: '+item.productType+
+      (item.documentNumber?' · № '+item.documentNumber:'');
+    this.archiveReason.value=item.endDate<dateISO()?'expired':'replaced';
+    this.archiveNote.value='';
+    this.archivePanel.hidden=false;
+    this.archivePanel.scrollIntoView({block:'nearest'});
+  }
+  closeArchivePanel(){
+    if(this.lifecycleBusy)return;
+    this.archivePanel.hidden=true;this.archiveId=null;
+    this.archiveNote.value='';
+  }
+  async commitArchive(){
+    if(!this.archiveId||this.lifecycleBusy||this.saving)return;
+    const id=this.archiveId;
+    const item=this.db?.declarations?.find(entry=>String(entry.id)===id);
+    if(!item){this.setStatus('Документ больше не найден. Обновите список.');return;}
+    this.lifecycleBusy=true;this.archiveConfirm.disabled=true;
+    this.setStatus('Переношу документ в архив, сохраняя реквизиты и фотографии…');
+    try{
+      const result=await optimaRequest('/api/dashboardx/declarations',{
+        method:'POST',
+        body:JSON.stringify({action:'archive',id,baseRevision:this.revision,
+          reason:this.archiveReason.value,note:this.archiveNote.value.trim()})
+      });
+      this.archiveId=null;this.archivePanel.hidden=true;this.archiveNote.value='';
+      window.dispatchEvent(new CustomEvent('dashboardx:optima-updated',{detail:{revision:result.revision}}));
+      await this.load();
+      this.setStatus('Документ сохранён в архиве. Оригиналы и фотографии доступны во вкладке «Архив».');
+    }catch(error){
+      this.setStatus('Перенос не выполнен: '+error.message);
+    }finally{
+      this.lifecycleBusy=false;this.archiveConfirm.disabled=false;
+    }
+  }
+  async updateLifecycle(action,item){
+    if(this.lifecycleBusy||this.saving||!item)return;
+    this.lifecycleBusy=true;
+    const label={
+      restore:'Возвращаю документ из архива…',
+      request_replacement:'Сохраняю отметку запроса нового документа…',
+      cancel_replacement:'Снимаю отметку запроса…'
+    };
+    this.setStatus(label[action]||'Сохраняю изменение…');
+    try{
+      const result=await optimaRequest('/api/dashboardx/declarations',{
+        method:'POST',
+        body:JSON.stringify({action,id:item.id,baseRevision:this.revision})
+      });
+      window.dispatchEvent(new CustomEvent('dashboardx:optima-updated',{detail:{revision:result.revision}}));
+      await this.load();
+      this.setStatus(action==='restore'?'Документ возвращён в рабочий список.':
+        action==='request_replacement'?'Отмечено: новый документ запрошен. Старый остаётся в базе.':
+        'Отметка запроса снята.');
+    }catch(error){this.setStatus('Не удалось изменить статус документа: '+error.message);}
+    finally{this.lifecycleBusy=false;}
   }
   closeImport(){
     this.importPack=null;this.importReview.hidden=true;
@@ -549,12 +659,12 @@ export default class OptimaDeclarationsWidget{
     this.editorOpen=false;
     this.editorWindow?.hide();
     this.closeEditorSupplier?.(false);
-    this.editId=null;
+    this.editId=null;this.replacesId=null;
     this.form?.reset();
     this.editorSupplierQuery?.setCustomValidity('');
     if(this.formFeedback)this.formFeedback.textContent='';
   }
-  openEditor(item){
+  openEditor(item,replacementFrom=null){
     if(!this.db||this.revision==null){this.setStatus('Сначала подключитесь к базе PRO OPTIMA.');return;}
     this.buildEditor();
     if(this.editorOpen){
@@ -563,43 +673,59 @@ export default class OptimaDeclarationsWidget{
       return;
     }
     this.editId=item?.id!=null?String(item.id):null;
+    this.replacesId=item?.replacesId||replacementFrom?.id||null;
+    const initial=item||(replacementFrom?{
+      documentType:replacementFrom.documentType,
+      supplierId:replacementFrom.supplierId,
+      productType:replacementFrom.productType
+    }:null);
     this.dialogRevision=this.revision;
-    this.editorWindow.setTitle(item?'Изменить декларацию':'Добавить декларацию');
-    const supplier=this.supplierItems().find(s=>String(s.id)===String(item?.supplierId??''));
-    this.editorSupplierId.value=item?.supplierId!=null?String(item.supplierId):'';
+    this.editorWindow.setTitle(item?'Изменить декларацию':replacementFrom?'Новый документ взамен':'Добавить декларацию');
+    const supplier=this.supplierItems().find(s=>String(s.id)===String(initial?.supplierId??''));
+    this.editorSupplierId.value=initial?.supplierId!=null?String(initial.supplierId):'';
     this.editorSupplierQuery.value=supplier?.name||'';
     this.editorSupplierQuery.setCustomValidity('');
     this.closeEditorSupplier(false);
     const values={
-      documentType:item?.documentType||(this.filters.type==='veterinary'?'veterinary':'eaeu'),
-      reviewStatus:item?.reviewStatus||(item?'confirmed':'needs_review'),
-      productType:item?.productType||'',
-      documentNumber:item?.documentNumber||'',
-      applicantName:item?.applicantName||'',
-      manufacturerName:item?.manufacturerName||'',
-      originCountry:item?.originCountry||'',
-      productDescription:item?.productDescription||'',
-      registrationDate:item?.registrationDate||'',
-      issueDate:item?.issueDate||'',
-      startDate:item?.startDate||'',
-      endDate:item?.endDate||'',
-      technicalRegulations:item?.technicalRegulations||'',
-      qrUrl:item?.qrUrl||'',
-      recipientName:item?.recipientName||'',
-      quantityPlaces:item?.quantityPlaces||'',
-      netWeight:item?.netWeight||'',
-      receiptDate:item?.receiptDate||'',
-      receiptReference:item?.receiptReference||'',
-      batchDetails:item?.batchDetails||'',
-      notes:item?.notes||''
+      documentType:initial?.documentType||(this.filters.type==='veterinary'?'veterinary':'eaeu'),
+      reviewStatus:initial?.reviewStatus||(item?'confirmed':'needs_review'),
+      productType:initial?.productType||'',
+      documentNumber:initial?.documentNumber||'',
+      applicantName:initial?.applicantName||'',
+      manufacturerName:initial?.manufacturerName||'',
+      originCountry:initial?.originCountry||'',
+      productDescription:initial?.productDescription||'',
+      registrationDate:initial?.registrationDate||'',
+      issueDate:initial?.issueDate||'',
+      startDate:initial?.startDate||'',
+      endDate:initial?.endDate||'',
+      technicalRegulations:initial?.technicalRegulations||'',
+      qrUrl:initial?.qrUrl||'',
+      recipientName:initial?.recipientName||'',
+      quantityPlaces:initial?.quantityPlaces||'',
+      netWeight:initial?.netWeight||'',
+      receiptDate:initial?.receiptDate||'',
+      receiptReference:initial?.receiptReference||'',
+      batchDetails:initial?.batchDetails||'',
+      notes:initial?.notes||''
     };
     for(const [field,value] of Object.entries(values))this.form.elements.namedItem(field).value=value;
-    this.form.elements.namedItem('qrPresent').checked=Boolean(item?.qrPresent);
+    this.form.elements.namedItem('qrPresent').checked=Boolean(initial?.qrPresent);
     this.form.elements.namedItem('newFiles').value='';
     this.form.querySelector('[data-role="declaration-attachment-count"]').textContent=
-      'Сохранённых вложений: '+(item?.attachments?.length||0)+
-      (item?.supplierNameHint?' · Название в источнике: '+item.supplierNameHint:'');
+      'Сохранённых вложений: '+(initial?.attachments?.length||0)+
+      (initial?.supplierNameHint?' · Название в источнике: '+item.supplierNameHint:'');
     this.updateEditorFields();
+    let renewalInfo=this.form.querySelector('[data-role="declaration-renewal-hint"]');
+    if(!renewalInfo){
+      renewalInfo=elem('p','dx-decl-renewal-hint');
+      renewalInfo.dataset.role='declaration-renewal-hint';
+      this.form.insertBefore(renewalInfo,this.form.querySelector('[data-role="declaration-attachment-count"]'));
+    }
+    renewalInfo.hidden=!this.replacesId;
+    renewalInfo.textContent=this.replacesId
+      ?'Новая запись будет связана с предыдущей. Старые сроки, номер и фотографии не копируются.'
+      :'';
     this.formFeedback.textContent='';
     this.editorOpen=true;
     this.editorWindow.open();
@@ -622,6 +748,7 @@ export default class OptimaDeclarationsWidget{
     const data=Object.fromEntries(names.map(name=>[name,value(name)]));
     data.supplierId=hasSupplier?chosenId:null;
     data.qrPresent=this.form.elements.namedItem('qrPresent').checked;
+    if(this.replacesId)data.replacesId=this.replacesId;
     if(data.startDate&&data.endDate<data.startDate){
       this.formFeedback.textContent='Дата окончания раньше даты начала.';return;
     }
@@ -658,6 +785,7 @@ export default class OptimaDeclarationsWidget{
     window.removeEventListener('dashboardx:optima-updated',this.onExternalUpdate);
     for(const fn of this.unbind)fn();
     this.closeImport();this.closeFiles();
+    this.archivePanel.hidden=true;
     this.editorWindow?.destroy();
   }
 }
