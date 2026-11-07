@@ -18,6 +18,7 @@ const GROUPS=[
   ['upcoming','Ещё не действуют']
 ];
 const ARCHIVE_REASONS={expired:'Истёк срок',replaced:'Получен новый документ',other:'Другая причина'};
+const EXPIRY_LABELS={expired:'Просрочена',urgent:'До 7 дней',soon:'До 30 дней',valid:'Действует',upcoming:'Ещё не действует'};
 const classify=(x,today)=>{
   if(x.endDate<today)return 'expired';
   if(x.startDate>today)return 'upcoming';
@@ -462,12 +463,27 @@ export default class OptimaDeclarationsWidget{
             if(product.open&&!inner.firstChild)inner.append(this.renderDocumentDetail(item,all,name));
           });
           const label=elem('summary','dx-decl-product-summary');
-          const nameBox=elem('span','dx-decl-product-name',name);
-          label.append(nameBox);
-          if(item.reviewStatus==='needs_review')label.append(elem('span','dx-decl-product-review','Проверить'));
+          const nameBox=elem('span','dx-decl-product-name');
+          nameBox.append(elem('span','dx-decl-product-text',name));
+          const quickFrozen=/быстрозамороженн/i.test(String(item.productType||''));
+          if(quickFrozen&&!/быстрозамороженн/i.test(String(name||''))){
+            const category=elem('small','dx-decl-product-category','Быстрозамороженная продукция');
+            category.title='Указано в категории документа: '+item.productType;
+            nameBox.append(category);
+          }
+          if(item.reviewStatus==='needs_review'){
+            nameBox.append(elem('small','dx-decl-product-review','На проверке'));
+          }
+          const number=elem('span','dx-decl-product-number',item.documentNumber||'№ не указан');
+          number.title=item.documentNumber?
+            'Регистрационный номер документа: '+item.documentNumber:
+            'Регистрационный номер ещё не указан — требуется проверка';
+          const expiryStatus=elem('span','dx-decl-pill dx-decl-'+item.status+' dx-decl-product-status',
+            EXPIRY_LABELS[item.status]||'Срок не определён');
+          expiryStatus.title=remaining(item,today);
           const expiry=elem('span','dx-decl-product-date',prettyDate(item.endDate));
           expiry.title='Окончание действия · '+remaining(item,today);
-          label.append(expiry);
+          label.append(nameBox,number,expiryStatus,expiry);
           product.append(label,inner);
           products.append(product);
         }
