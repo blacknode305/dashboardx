@@ -548,6 +548,17 @@ export default class OptimaDeclarationsWidget{
     this.viewerSavedLayout=null;
     this.widget.classList.remove('dx-decl-viewer-open');
     if(!previous)return;
+    // If the user maximized the widget while viewing, repair its pending restore
+    // size without shrinking the currently maximized window.
+    if(this.widget.classList.contains('is-maximized')){
+      const back=this.widget._restoreSize;
+      if(back){
+        if(previous.expandedWidth&&back.width===previous.expandedWidth)back.width=previous.width;
+        if(previous.shiftedLeft&&back.left===previous.shiftedLeft)back.left=previous.left;
+      }
+      return;
+    }
+    if(this.widget._spatialMode)return;
     // Preserve any size/position the user manually changed with the usual widget controls.
     let restored=false;
     if(previous.expandedWidth&&this.widget.style.width===previous.expandedWidth){
@@ -558,7 +569,7 @@ export default class OptimaDeclarationsWidget{
       this.widget.style.left=previous.left;
       restored=true;
     }
-    if(restored&&!this.destroyed&&!this.widget._spatialMode)this.widget.saveWidget?.();
+    if(restored&&!this.destroyed)this.widget.saveWidget?.();
     window.dashboardxUpdateWorkspaceBounds?.();
   }
   closeFiles(){
