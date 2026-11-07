@@ -313,7 +313,10 @@ export default class OptimaDeclarationsWidget{
         const actions=elem('div','dx-decl-card-actions');
         const buttons=[['edit','✎','Проверить / изменить']];
         if(item.attachments?.length)buttons.push(['photos','▧','Фотографии ('+item.attachments.length+')']);
-        if(item.archivedAt)buttons.push(['restore','Вернуть','Вернуть в рабочий список']);
+        if(item.archivedAt){
+          buttons.push(['renew','Новый взамен','Создать новую запись взамен архивного документа']);
+          buttons.push(['restore','Вернуть','Вернуть в рабочий список']);
+        }
         else{
           buttons.push([item.replacementRequestedAt?'cancel_request':'request',
             item.replacementRequestedAt?'Отменить запрос':'Запросил новый',
@@ -653,12 +656,12 @@ export default class OptimaDeclarationsWidget{
     this.editorOpen=false;
     this.editorWindow?.hide();
     this.closeEditorSupplier?.(false);
-    this.editId=null;
+    this.editId=null;this.replacesId=null;
     this.form?.reset();
     this.editorSupplierQuery?.setCustomValidity('');
     if(this.formFeedback)this.formFeedback.textContent='';
   }
-  openEditor(item){
+  openEditor(item,replacementFrom=null){
     if(!this.db||this.revision==null){this.setStatus('Сначала подключитесь к базе PRO OPTIMA.');return;}
     this.buildEditor();
     if(this.editorOpen){
@@ -667,43 +670,59 @@ export default class OptimaDeclarationsWidget{
       return;
     }
     this.editId=item?.id!=null?String(item.id):null;
+    this.replacesId=item?.replacesId||replacementFrom?.id||null;
+    const initial=item||(replacementFrom?{
+      documentType:replacementFrom.documentType,
+      supplierId:replacementFrom.supplierId,
+      productType:replacementFrom.productType
+    }:null);
     this.dialogRevision=this.revision;
-    this.editorWindow.setTitle(item?'Изменить декларацию':'Добавить декларацию');
-    const supplier=this.supplierItems().find(s=>String(s.id)===String(item?.supplierId??''));
-    this.editorSupplierId.value=item?.supplierId!=null?String(item.supplierId):'';
+    this.editorWindow.setTitle(item?'Изменить декларацию':replacementFrom?'Новый документ взамен':'Добавить декларацию');
+    const supplier=this.supplierItems().find(s=>String(s.id)===String(initial?.supplierId??''));
+    this.editorSupplierId.value=initial?.supplierId!=null?String(initial.supplierId):'';
     this.editorSupplierQuery.value=supplier?.name||'';
     this.editorSupplierQuery.setCustomValidity('');
     this.closeEditorSupplier(false);
     const values={
-      documentType:item?.documentType||(this.filters.type==='veterinary'?'veterinary':'eaeu'),
-      reviewStatus:item?.reviewStatus||(item?'confirmed':'needs_review'),
-      productType:item?.productType||'',
-      documentNumber:item?.documentNumber||'',
-      applicantName:item?.applicantName||'',
-      manufacturerName:item?.manufacturerName||'',
-      originCountry:item?.originCountry||'',
-      productDescription:item?.productDescription||'',
-      registrationDate:item?.registrationDate||'',
-      issueDate:item?.issueDate||'',
-      startDate:item?.startDate||'',
-      endDate:item?.endDate||'',
-      technicalRegulations:item?.technicalRegulations||'',
-      qrUrl:item?.qrUrl||'',
-      recipientName:item?.recipientName||'',
-      quantityPlaces:item?.quantityPlaces||'',
-      netWeight:item?.netWeight||'',
-      receiptDate:item?.receiptDate||'',
-      receiptReference:item?.receiptReference||'',
-      batchDetails:item?.batchDetails||'',
-      notes:item?.notes||''
+      documentType:initial?.documentType||(this.filters.type==='veterinary'?'veterinary':'eaeu'),
+      reviewStatus:initial?.reviewStatus||(item?'confirmed':'needs_review'),
+      productType:initial?.productType||'',
+      documentNumber:initial?.documentNumber||'',
+      applicantName:initial?.applicantName||'',
+      manufacturerName:initial?.manufacturerName||'',
+      originCountry:initial?.originCountry||'',
+      productDescription:initial?.productDescription||'',
+      registrationDate:initial?.registrationDate||'',
+      issueDate:initial?.issueDate||'',
+      startDate:initial?.startDate||'',
+      endDate:initial?.endDate||'',
+      technicalRegulations:initial?.technicalRegulations||'',
+      qrUrl:initial?.qrUrl||'',
+      recipientName:initial?.recipientName||'',
+      quantityPlaces:initial?.quantityPlaces||'',
+      netWeight:initial?.netWeight||'',
+      receiptDate:initial?.receiptDate||'',
+      receiptReference:initial?.receiptReference||'',
+      batchDetails:initial?.batchDetails||'',
+      notes:initial?.notes||''
     };
     for(const [field,value] of Object.entries(values))this.form.elements.namedItem(field).value=value;
-    this.form.elements.namedItem('qrPresent').checked=Boolean(item?.qrPresent);
+    this.form.elements.namedItem('qrPresent').checked=Boolean(initial?.qrPresent);
     this.form.elements.namedItem('newFiles').value='';
     this.form.querySelector('[data-role="declaration-attachment-count"]').textContent=
-      'Сохранённых вложений: '+(item?.attachments?.length||0)+
-      (item?.supplierNameHint?' · Название в источнике: '+item.supplierNameHint:'');
+      'Сохранённых вложений: '+(initial?.attachments?.length||0)+
+      (initial?.supplierNameHint?' · Название в источнике: '+item.supplierNameHint:'');
     this.updateEditorFields();
+    let renewalInfo=this.form.querySelector('[data-role="declaration-renewal-hint"]');
+    if(!renewalInfo){
+      renewalInfo=elem('p','dx-decl-renewal-hint');
+      renewalInfo.dataset.role='declaration-renewal-hint';
+      this.form.insertBefore(renewalInfo,this.form.querySelector('[data-role="declaration-attachment-count"]'));
+    }
+    renewalInfo.hidden=!this.replacesId;
+    renewalInfo.textContent=this.replacesId
+      ?'Новая запись будет связана с предыдущей. Старые сроки, номер и фотографии не копируются.'
+      :'';
     this.formFeedback.textContent='';
     this.editorOpen=true;
     this.editorWindow.open();
@@ -726,6 +745,7 @@ export default class OptimaDeclarationsWidget{
     const data=Object.fromEntries(names.map(name=>[name,value(name)]));
     data.supplierId=hasSupplier?chosenId:null;
     data.qrPresent=this.form.elements.namedItem('qrPresent').checked;
+    if(this.replacesId)data.replacesId=this.replacesId;
     if(data.startDate&&data.endDate<data.startDate){
       this.formFeedback.textContent='Дата окончания раньше даты начала.';return;
     }
