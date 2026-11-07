@@ -135,6 +135,15 @@ export default class OptimaDeclarationsWidget{
       if(!button||!this.list.contains(button))return;
       const entry=(this.db?.declarations||[]).find(x=>String(x.id)===button.dataset.id);
       if(!entry)return;
+      if(button.dataset.action==='copy_product'){
+        const text=entry.productItems?.[Number(button.dataset.index)];
+        if(text&&navigator.clipboard?.writeText){
+          navigator.clipboard.writeText(text).then(()=>
+            this.setStatus('Скопировано: '+text)).catch(()=>
+            this.setStatus('Копирование недоступно. Выделите название вручную.'));
+        }else this.setStatus('Копирование недоступно. Выделите название вручную.');
+        return;
+      }
       if(button.dataset.action==='edit')this.openEditor(entry);
       if(button.dataset.action==='photos')this.openFiles(entry);
       if(button.dataset.action==='archive')this.showArchivePanel(entry);
@@ -248,7 +257,7 @@ export default class OptimaDeclarationsWidget{
       (this.filters.status==='all'||this.filters.status===x.status||
        this.filters.status===x.reviewStatus||
        (this.filters.status==='replacement_requested'&&Boolean(x.replacementRequestedAt)))&&
-      (!typed||norm([x.productType,x.supplierName,x.applicantName,x.documentNumber,x.productDescription].join(' ')).includes(typed))
+      (!typed||norm([x.productType,...(x.productItems||[]),x.supplierName,x.applicantName,x.documentNumber,x.productDescription].join(' ')).includes(typed))
     );
     if(!filtered.length){
       this.list.append(elem('p','dx-decl-empty',all.length?
@@ -289,6 +298,23 @@ export default class OptimaDeclarationsWidget{
         main.append(meta);
         main.append(elem('div','dx-decl-supplier-name',item.supplierName));
         if(item.applicantName)main.append(elem('div','dx-decl-applicant','Документ: '+item.applicantName));
+        if(Array.isArray(item.productItems)&&item.productItems.length){
+          const positions=elem('div','dx-decl-positions');
+          positions.append(elem('strong','dx-decl-positions-title',
+            'Конкретные позиции ('+item.productItems.length+')'));
+          const names=elem('ul','dx-decl-positions-list');
+          for(const [index,name] of item.productItems.entries()){
+            const row=elem('li','dx-decl-position');
+            row.append(elem('span','',name));
+            const copy=elem('button','dx-decl-copy-item','Копировать');
+            copy.type='button';copy.dataset.action='copy_product';
+            copy.dataset.id=String(item.id);copy.dataset.index=String(index);
+            copy.title='Скопировать название для переноса в «Наименования»';
+            copy.setAttribute('aria-label','Копировать позицию '+name);
+            row.append(copy);names.append(row);
+          }
+          positions.append(names);main.append(positions);
+        }
         if(item.documentType==='veterinary'&&item.receiptDate){
           const deadline=new Date(item.receiptDate+'T12:00:00Z');
           deadline.setUTCFullYear(deadline.getUTCFullYear()+3);
@@ -432,6 +458,12 @@ export default class OptimaDeclarationsWidget{
         details.append(elem('span','','№ '+(record.documentNumber||'не указан')));
         details.append(elem('span','','Срок: '+prettyDate(record.startDate)+' – '+prettyDate(record.endDate)));
         details.append(elem('span','','Заявитель: '+(record.applicantName||'не указан')));
+        if(record.productItems?.length){
+          const list=elem('ul','dx-decl-import-itemnames');
+          for(const name of record.productItems)list.append(elem('li','',name));
+          details.append(elem('span','','Конкретные позиции ('+record.productItems.length+'):'));
+          details.append(list);
+        }
         if(record.notes)details.append(elem('small','',record.notes));
         card.append(details);this.importItems.append(card);
       }
@@ -452,8 +484,10 @@ export default class OptimaDeclarationsWidget{
       this.filters.search='';this.search.value='';
       this.filters.supplierId='';this.supplierEditing=false;this.supplier.value='';this.closeSupplier();
       this.scheduleSave();await this.load();
-      this.setStatus('Импортировано черновиков: '+response.imported.length+
-        ' · пропущено повторов: '+response.skipped.length+'. Проверьте реквизиты и привяжите поставщиков.');
+      this.setStatus('Новых документов: '+response.imported.length+
+        ' · дополнены позиции: '+(response.updated?.length||0)+
+        ' · без изменений: '+response.skipped.length+
+        '. Проверьте реквизиты и выберите поставщиков.');
     }catch(error){
       this.importMessage.textContent='Импорт не выполнен: '+error.message+
         (error.status===409?' Обновите документы и повторите импорт.':'');
@@ -499,7 +533,7 @@ export default class OptimaDeclarationsWidget{
     const form=document.createElement('form');
     form.className='dx-decl-form';
     form.setAttribute('data-role','declaration-form');
-    form.innerHTML="<label>Категория документа\n  <select name=\"documentType\" required><option value=\"eaeu\">Декларация ЕАЭС</option><option value=\"veterinary\">Ветеринарная справка</option></select>\n</label>\n<label class=\"dx-decl-editor-supplier-label\">Поставщик PRO OPTIMA\n  <div class=\"dx-declarations-supplier dx-decl-editor-supplier\" data-role=\"declaration-editor-supplier-picker\">\n    <input type=\"search\" data-role=\"declaration-editor-supplier-query\" role=\"combobox\" aria-autocomplete=\"list\" aria-haspopup=\"listbox\" aria-expanded=\"false\" aria-label=\"Поставщик\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"Введите название поставщика…\">\n    <input type=\"hidden\" name=\"supplierId\">\n    <div data-role=\"declaration-editor-supplier-list\" role=\"listbox\" aria-label=\"Подходящие поставщики\" hidden></div>\n  </div>\n</label>\n<label>Обобщённый тип продукции\n  <input name=\"productType\" type=\"text\" maxlength=\"180\" placeholder=\"Например, молочная продукция\" autocomplete=\"off\" required>\n</label>\n<label>Номер документа\n  <input name=\"documentNumber\" type=\"text\" maxlength=\"130\" placeholder=\"Номер из бланка\">\n</label>\n<label>Заявитель / отправитель\n  <input name=\"applicantName\" type=\"text\" maxlength=\"190\" placeholder=\"Организация, указанная в документе\">\n</label>\n<label>Изготовитель\n  <input name=\"manufacturerName\" type=\"text\" maxlength=\"190\" placeholder=\"Изготовитель продукции\">\n</label>\n<label>Страна происхождения\n  <input name=\"originCountry\" type=\"text\" maxlength=\"90\" placeholder=\"Страна происхождения продукции\">\n</label>\n<label>Описание продукции из документа\n  <textarea name=\"productDescription\" rows=\"2\" maxlength=\"700\" placeholder=\"Точное наименование, чтобы не перепутать с категорией\"></textarea>\n</label>\n<div class=\"dx-decl-date-fields\">\n  <label data-doc-scope=\"eaeu\">Дата регистрации<input name=\"registrationDate\" type=\"date\"></label>\n  <label data-doc-scope=\"veterinary\" hidden>Дата выдачи<input name=\"issueDate\" type=\"date\"></label>\n  <label>Начало действия<input name=\"startDate\" type=\"date\"></label>\n  <label>Окончание действия<input name=\"endDate\" type=\"date\" required></label>\n</div>\n<label data-doc-scope=\"eaeu\">Технические регламенты\n  <input name=\"technicalRegulations\" maxlength=\"200\" placeholder=\"ТР ТС 021/2011\">\n</label>\n<label>Ссылка на официальный реестр из QR\n  <input name=\"qrUrl\" type=\"url\" maxlength=\"900\" placeholder=\"https://...\">\n</label>\n<label class=\"dx-decl-qr-checkbox\">\n  <input name=\"qrPresent\" type=\"checkbox\"> QR-код присутствует на бумажном документе\n</label>\n<label data-doc-scope=\"veterinary\" hidden>Получатель<input name=\"recipientName\" maxlength=\"190\"></label>\n<div class=\"dx-decl-date-fields\" data-doc-scope=\"veterinary\" hidden>\n  <label>Количество мест<input name=\"quantityPlaces\" maxlength=\"50\"></label>\n  <label>Вес нетто<input name=\"netWeight\" maxlength=\"70\" placeholder=\"50 кг\"></label>\n</div>\n<label data-doc-scope=\"veterinary\" hidden>Дата фактического поступления<input name=\"receiptDate\" type=\"date\"></label>\n<label data-doc-scope=\"veterinary\" hidden>Номер поступления в 1С\n  <input name=\"receiptReference\" maxlength=\"120\" placeholder=\"Номер документа поступления\">\n</label>\n<label data-doc-scope=\"veterinary\" hidden>Партия / сведения о перевозке\n  <textarea name=\"batchDetails\" maxlength=\"500\" rows=\"2\"></textarea>\n</label>\n<label>Дополнительные сведения\n  <textarea name=\"notes\" rows=\"3\" maxlength=\"1200\" placeholder=\"Какие данные ещё нужно проверить\"></textarea>\n</label>\n<label>Состояние проверки\n  <select name=\"reviewStatus\">\n    <option value=\"needs_review\">На проверке</option>\n    <option value=\"confirmed\">Проверено вручную</option>\n  </select>\n</label>\n<label>Приложить оригиналы (JPG, PNG, WEBP, PDF; до 8 МБ каждый)\n  <input name=\"newFiles\" type=\"file\" accept=\"image/jpeg,image/png,image/webp,application/pdf\" multiple>\n</label>\n<p class=\"dx-decl-form-hint\" data-role=\"declaration-attachment-count\"></p>\n<p class=\"dx-decl-form-hint\">Черновик можно сохранить без поставщика или даты начала. Перед подтверждением проверьте реквизиты и выберите поставщика PRO OPTIMA. Подтверждение здесь не равно проверке в государственном реестре.</p>\n<p class=\"dx-decl-form-feedback\" data-role=\"declaration-form-feedback\" aria-live=\"polite\"></p>\n<div class=\"dx-decl-dialog-actions\">\n  <button type=\"button\" data-role=\"declaration-form-cancel\">Отмена</button>\n  <button type=\"submit\" data-role=\"declaration-form-save\">Сохранить</button>\n</div>";
+    form.innerHTML="<label>Категория документа\n  <select name=\"documentType\" required><option value=\"eaeu\">Декларация ЕАЭС</option><option value=\"veterinary\">Ветеринарная справка</option></select>\n</label>\n<label class=\"dx-decl-editor-supplier-label\">Поставщик PRO OPTIMA\n  <div class=\"dx-declarations-supplier dx-decl-editor-supplier\" data-role=\"declaration-editor-supplier-picker\">\n    <input type=\"search\" data-role=\"declaration-editor-supplier-query\" role=\"combobox\" aria-autocomplete=\"list\" aria-haspopup=\"listbox\" aria-expanded=\"false\" aria-label=\"Поставщик\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"Введите название поставщика…\">\n    <input type=\"hidden\" name=\"supplierId\">\n    <div data-role=\"declaration-editor-supplier-list\" role=\"listbox\" aria-label=\"Подходящие поставщики\" hidden></div>\n  </div>\n</label>\n<label>Обобщённый тип продукции\n  <input name=\"productType\" type=\"text\" maxlength=\"180\" placeholder=\"Например, молочная продукция\" autocomplete=\"off\" required>\n</label>\n<label>Конкретные позиции продукции (каждая с новой строки)\n  <textarea name=\"productItemsText\" rows=\"4\" maxlength=\"17000\" placeholder=\"Например:\nСпортивная\nТыквита\nВиктория\nВиктория с йодказеином\"></textarea>\n  <small>Категория остаётся как в декларации. Позиции можно затем вручную перенести в «Наименования».</small>\n</label>\n<label>Номер документа\n  <input name=\"documentNumber\" type=\"text\" maxlength=\"130\" placeholder=\"Номер из бланка\">\n</label>\n<label>Заявитель / отправитель\n  <input name=\"applicantName\" type=\"text\" maxlength=\"190\" placeholder=\"Организация, указанная в документе\">\n</label>\n<label>Изготовитель\n  <input name=\"manufacturerName\" type=\"text\" maxlength=\"190\" placeholder=\"Изготовитель продукции\">\n</label>\n<label>Страна происхождения\n  <input name=\"originCountry\" type=\"text\" maxlength=\"90\" placeholder=\"Страна происхождения продукции\">\n</label>\n<label>Описание продукции из документа\n  <textarea name=\"productDescription\" rows=\"2\" maxlength=\"700\" placeholder=\"Точное наименование, чтобы не перепутать с категорией\"></textarea>\n</label>\n<div class=\"dx-decl-date-fields\">\n  <label data-doc-scope=\"eaeu\">Дата регистрации<input name=\"registrationDate\" type=\"date\"></label>\n  <label data-doc-scope=\"veterinary\" hidden>Дата выдачи<input name=\"issueDate\" type=\"date\"></label>\n  <label>Начало действия<input name=\"startDate\" type=\"date\"></label>\n  <label>Окончание действия<input name=\"endDate\" type=\"date\" required></label>\n</div>\n<label data-doc-scope=\"eaeu\">Технические регламенты\n  <input name=\"technicalRegulations\" maxlength=\"200\" placeholder=\"ТР ТС 021/2011\">\n</label>\n<label>Ссылка на официальный реестр из QR\n  <input name=\"qrUrl\" type=\"url\" maxlength=\"900\" placeholder=\"https://...\">\n</label>\n<label class=\"dx-decl-qr-checkbox\">\n  <input name=\"qrPresent\" type=\"checkbox\"> QR-код присутствует на бумажном документе\n</label>\n<label data-doc-scope=\"veterinary\" hidden>Получатель<input name=\"recipientName\" maxlength=\"190\"></label>\n<div class=\"dx-decl-date-fields\" data-doc-scope=\"veterinary\" hidden>\n  <label>Количество мест<input name=\"quantityPlaces\" maxlength=\"50\"></label>\n  <label>Вес нетто<input name=\"netWeight\" maxlength=\"70\" placeholder=\"50 кг\"></label>\n</div>\n<label data-doc-scope=\"veterinary\" hidden>Дата фактического поступления<input name=\"receiptDate\" type=\"date\"></label>\n<label data-doc-scope=\"veterinary\" hidden>Номер поступления в 1С\n  <input name=\"receiptReference\" maxlength=\"120\" placeholder=\"Номер документа поступления\">\n</label>\n<label data-doc-scope=\"veterinary\" hidden>Партия / сведения о перевозке\n  <textarea name=\"batchDetails\" maxlength=\"500\" rows=\"2\"></textarea>\n</label>\n<label>Дополнительные сведения\n  <textarea name=\"notes\" rows=\"3\" maxlength=\"1200\" placeholder=\"Какие данные ещё нужно проверить\"></textarea>\n</label>\n<label>Состояние проверки\n  <select name=\"reviewStatus\">\n    <option value=\"needs_review\">На проверке</option>\n    <option value=\"confirmed\">Проверено вручную</option>\n  </select>\n</label>\n<label>Приложить оригиналы (JPG, PNG, WEBP, PDF; до 8 МБ каждый)\n  <input name=\"newFiles\" type=\"file\" accept=\"image/jpeg,image/png,image/webp,application/pdf\" multiple>\n</label>\n<p class=\"dx-decl-form-hint\" data-role=\"declaration-attachment-count\"></p>\n<p class=\"dx-decl-form-hint\">Черновик можно сохранить без поставщика или даты начала. Перед подтверждением проверьте реквизиты и выберите поставщика PRO OPTIMA. Подтверждение здесь не равно проверке в государственном реестре.</p>\n<p class=\"dx-decl-form-feedback\" data-role=\"declaration-form-feedback\" aria-live=\"polite\"></p>\n<div class=\"dx-decl-dialog-actions\">\n  <button type=\"button\" data-role=\"declaration-form-cancel\">Отмена</button>\n  <button type=\"submit\" data-role=\"declaration-form-save\">Сохранить</button>\n</div>";
     this.form=form;
     this.formFeedback=form.querySelector('[data-role="declaration-form-feedback"]');
     this.saveButton=form.querySelector('[data-role="declaration-form-save"]');
@@ -690,6 +724,7 @@ export default class OptimaDeclarationsWidget{
       documentType:initial?.documentType||(this.filters.type==='veterinary'?'veterinary':'eaeu'),
       reviewStatus:initial?.reviewStatus||(item?'confirmed':'needs_review'),
       productType:initial?.productType||'',
+      productItemsText:Array.isArray(item?.productItems)?item.productItems.join('\n'):'',
       documentNumber:initial?.documentNumber||'',
       applicantName:initial?.applicantName||'',
       manufacturerName:initial?.manufacturerName||'',
@@ -748,6 +783,11 @@ export default class OptimaDeclarationsWidget{
     const data=Object.fromEntries(names.map(name=>[name,value(name)]));
     data.supplierId=hasSupplier?chosenId:null;
     data.qrPresent=this.form.elements.namedItem('qrPresent').checked;
+    data.productItems=this.form.elements.namedItem('productItemsText').value.split(/\r?\n/)
+      .map(x=>x.trim().replace(/\s+/g,' ')).filter(Boolean);
+    if(data.productItems.length>100||data.productItems.some(x=>x.length>160)){
+      this.formFeedback.textContent='Можно указать до 100 позиций, не более 160 символов на строку.';return;
+    }
     if(this.replacesId)data.replacesId=this.replacesId;
     if(data.startDate&&data.endDate<data.startDate){
       this.formFeedback.textContent='Дата окончания раньше даты начала.';return;

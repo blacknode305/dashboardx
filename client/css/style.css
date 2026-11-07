@@ -3282,3 +3282,40 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
   #workspace-canvas .dx-decl-card-actions{max-width:none;justify-content:flex-start;width:100%}
   #workspace-canvas .dx-declarations-tab-group button{padding:5px 6px}
 }
+
+
+/* Per-declaration product names: the document group stays untouched. */
+#workspace-canvas .dx-decl-positions{
+  display:grid;gap:5px;min-width:0;margin:4px 0 3px;
+}
+#workspace-canvas .dx-decl-positions-title{
+  color:var(--text-muted);font-size:10px;font-weight:650;
+}
+#workspace-canvas .dx-decl-positions-list{
+  display:flex;flex-direction:column;gap:4px;min-width:0;
+  max-height:175px;overflow-y:auto;margin:0;padding:0;list-style:none;
+}
+#workspace-canvas .dx-decl-position{
+  display:flex;justify-content:space-between;align-items:center;gap:7px;
+  min-width:0;padding:6px 8px;border:1px solid var(--border);
+  border-radius:6px;background:var(--bg-panel-light);
+}
+#workspace-canvas .dx-decl-position>span{min-width:0;overflow-wrap:anywhere}
+#workspace-canvas .dx-decl-copy-item{
+  flex:0 0 auto;padding:3px 7px;min-height:24px;border:1px solid transparent;
+  border-radius:5px;background:transparent;color:var(--text-muted);
+  font:inherit;font-size:10px;cursor:pointer;
+}
+#workspace-canvas .dx-decl-copy-item:hover{
+  color:var(--text-main);border-color:var(--dx-accent);
+}
+#workspace-canvas .dx-decl-form textarea[name="productItemsText"]{
+  min-height:95px;resize:vertical;white-space:pre-wrap;
+}
+#workspace-canvas .dx-decl-form>label>small{
+  font-size:10px;color:var(--text-muted);
+}
+#workspace-canvas .dx-decl-import-itemnames{
+  margin:0 0 0 5px;padding-left:13px;max-height:90px;overflow:auto;
+  color:var(--text-main);font-size:10px;
+}
