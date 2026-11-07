@@ -379,7 +379,7 @@ export default class OptimaDeclarationsWidget{
     const form=document.createElement('form');
     form.className='dx-decl-form';
     form.setAttribute('data-role','declaration-form');
-    form.innerHTML='<label class="dx-decl-editor-supplier-label">Поставщик<div class="dx-declarations-supplier dx-decl-editor-supplier" data-role="declaration-editor-supplier-picker"><input type="search" data-role="declaration-editor-supplier-query" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-label="Поставщик" autocomplete="off" spellcheck="false" placeholder="Введите название поставщика…" required><input type="hidden" name="supplierId"><div data-role="declaration-editor-supplier-list" role="listbox" aria-label="Подходящие поставщики" hidden></div></div></label><label>Тип продукции<input name="productType" type="text" maxlength="180" placeholder="Например, молочная продукция" autocomplete="off" required></label><div class="dx-decl-date-fields"><label>Начало действия<input name="startDate" type="date" required></label><label>Окончание действия<input name="endDate" type="date" required></label></div><p class="dx-decl-form-hint">Дата окончания включена в срок действия. Категорию продукции вводите вручную.</p><p class="dx-decl-form-feedback" data-role="declaration-form-feedback" aria-live="polite"></p><div class="dx-decl-dialog-actions"><button type="button" data-role="declaration-form-cancel">Отмена</button><button type="submit" data-role="declaration-form-save">Сохранить</button></div>';
+    form.innerHTML="<label>Категория документа\n  <select name=\"documentType\" required><option value=\"eaeu\">Декларация ЕАЭС</option><option value=\"veterinary\">Ветеринарная справка</option></select>\n</label>\n<label class=\"dx-decl-editor-supplier-label\">Поставщик PRO OPTIMA\n  <div class=\"dx-declarations-supplier dx-decl-editor-supplier\" data-role=\"declaration-editor-supplier-picker\">\n    <input type=\"search\" data-role=\"declaration-editor-supplier-query\" role=\"combobox\" aria-autocomplete=\"list\" aria-haspopup=\"listbox\" aria-expanded=\"false\" aria-label=\"Поставщик\" autocomplete=\"off\" spellcheck=\"false\" placeholder=\"Введите название поставщика…\">\n    <input type=\"hidden\" name=\"supplierId\">\n    <div data-role=\"declaration-editor-supplier-list\" role=\"listbox\" aria-label=\"Подходящие поставщики\" hidden></div>\n  </div>\n</label>\n<label>Обобщённый тип продукции\n  <input name=\"productType\" type=\"text\" maxlength=\"180\" placeholder=\"Например, молочная продукция\" autocomplete=\"off\" required>\n</label>\n<label>Номер документа\n  <input name=\"documentNumber\" type=\"text\" maxlength=\"130\" placeholder=\"Номер из бланка\">\n</label>\n<label>Заявитель / отправитель\n  <input name=\"applicantName\" type=\"text\" maxlength=\"190\" placeholder=\"Организация, указанная в документе\">\n</label>\n<label>Изготовитель\n  <input name=\"manufacturerName\" type=\"text\" maxlength=\"190\" placeholder=\"Изготовитель продукции\">\n</label>\n<label>Описание продукции из документа\n  <textarea name=\"productDescription\" rows=\"2\" maxlength=\"700\" placeholder=\"Точное наименование, чтобы не перепутать с категорией\"></textarea>\n</label>\n<div class=\"dx-decl-date-fields\">\n  <label data-doc-scope=\"eaeu\">Дата регистрации<input name=\"registrationDate\" type=\"date\"></label>\n  <label data-doc-scope=\"veterinary\" hidden>Дата выдачи<input name=\"issueDate\" type=\"date\"></label>\n  <label>Начало действия<input name=\"startDate\" type=\"date\"></label>\n  <label>Окончание действия<input name=\"endDate\" type=\"date\" required></label>\n</div>\n<label data-doc-scope=\"eaeu\">Технические регламенты\n  <input name=\"technicalRegulations\" maxlength=\"200\" placeholder=\"ТР ТС 021/2011\">\n</label>\n<label data-doc-scope=\"eaeu\">Ссылка на официальный реестр из QR\n  <input name=\"qrUrl\" type=\"url\" maxlength=\"900\" placeholder=\"https://...\">\n</label>\n<label class=\"dx-decl-qr-checkbox\" data-doc-scope=\"eaeu\">\n  <input name=\"qrPresent\" type=\"checkbox\"> QR-код присутствует на бумажном документе\n</label>\n<label data-doc-scope=\"veterinary\" hidden>Получатель<input name=\"recipientName\" maxlength=\"190\"></label>\n<div class=\"dx-decl-date-fields\" data-doc-scope=\"veterinary\" hidden>\n  <label>Количество мест<input name=\"quantityPlaces\" maxlength=\"50\"></label>\n  <label>Вес нетто<input name=\"netWeight\" maxlength=\"70\" placeholder=\"50 кг\"></label>\n</div>\n<label data-doc-scope=\"veterinary\" hidden>Дата фактического поступления<input name=\"receiptDate\" type=\"date\"></label>\n<label data-doc-scope=\"veterinary\" hidden>Партия / сведения о перевозке\n  <textarea name=\"batchDetails\" maxlength=\"500\" rows=\"2\"></textarea>\n</label>\n<label>Дополнительные сведения\n  <textarea name=\"notes\" rows=\"3\" maxlength=\"1200\" placeholder=\"Какие данные ещё нужно проверить\"></textarea>\n</label>\n<label>Состояние проверки\n  <select name=\"reviewStatus\">\n    <option value=\"needs_review\">На проверке</option>\n    <option value=\"confirmed\">Проверено вручную</option>\n  </select>\n</label>\n<label>Приложить оригиналы (JPG, PNG, WEBP, PDF; до 8 МБ каждый)\n  <input name=\"newFiles\" type=\"file\" accept=\"image/jpeg,image/png,image/webp,application/pdf\" multiple>\n</label>\n<p class=\"dx-decl-form-hint\" data-role=\"declaration-attachment-count\"></p>\n<p class=\"dx-decl-form-hint\">Черновик можно сохранить без поставщика или даты начала. Перед подтверждением проверьте реквизиты и выберите поставщика PRO OPTIMA. Подтверждение здесь не равно проверке в государственном реестре.</p>\n<p class=\"dx-decl-form-feedback\" data-role=\"declaration-form-feedback\" aria-live=\"polite\"></p>\n<div class=\"dx-decl-dialog-actions\">\n  <button type=\"button\" data-role=\"declaration-form-cancel\">Отмена</button>\n  <button type=\"submit\" data-role=\"declaration-form-save\">Сохранить</button>\n</div>";
     this.form=form;
     this.formFeedback=form.querySelector('[data-role="declaration-form-feedback"]');
     this.saveButton=form.querySelector('[data-role="declaration-form-save"]');
@@ -390,6 +390,8 @@ export default class OptimaDeclarationsWidget{
     });
     this.listen(form.querySelector('[data-role="declaration-form-cancel"]'),'click',()=>this.closeEditor());
     this.installEditorSupplierPicker();
+    this.listen(form.elements.namedItem('documentType'),'change',()=>this.updateEditorFields());
+    this.listen(form.elements.namedItem('reviewStatus'),'change',()=>this.updateEditorFields());
     this.listen(form,'submit',event=>{event.preventDefault();this.saveEntry();});
   }
   installEditorSupplierPicker(){
@@ -504,6 +506,34 @@ export default class OptimaDeclarationsWidget{
       if(this.editorSupplierOpen&&!picker.contains(event.target))close();
     });
   }
+  updateEditorFields(){
+    if(!this.form)return;
+    const kind=this.form.elements.namedItem('documentType').value;
+    for(const field of this.form.querySelectorAll('[data-doc-scope]')){
+      field.hidden=field.dataset.docScope!==kind;
+    }
+    const confirmed=this.form.elements.namedItem('reviewStatus').value==='confirmed';
+    this.editorSupplierQuery.required=confirmed;
+    this.form.elements.namedItem('startDate').required=confirmed;
+    if(!confirmed)this.editorSupplierQuery.setCustomValidity('');
+  }
+  async encodeFiles(files){
+    if(files.length>10)throw Error('Выберите не более 10 файлов.');
+    const result=[];
+    for(const file of files){
+      if(file.size>8*1024*1024)throw Error('Файл '+file.name+' больше 8 МБ.');
+      if(!['image/jpeg','image/png','image/webp','application/pdf'].includes(file.type))
+        throw Error('Допустимы JPG, PNG, WEBP и PDF.');
+      const base64=await new Promise((resolve,reject)=>{
+        const reader=new FileReader();
+        reader.onload=()=>resolve(String(reader.result||'').split(',')[1]);
+        reader.onerror=()=>reject(Error('Не удалось прочитать '+file.name));
+        reader.readAsDataURL(file);
+      });
+      result.push({name:file.name,mime:file.type,base64});
+    }
+    return result;
+  }
   closeEditor(force=false){
     if(this.saving&&!force)return;
     this.editorOpen=false;
@@ -530,9 +560,33 @@ export default class OptimaDeclarationsWidget{
     this.editorSupplierQuery.value=supplier?.name||'';
     this.editorSupplierQuery.setCustomValidity('');
     this.closeEditorSupplier(false);
-    this.form.elements.namedItem('productType').value=item?.productType||'';
-    this.form.elements.namedItem('startDate').value=item?.startDate||'';
-    this.form.elements.namedItem('endDate').value=item?.endDate||'';
+    const values={
+      documentType:item?.documentType||(this.filters.type==='veterinary'?'veterinary':'eaeu'),
+      reviewStatus:item?.reviewStatus||(item?'confirmed':'needs_review'),
+      productType:item?.productType||'',
+      documentNumber:item?.documentNumber||'',
+      applicantName:item?.applicantName||'',
+      manufacturerName:item?.manufacturerName||'',
+      productDescription:item?.productDescription||'',
+      registrationDate:item?.registrationDate||'',
+      issueDate:item?.issueDate||'',
+      startDate:item?.startDate||'',
+      endDate:item?.endDate||'',
+      technicalRegulations:item?.technicalRegulations||'',
+      qrUrl:item?.qrUrl||'',
+      recipientName:item?.recipientName||'',
+      quantityPlaces:item?.quantityPlaces||'',
+      netWeight:item?.netWeight||'',
+      receiptDate:item?.receiptDate||'',
+      batchDetails:item?.batchDetails||'',
+      notes:item?.notes||''
+    };
+    for(const [field,value] of Object.entries(values))this.form.elements.namedItem(field).value=value;
+    this.form.elements.namedItem('qrPresent').checked=Boolean(item?.qrPresent);
+    this.form.elements.namedItem('newFiles').value='';
+    this.form.querySelector('[data-role="declaration-attachment-count"]').textContent=
+      'Сохранённых вложений: '+(item?.attachments?.length||0);
+    this.updateEditorFields();
     this.formFeedback.textContent='';
     this.editorOpen=true;
     this.editorWindow.open();
@@ -540,21 +594,29 @@ export default class OptimaDeclarationsWidget{
   }
   async saveEntry(){
     if(this.saving||!this.editorOpen)return;
+    const value=name=>this.form.elements.namedItem(name).value.trim();
+    const reviewStatus=value('reviewStatus');
     const chosenId=this.editorSupplierId?.value||'';
-    const hasSupplier=this.supplierItems().some(s=>String(s.id)===chosenId);
-    this.editorSupplierQuery.setCustomValidity(hasSupplier?'':'Выберите поставщика из выпадающего списка.');
+    const hasSupplier=this.supplierItems().some(x=>String(x.id)===chosenId);
+    const typed=this.editorSupplierQuery.value.trim();
+    const invalid=(!hasSupplier&&typed)||(!hasSupplier&&reviewStatus==='confirmed');
+    this.editorSupplierQuery.setCustomValidity(invalid?'Выберите поставщика из выпадающего списка.':'');
     if(!this.form.reportValidity())return;
-    const data={
-      supplierId:this.form.elements.namedItem('supplierId').value,
-      productType:this.form.elements.namedItem('productType').value.trim(),
-      startDate:this.form.elements.namedItem('startDate').value,
-      endDate:this.form.elements.namedItem('endDate').value
-    };
-    if(data.endDate<data.startDate){this.formFeedback.textContent='Дата окончания раньше даты начала.';return;}
+    const names=['documentType','reviewStatus','productType','documentNumber','applicantName',
+      'manufacturerName','productDescription','registrationDate','issueDate','startDate',
+      'endDate','technicalRegulations','qrUrl','recipientName','quantityPlaces',
+      'netWeight','receiptDate','batchDetails','notes'];
+    const data=Object.fromEntries(names.map(name=>[name,value(name)]));
+    data.supplierId=hasSupplier?chosenId:null;
+    data.qrPresent=this.form.elements.namedItem('qrPresent').checked;
+    if(data.startDate&&data.endDate<data.startDate){
+      this.formFeedback.textContent='Дата окончания раньше даты начала.';return;
+    }
     this.saving=true;this.saveButton.disabled=true;this.formFeedback.textContent='Сохраняю декларацию…';
     try{
+      const files=await this.encodeFiles(Array.from(this.form.elements.namedItem('newFiles').files||[]));
       const response=await optimaRequest('/api/dashboardx/declarations',{method:'POST',
-        body:JSON.stringify({action:'save',baseRevision:this.dialogRevision,
+        body:JSON.stringify({action:'save',baseRevision:this.dialogRevision,files,
           declaration:{...(this.editId?{id:this.editId}:{}),...data}})});
       this.closeEditor(true);
       window.dispatchEvent(new CustomEvent('dashboardx:optima-updated',{detail:{revision:response.revision}}));
