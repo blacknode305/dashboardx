@@ -135,6 +135,15 @@ export default class OptimaDeclarationsWidget{
       if(!button||!this.list.contains(button))return;
       const entry=(this.db?.declarations||[]).find(x=>String(x.id)===button.dataset.id);
       if(!entry)return;
+      if(button.dataset.action==='copy_product'){
+        const text=entry.productItems?.[Number(button.dataset.index)];
+        if(text&&navigator.clipboard?.writeText){
+          navigator.clipboard.writeText(text).then(()=>
+            this.setStatus('Скопировано: '+text)).catch(()=>
+            this.setStatus('Копирование недоступно. Выделите название вручную.'));
+        }else this.setStatus('Копирование недоступно. Выделите название вручную.');
+        return;
+      }
       if(button.dataset.action==='edit')this.openEditor(entry);
       if(button.dataset.action==='photos')this.openFiles(entry);
       if(button.dataset.action==='archive')this.showArchivePanel(entry);
@@ -248,7 +257,7 @@ export default class OptimaDeclarationsWidget{
       (this.filters.status==='all'||this.filters.status===x.status||
        this.filters.status===x.reviewStatus||
        (this.filters.status==='replacement_requested'&&Boolean(x.replacementRequestedAt)))&&
-      (!typed||norm([x.productType,x.supplierName,x.applicantName,x.documentNumber,x.productDescription].join(' ')).includes(typed))
+      (!typed||norm([x.productType,...(x.productItems||[]),x.supplierName,x.applicantName,x.documentNumber,x.productDescription].join(' ')).includes(typed))
     );
     if(!filtered.length){
       this.list.append(elem('p','dx-decl-empty',all.length?
@@ -289,6 +298,23 @@ export default class OptimaDeclarationsWidget{
         main.append(meta);
         main.append(elem('div','dx-decl-supplier-name',item.supplierName));
         if(item.applicantName)main.append(elem('div','dx-decl-applicant','Документ: '+item.applicantName));
+        if(Array.isArray(item.productItems)&&item.productItems.length){
+          const positions=elem('div','dx-decl-positions');
+          positions.append(elem('strong','dx-decl-positions-title',
+            'Конкретные позиции ('+item.productItems.length+')'));
+          const names=elem('ul','dx-decl-positions-list');
+          for(const [index,name] of item.productItems.entries()){
+            const row=elem('li','dx-decl-position');
+            row.append(elem('span','',name));
+            const copy=elem('button','dx-decl-copy-item','Копировать');
+            copy.type='button';copy.dataset.action='copy_product';
+            copy.dataset.id=String(item.id);copy.dataset.index=String(index);
+            copy.title='Скопировать название для переноса в «Наименования»';
+            copy.setAttribute('aria-label','Копировать позицию '+name);
+            row.append(copy);names.append(row);
+          }
+          positions.append(names);main.append(positions);
+        }
         if(item.documentType==='veterinary'&&item.receiptDate){
           const deadline=new Date(item.receiptDate+'T12:00:00Z');
           deadline.setUTCFullYear(deadline.getUTCFullYear()+3);
@@ -432,6 +458,12 @@ export default class OptimaDeclarationsWidget{
         details.append(elem('span','','№ '+(record.documentNumber||'не указан')));
         details.append(elem('span','','Срок: '+prettyDate(record.startDate)+' – '+prettyDate(record.endDate)));
         details.append(elem('span','','Заявитель: '+(record.applicantName||'не указан')));
+        if(record.productItems?.length){
+          const list=elem('ul','dx-decl-import-itemnames');
+          for(const name of record.productItems)list.append(elem('li','',name));
+          details.append(elem('span','','Конкретные позиции ('+record.productItems.length+'):'));
+          details.append(list);
+        }
         if(record.notes)details.append(elem('small','',record.notes));
         card.append(details);this.importItems.append(card);
       }
@@ -452,8 +484,10 @@ export default class OptimaDeclarationsWidget{
       this.filters.search='';this.search.value='';
       this.filters.supplierId='';this.supplierEditing=false;this.supplier.value='';this.closeSupplier();
       this.scheduleSave();await this.load();
-      this.setStatus('Импортировано черновиков: '+response.imported.length+
-        ' · пропущено повторов: '+response.skipped.length+'. Проверьте реквизиты и привяжите поставщиков.');
+      this.setStatus('Новых документов: '+response.imported.length+
+        ' · дополнены позиции: '+(response.updated?.length||0)+
+        ' · без изменений: '+response.skipped.length+
+        '. Проверьте реквизиты и выберите поставщиков.');
     }catch(error){
       this.importMessage.textContent='Импорт не выполнен: '+error.message+
         (error.status===409?' Обновите документы и повторите импорт.':'');
