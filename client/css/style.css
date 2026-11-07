@@ -3710,3 +3710,30 @@ body>.dx-decl-floating-viewer .dx-decl-viewer-footer>a[hidden]{display:none!impo
   #workspace-canvas .dx-decl-product-status{grid-column:2;grid-row:2}
   #workspace-canvas .dx-decl-product-date{grid-column:2;grid-row:3}
 }
+
+
+/* Print control in each Optima declaration expiry group header. */
+#workspace-canvas .dx-decl-group-title .dx-decl-group-actions{
+  display:inline-flex;align-items:center;justify-content:flex-end;
+  gap:9px;flex:0 0 auto;margin-left:auto;
+}
+#workspace-canvas .dx-decl-group-title .dx-decl-print-button{
+  display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 auto;min-height:28px;padding:5px 10px;
+  border:1px solid var(--border);border-radius:6px;
+  background:var(--bg-panel-inside);color:var(--text-main);
+  font:600 10px/1.35 var(--f-family-inter);
+  cursor:pointer;
+}
+#workspace-canvas .dx-decl-group-title .dx-decl-print-button:hover,
+#workspace-canvas .dx-decl-group-title .dx-decl-print-button:focus-visible{
+  border-color:var(--dx-accent);background:var(--bg-panel-light);
+}
+@media(max-width:460px){
+  #workspace-canvas .dx-decl-group-title{
+    flex-wrap:wrap;row-gap:6px;
+  }
+  #workspace-canvas .dx-decl-group-title .dx-decl-group-actions{
+    gap:6px;
+  }
+}
