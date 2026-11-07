@@ -1,5 +1,6 @@
 import { getCredential } from '../CredentialStore.js';
 import { attachWidgetInlineEditor } from '../WidgetInlineEditor.js?v=widget-editors-20261101b';
+import { openOptimaPrintPreview } from '../OptimaPrint.js?v=declarations-print-20261107';
 import { loadOptima, optimaRequest, OPTIMA_POLL_MS, OPTIMA_BASE, dateISO, norm } from '../OptimaAPI.js';
 const elem=(tag,cls,text)=>{
   const e=document.createElement(tag);
@@ -361,6 +362,35 @@ export default class OptimaDeclarationsWidget{
     panel.append(actions);
     return panel;
   }
+  printDeclarationGroup(status,title,ordered,documentCount){
+    if(this.destroyed||!this.db)return;
+    const rows=ordered.map(([,company])=>({
+      name:company.name,
+      products:company.rows.map(({item,name})=>({
+        name:String(name||item.productType||'—'),
+        number:String(item.documentNumber||'№ не указан'),
+        status:status==='archive'?'В архиве':
+          (EXPIRY_LABELS[item.status]||'Срок не определён')+
+          (item.reviewStatus==='needs_review'?' · На проверке':''),
+        expiration:prettyDate(item.endDate)
+      }))
+    }));
+    const filters=[
+      ['Категория',title],
+      ['Тип документов',this.filters.type==='eaeu'?'ЕАЭС':
+        this.filters.type==='veterinary'?'Ветсправки':
+        this.filters.type==='archive'?'Архив':'Все'],
+      ['Поставщик',this.filters.supplierId?this.supplier.value:'Все'],
+      ['Поиск',this.filters.search||''],
+      ['Доп. фильтр',this.filters.status==='all'?'':this.statusFilter.selectedOptions?.[0]?.textContent||''],
+      ['Документов',String(documentCount)]
+    ];
+    openOptimaPrintPreview({
+      kind:'declarations',
+      title:'Декларации · '+title,
+      filters,rows
+    });
+  }
   render(){
     this.list.replaceChildren();this.counts.replaceChildren();
     for(const button of this.widget.querySelectorAll('[data-role="declaration-type-tab"]')){
@@ -418,7 +448,7 @@ export default class OptimaDeclarationsWidget{
       group.dataset.group=status;group.open=this.groupOpen[status]===true;
       group.addEventListener('toggle',()=>{this.groupOpen[status]=group.open;});
       const summary=elem('summary','dx-decl-group-title');
-      summary.append(elem('span','',title),elem('span','dx-decl-total',entries.length+' док.'));
+      summary.append(elem('span','',title));
       group.append(summary);
       const companies=new Map();
       for(const item of entries){
@@ -436,6 +466,22 @@ export default class OptimaDeclarationsWidget{
       const container=elem('div','dx-decl-group-body dx-decl-companies');
       const ordered=[...companies.entries()].sort((a,b)=>
         a[1].name.localeCompare(b[1].name,'ru'));
+      const headerActions=elem('span','dx-decl-group-actions');
+      headerActions.append(elem('span','dx-decl-total',entries.length+' док.'));
+      const printButton=elem('button','dx-decl-print-button','Печать');
+      printButton.type='button';
+      printButton.title='Распечатать категорию «'+title+'» (без фотографий)';
+      printButton.setAttribute('aria-label','Печать категории «'+title+'»');
+      printButton.addEventListener('click',event=>{
+        event.preventDefault();event.stopPropagation();
+        this.printDeclarationGroup(status,title,ordered,entries.length);
+      });
+      // Prevent Enter/Space on the inner button from toggling the outer disclosure.
+      printButton.addEventListener('keydown',event=>{
+        if(event.key==='Enter'||event.key===' '){event.stopPropagation();}
+      });
+      headerActions.append(printButton);
+      summary.append(headerActions);
       for(const [key,company] of ordered){
         const companyState=status+'::'+key;
         const branch=elem('details','dx-decl-company');
