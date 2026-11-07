@@ -3719,10 +3719,10 @@ body>.dx-decl-floating-viewer .dx-decl-viewer-footer>a[hidden]{display:none!impo
 }
 #workspace-canvas .dx-decl-group-title .dx-decl-print-button{
   display:inline-flex;align-items:center;justify-content:center;
-  flex:0 0 auto;min-height:28px;padding:5px 10px;
-  border:1px solid var(--border);border-radius:6px;
+  flex:0 0 30px;width:30px;min-width:30px;height:30px;
+  padding:0;border:1px solid var(--border);border-radius:7px;
   background:var(--bg-panel-inside);color:var(--text-main);
-  font:600 10px/1.35 var(--f-family-inter);
+  font-size:15px;line-height:1;
   cursor:pointer;
 }
 #workspace-canvas .dx-decl-group-title .dx-decl-print-button:hover,

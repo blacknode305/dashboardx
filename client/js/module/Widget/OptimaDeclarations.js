@@ -468,7 +468,7 @@ export default class OptimaDeclarationsWidget{
         a[1].name.localeCompare(b[1].name,'ru'));
       const headerActions=elem('span','dx-decl-group-actions');
       headerActions.append(elem('span','dx-decl-total',entries.length+' док.'));
-      const printButton=elem('button','dx-decl-print-button','Печать');
+      const printButton=elem('button','dx-decl-print-button','🖨');
       printButton.type='button';
       printButton.title='Распечатать категорию «'+title+'» (без фотографий)';
       printButton.setAttribute('aria-label','Печать категории «'+title+'»');
