@@ -37,6 +37,16 @@ html,body{margin:0;background:#e9edef;color:#20252a;font:12px/1.45 Arial,Helveti
 .print-catalog th:nth-child(1){width:37%}.print-catalog th:nth-child(2){width:34%}
 .print-catalog th:nth-child(3){width:12%}.print-catalog th:nth-child(4){width:17%}
 .print-grid tbody tr:nth-child(even){background:#f7f8f9}
+.print-declarations-company{margin:13px 0 16px;break-inside:auto;page-break-inside:auto}
+.print-declarations-company-title{margin:0;padding:7px 9px;border:1px solid #cbd3d9;background:#edf1f3;font-size:13px;font-weight:700;break-after:avoid;page-break-after:avoid}
+.print-declarations th:nth-child(1){width:40%}
+.print-declarations th:nth-child(2){width:34%}
+.print-declarations th:nth-child(3){width:13%}
+.print-declarations th:nth-child(4){width:13%}
+.print-declarations td{font-size:11px}
+.print-declarations td:nth-child(2){font-size:10px;overflow-wrap:anywhere}
+.print-declarations thead{display:table-header-group}
+.print-declarations-company tr{break-inside:avoid;page-break-inside:avoid}
 .print-grid thead{display:table-header-group}
 .print-grid tr{break-inside:avoid;page-break-inside:avoid}
 .print-empty{border:1px dashed #cdd5db;padding:15px;color:#64717c}
@@ -82,7 +92,7 @@ export function openOptimaPrintPreview({kind,title,filters=[],rows=[]}){
   const preview=append(doc.body,'main',undefined,'print-preview');
   const sheet=append(preview,'article',undefined,'print-sheet');
   const syncPage=()=>{
-    const actualDirection=direction.value==='auto'?(['products','catalog'].includes(kind)?'landscape':'portrait'):direction.value;
+    const actualDirection=direction.value==='auto'?(['products','catalog','declarations'].includes(kind)?'landscape':'portrait'):direction.value;
     sheet.className='print-sheet '+paper.value.toLowerCase()+' '+actualDirection;
     dynamicCSS.textContent='@page{size:'+paper.value+' '+actualDirection+';margin:12mm}';
   };
@@ -96,7 +106,10 @@ export function openOptimaPrintPreview({kind,title,filters=[],rows=[]}){
       const line=append(sheet,'div',undefined,'print-filter-tags');
       filters.filter(([,v])=>String(v||'').trim()).forEach(([k,v])=>append(line,'span',k+': '+v));
     }
-    append(sheet,'div','Записей: '+rows.length,'print-count');
+    if(kind==='declarations'){
+      const total=rows.reduce((n,row)=>n+(Array.isArray(row.products)?row.products.length:0),0);
+      append(sheet,'div','Организаций: '+rows.length+' · Позиций продукции: '+total,'print-count');
+    }else append(sheet,'div','Записей: '+rows.length,'print-count');
     if(!rows.length){append(sheet,'p','Нет записей для выбранных условий','print-empty');return;}
     if(kind==='suppliers'){
       for(const supplier of rows){
@@ -117,6 +130,20 @@ export function openOptimaPrintPreview({kind,title,filters=[],rows=[]}){
         }else for(const schedule of supplier.schedules){
           const tr=append(body,'tr');
           [schedule.branch,schedule.order,schedule.delivery,schedule.note].forEach(v=>append(tr,'td',v||'—'));
+        }
+      }
+    }else if(kind==='declarations'){
+      // Print only structured document metadata. Do not request or embed original photos.
+      for(const firm of rows){
+        const section=append(sheet,'section',undefined,'print-declarations-company');
+        append(section,'h2',firm.name||'Организация не указана','print-declarations-company-title');
+        const table=append(section,'table',undefined,'print-grid print-declarations');
+        const header=append(append(table,'thead'),'tr');
+        ['Наименование продукции','Номер документа','Статус','Действителен до'].forEach(h=>append(header,'th',h));
+        const body=append(table,'tbody');
+        for(const item of firm.products||[]){
+          const tr=append(body,'tr');
+          [item.name,item.number,item.status,item.expiration].forEach(v=>append(tr,'td',v||'—'));
         }
       }
     }else if(kind==='catalog'){
