@@ -1,6 +1,21 @@
 <!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Декларации</title></head><body>
 <template data-widget data-id="optimaDeclarations" data-category="optima" data-title="Декларации">
 <section class="dx-declarations">
+  <div class="dx-declarations-tabs">
+    <div class="dx-declarations-tab-group" role="group" aria-label="Типы документов">
+      <button type="button" data-role="declaration-type-tab" data-type="all" aria-pressed="true">Все</button>
+      <button type="button" data-role="declaration-type-tab" data-type="eaeu" aria-pressed="false">ЕАЭС</button>
+      <button type="button" data-role="declaration-type-tab" data-type="veterinary" aria-pressed="false">Ветсправки</button>
+    </div>
+    <button type="button" class="dx-decl-import-trigger" data-role="declaration-import-trigger" title="Импортировать фотографии и реквизиты из подготовленного пакета">Импорт</button>
+    <input type="file" data-role="declaration-import-file" accept=".json,application/json" hidden>
+  </div>
+  <section class="dx-decl-import-review" data-role="declaration-import-review" hidden aria-label="Предварительная проверка документов">
+    <div class="dx-decl-import-head"><strong>Проверка распознанных документов</strong><button type="button" data-role="declaration-import-cancel" aria-label="Отмена">×</button></div>
+    <p data-role="declaration-import-message">Проверьте реквизиты перед загрузкой. Документы сохранятся с пометкой «На проверке».</p>
+    <div data-role="declaration-import-items" class="dx-decl-import-items"></div>
+    <button type="button" data-role="declaration-import-confirm">Импортировать черновики</button>
+  </section>
   <div class="dx-declarations-filters">
     <div class="dx-declarations-search">
       <button type="button" data-role="declaration-add" title="Добавить декларацию" aria-label="Добавить декларацию">+</button>
@@ -17,10 +32,16 @@
       <option value="soon">До 30 дней</option>
       <option value="valid">Действуют</option>
       <option value="upcoming">Ещё не действуют</option>
+      <option value="needs_review">На проверке</option>
+      <option value="confirmed">Проверенные вручную</option>
     </select>
   </div>
   <p class="optima-status" data-role="declaration-status-text" aria-live="polite"></p>
   <div class="dx-declarations-counts" data-role="declaration-counts"></div>
   <div class="dx-declarations-scroll" data-role="declaration-list"></div>
+  <section class="dx-decl-files-viewer" data-role="declaration-files-viewer" hidden>
+    <div class="dx-decl-import-head"><strong data-role="declaration-files-title">Фотографии документа</strong><button type="button" data-role="declaration-files-close" aria-label="Закрыть">×</button></div>
+    <div class="dx-decl-files-grid" data-role="declaration-files-grid"></div>
+  </section>
 </section>
 </template></body></html>
