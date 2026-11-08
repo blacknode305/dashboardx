@@ -3776,3 +3776,47 @@ body>.dx-decl-floating-viewer .dx-decl-viewer-footer>a[hidden]{display:none!impo
     gap:6px;
   }
 }
+
+
+/* Price-list editor is a movable nonmodal window. Only the window captures clicks. */
+body>.dx-catalog-edit-shade{
+  position:fixed;inset:0;z-index:20040;
+  background:rgba(4,8,14,.18);
+  pointer-events:none!important;
+}
+body>dialog.dx-catalog-link-dialog.dx-catalog-edit-dialog{
+  position:fixed;top:50%;left:50%;z-index:20050;
+  margin:0;transform:translate(-50%,-50%);
+  width:min(620px,calc(100vw - 24px));
+  max-width:calc(100vw - 16px);max-height:calc(100dvh - 24px);
+  overflow-y:auto;overscroll-behavior:contain;
+  resize:both;
+  box-shadow:0 18px 60px rgba(0,0,0,.55);
+}
+body>dialog.dx-catalog-edit-dialog:not([open]){display:none}
+body>dialog.dx-catalog-edit-dialog::backdrop{display:none!important}
+body>dialog.dx-catalog-edit-dialog .dx-catalog-edit-header{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;margin:-4px 0 0;
+  cursor:grab;user-select:none;touch-action:none;
+}
+body>dialog.dx-catalog-edit-dialog .dx-catalog-edit-header:active{cursor:grabbing}
+body>dialog.dx-catalog-edit-dialog .dx-catalog-edit-header h3{
+  margin:0;flex:1 1 auto;min-width:0;
+}
+body>dialog.dx-catalog-edit-dialog .dx-catalog-edit-close{
+  display:grid;place-items:center;flex:0 0 30px;
+  width:30px;height:30px;padding:0;
+  border:1px solid var(--border);border-radius:7px;
+  background:var(--bg-panel-inside);color:var(--text-main);
+  font-size:21px;line-height:1;cursor:pointer;
+}
+body>dialog.dx-catalog-edit-dialog .dx-catalog-edit-close:hover{
+  border-color:var(--dx-accent);background:var(--bg-panel-light);
+}
+@media(max-width:620px){
+  body>dialog.dx-catalog-link-dialog.dx-catalog-edit-dialog{
+    width:calc(100vw - 16px);max-height:calc(85dvh - 10px);
+    padding:16px;resize:none;
+  }
+}

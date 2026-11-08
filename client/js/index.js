@@ -2,7 +2,7 @@ import eventBus from './module/EventBus.js';
 import ClientDB from './module/ClientDB.js';
 import learning from './module/EnglishLearningStore.js';
 import { installEnglishQuickWords } from './module/EnglishQuickWords.js?v=english-study-20261101';
-import WidgetElement from './module/WidgetElement.js?v=declarations-long-annex-20261107';
+import WidgetElement from './module/WidgetElement.js?v=catalog-edit-nonmodal-20261108';
 import NavigationBar from './module/NavigationBar.js';
 import installTableColumnResize from './module/TableColumnResize.js?v=optima-price-upload-20261031';
 import installTableSort from './module/TableSort.js?v=optima-price-upload-20261031';
