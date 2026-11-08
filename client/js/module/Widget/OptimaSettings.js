@@ -43,7 +43,7 @@ export default class OptimaSettingsWidget {
       if (!this.password.value) return this.report(this.authStatus, 'Введите пароль администратора.', true);
       setOptimaWritePassword(this.password.value);
       this.password.value = '';
-      this.report(this.authStatus, 'Пароль действует только в открытой вкладке. Сервер проверит его при изменении.');
+      this.report(this.authStatus, 'Пароль действует только в открытой вкладке. Проверка на сервере обязательна для изменения PIN.');
       this.load();
     });
     this.bind(find(widget, 'os-password-clear'), 'click', () => {
@@ -96,8 +96,11 @@ export default class OptimaSettingsWidget {
       if (this.destroyed || seq !== this.seq) return;
       this.report(this.serverStatus, 'Railway · подключено · ревизия ' + String(database.revision ?? '—')
         + ' · поставщиков: ' + String(database.data?.suppliers?.length ?? 0));
+      this.pinWriteVerified = access.passwordRequiredForPins === true;
       this.renderBranches(Array.isArray(access.branches) ? access.branches : []);
-      this.report(this.branchStatus, 'Пароли производства хранятся на сервере в виде хешей.');
+      this.report(this.branchStatus, this.pinWriteVerified
+        ? 'Пароли филиалов хранятся на сервере в виде хешей. Сохранение защищено паролем администратора.'
+        : 'Сохранение PIN отключено до установки серверной проверки пароля администратора.');
     } catch (error) {
       if (this.destroyed || seq !== this.seq) return;
       this.branchList.replaceChildren();
@@ -124,6 +127,8 @@ export default class OptimaSettingsWidget {
       input.placeholder = 'Новый PIN филиала (от 4 символов)';
       input.setAttribute('aria-label', 'Новый PIN: ' + String(record.branch || ''));
       const button = make('button', 'Сохранить'); button.type = 'submit';
+      // Never enable a PIN mutation against an older server that only checks Admin Token.
+      if (!this.pinWriteVerified) { input.disabled = true; button.disabled = true; }
       form.append(input, button);
       this.bind(form, 'submit', async event => {
         event.preventDefault();
