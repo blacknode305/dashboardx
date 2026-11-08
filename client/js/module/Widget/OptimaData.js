@@ -765,6 +765,216 @@ export default class OptimaDataWidget {
     catch(error){dialog.remove();this.catalogAddDialog=null;
       this.statusText.textContent='Не удалось открыть форму добавления: '+error.message;}
   }
+
+  catalogActionsCell(row){
+    const wrap=make('div',undefined,'dx-catalog-row-actions');
+    const edit=make('button','Изменить','dx-catalog-row-edit');
+    edit.type='button';edit.title='Редактировать позицию «'+String(row.name||'')+'»';
+    edit.addEventListener('click',()=>this.openCatalogEditDialog(row));
+    const remove=make('button','Удалить','dx-catalog-row-delete');
+    remove.type='button';remove.title='Удалить позицию «'+String(row.name||'')+'»';
+    remove.addEventListener('click',()=>void this.deleteCatalogEntry(row));
+    wrap.append(edit,remove);
+    return wrap;
+  }
+  openCatalogEditDialog(row){
+    if(!this.db||this.destroyed||this.catalogMutationBusy)return;
+    const catalog=rows(this.db.supplierCatalog);
+    const original=catalog.find(item=>String(item.id)===String(row.id));
+    if(!original||!Number.isFinite(Number(this.revision))){
+      window.alert('Позиция не найдена или база недоступна. Обновите каталог.');return;
+    }
+    const suppliers=rows(this.db.suppliers).filter(item=>item&&item.id!=null)
+      .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ru'));
+    const products=rows(this.db.products).filter(item=>item&&item.id!=null&&item.catalogStatus!=='proposal');
+    if(this.catalogEditDialog?.open)this.catalogEditDialog.close();
+    this.catalogEditDialog?.remove();
+    const dialog=make('dialog',undefined,'dx-catalog-link-dialog dx-catalog-add-dialog dx-catalog-edit-dialog');
+    dialog.setAttribute('aria-label','Редактирование позиции каталога прайс-листов');
+    const form=make('form');form.noValidate=true;
+    const title=make('h3','Изменить позицию каталога');
+    const subtitle=make('p','ID '+String(original.id)+' · Изменяются только поля выбранной позиции.','dx-catalog-link-source');
+    const field=(key,titleText,control)=>{
+      const label=make('label',titleText);
+      control.name=key;label.append(control);return label;
+    };
+    const supplier=make('select');
+    supplier.required=true;
+    supplier.append(new Option('Выберите поставщика',''));
+    for(const item of suppliers)supplier.append(new Option(String(item.name||'ID '+item.id),String(item.id)));
+    if(!suppliers.some(item=>String(item.id)===String(original.supplierId))){
+      supplier.append(new Option('Неизвестный поставщик (ID '+String(original.supplierId)+')',String(original.supplierId)));
+    }
+    supplier.value=String(original.supplierId??'');
+    const name=make('input');name.type='text';name.maxLength=240;name.required=true;
+    name.value=String(original.name||'');
+    const unit=make('input');unit.type='text';unit.maxLength=60;
+    unit.placeholder='кг, шт., л…';unit.value=String(original.unit||'');
+    const price=make('input');price.type='text';price.inputMode='decimal';
+    price.required=true;price.placeholder='Например, 1250,50';
+    price.value=original.price===null||original.price===undefined?'':String(original.price);
+    const selectedNow=products.find(item=>String(item.id)===String(catalogProductId(original)))||null;
+    let selected=selectedNow,linkSelectionValid=true;
+    const linkLabel=make('label','Привязка к нашему наименованию');
+    const link=make('input');link.type='search';link.autocomplete='off';
+    link.placeholder='Поиск по наименованию…';link.value=selected?.name||'';
+    link.setAttribute('role','combobox');link.setAttribute('aria-autocomplete','list');
+    link.setAttribute('aria-expanded','false');
+    const menu=make('div',undefined,'dx-catalog-modal-options');menu.hidden=true;
+    menu.setAttribute('role','listbox');
+    menu.id='dx-catalog-edit-options-'+String(this.id).replace(/[^a-zA-Z0-9_-]/g,'-');
+    link.setAttribute('aria-controls',menu.id);
+    const unlink=make('button','Снять привязку','dx-catalog-edit-unlink');unlink.type='button';
+    const choice=make('p',selected?'Сейчас привязано: '+selected.name:'Без привязки','dx-catalog-link-selection');
+    const hideOptions=()=>{menu.hidden=true;link.setAttribute('aria-expanded','false');};
+    const choose=product=>{
+      selected=product;linkSelectionValid=true;
+      link.value=String(product.name||'');hideOptions();
+      choice.textContent='Выбрано: '+product.name;
+    };
+    const showOptions=()=>{
+      const query=norm(link.value);
+      const found=products.filter(item=>!query||norm(item.name).includes(query)||String(item.id).includes(query))
+        .sort((a,b)=>Number(norm(b.name).startsWith(query))-Number(norm(a.name).startsWith(query))
+          ||String(a.name).localeCompare(String(b.name),'ru')).slice(0,40);
+      menu.replaceChildren();
+      for(const item of found){
+        const option=make('button',String(item.name||'')+' · #'+item.id,'dx-catalog-modal-option');
+        option.type='button';option.setAttribute('role','option');
+        option.addEventListener('click',()=>choose(item));
+        menu.append(option);
+      }
+      if(!found.length)menu.append(make('p','Совпадений нет','dx-catalog-link-no-results'));
+      menu.hidden=false;link.setAttribute('aria-expanded','true');
+    };
+    link.addEventListener('focus',showOptions);
+    link.addEventListener('input',()=>{
+      selected=null;linkSelectionValid=false;choice.textContent='Выберите позицию из списка или снимите привязку';
+      showOptions();
+    });
+    link.addEventListener('keydown',event=>{
+      if(event.key==='Enter'&&!menu.hidden){
+        event.preventDefault();menu.querySelector('button')?.click();
+      }else if(event.key==='Escape'&&!menu.hidden){
+        event.preventDefault();event.stopPropagation();hideOptions();
+      }
+    });
+    unlink.addEventListener('click',()=>{
+      selected=null;linkSelectionValid=true;link.value='';hideOptions();
+      choice.textContent='Без привязки';
+    });
+    linkLabel.append(link);
+    const note=make('p','Сохранение обновит каталог PRO OPTIMA и соответствующую привязку.','dx-catalog-edit-note');
+    const actions=make('div',undefined,'dx-catalog-link-actions');
+    const cancel=make('button','Отмена');cancel.type='button';
+    const save=make('button','Сохранить','dx-catalog-link-confirm');save.type='submit';
+    actions.append(cancel,save);
+    form.append(title,subtitle,field('supplierId','Поставщик',supplier),
+      field('name','Наименование товара',name),field('unit','Единица измерения',unit),
+      field('price','Цена, ₸',price),linkLabel,menu,unlink,choice,note,actions);
+    let busy=false;
+    const fields=[supplier,name,unit,price,link,unlink];
+    const setBusy=value=>{
+      busy=value;this.catalogMutationBusy=value;
+      for(const control of [...fields,cancel,save])control.disabled=value;
+    };
+    cancel.addEventListener('click',()=>{if(!busy)dialog.close();});
+    dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});
+    dialog.addEventListener('click',event=>{
+      if(event.target===dialog&&!busy)dialog.close();
+      else if(event.target!==link&&!menu.contains(event.target))hideOptions();
+    });
+    form.addEventListener('submit',async event=>{
+      event.preventDefault();
+      if(busy||this.catalogMutationBusy)return;
+      const supplierId=supplier.value;
+      const itemName=name.value.trim().replace(/\s+/g,' ');
+      const itemUnit=unit.value.trim().replace(/\s+/g,' ');
+      const raw=price.value.trim().replace(/[\s\u00a0\u202f]/g,'').replace(',','.');
+      const amount=Number(raw);
+      if(!suppliers.some(item=>String(item.id)===supplierId)){
+        note.textContent='Выберите существующего поставщика.';supplier.focus();return;
+      }
+      if(!itemName){note.textContent='Введите наименование товара.';name.focus();return;}
+      if(!raw||!/^\d+(?:\.\d{1,3})?$/.test(raw)||!Number.isFinite(amount)||amount<0){
+        note.textContent='Укажите цену от 0 ₸, максимум три знака после запятой.';price.focus();return;
+      }
+      if(!linkSelectionValid){
+        note.textContent='Выберите привязку из списка или нажмите «Снять привязку».';link.focus();return;
+      }
+      if(catalog.some(item=>String(item.id)!==String(original.id)&&String(item.supplierId)===supplierId
+        &&norm(item.name)===norm(itemName)&&norm(item.unit)===norm(itemUnit))){
+        note.textContent='У этого поставщика уже есть позиция с таким названием и единицей измерения.';
+        name.focus();return;
+      }
+      const nextId=selected?.id??null;
+      const linkChanged=String(catalogProductId(original)??'')!==String(nextId??'');
+      const changed=linkChanged||String(original.supplierId)!==supplierId
+        ||String(original.name||'')!==itemName||String(original.unit||'')!==itemUnit
+        ||String(original.price??'')!==String(amount);
+      if(!changed){dialog.close();return;}
+      const nextCatalog=catalog.map(item=>String(item.id)===String(original.id)
+        ?{...item,supplierId,name:itemName,unit:itemUnit,price:amount,usedProductId:nextId}:item);
+      const changes={supplierCatalog:nextCatalog};
+      if(linkChanged){
+        const id=String(original.id);
+        changes.products=rows(this.db.products).map(item=>{
+          const links=rows(item.catalogLinks).map(String).filter(value=>value!==id);
+          if(nextId!==null&&String(item.id)===String(nextId))links.push(id);
+          return {...item,catalogLinks:[...new Set(links)]};
+        });
+      }
+      setBusy(true);note.textContent='Сохранение изменений в PRO OPTIMA…';
+      try{
+        await patchOptima(changes,this.revision);
+        dialog.close();await this.load();
+      }catch(error){
+        note.textContent=error.status===409?'База изменилась. Закройте окно, обновите каталог и попробуйте снова.'
+          :'Не удалось изменить позицию: '+(error.message||String(error));
+      }finally{setBusy(false);}
+    });
+    dialog.addEventListener('close',()=>{
+      if(this.catalogEditDialog===dialog)this.catalogEditDialog=null;
+      dialog.remove();
+    },{once:true});
+    dialog.append(form);document.body.append(dialog);this.catalogEditDialog=dialog;
+    try{dialog.showModal();name.focus();name.select();}
+    catch(error){dialog.remove();this.catalogEditDialog=null;
+      this.statusText.textContent='Не удалось открыть редактор каталога: '+error.message;}
+  }
+  async deleteCatalogEntry(row){
+    if(!this.db||this.destroyed||this.catalogMutationBusy)return;
+    const catalog=rows(this.db.supplierCatalog);
+    const original=catalog.find(item=>String(item.id)===String(row.id));
+    if(!original||!Number.isFinite(Number(this.revision))){
+      window.alert('Позиция больше не найдена. Обновите каталог.');return;
+    }
+    const supplier=rows(this.db.suppliers).find(item=>String(item.id)===String(original.supplierId));
+    const linked=rows(this.db.products).find(item=>String(item.id)===String(catalogProductId(original)));
+    const message='Удалить из каталога прайс-листов «'+String(original.name||'Без названия')+
+      '» (поставщик: '+String(supplier?.name||original.supplierId)+')?\n\n'+
+      (linked?'Привязка к «'+linked.name+'» будет снята.\n':'')+
+      'Эта операция удаляет позицию каталога, но не удаляет товары и поставщиков. Отменить нельзя.';
+    if(!window.confirm(message))return;
+    const id=String(original.id);
+    const updatedProducts=rows(this.db.products).map(item=>{
+      const old=rows(item.catalogLinks);
+      if(!old.some(value=>String(value)===id))return item;
+      return {...item,catalogLinks:old.filter(value=>String(value)!==id)};
+    });
+    const changes={supplierCatalog:catalog.filter(item=>String(item.id)!==id)};
+    if(updatedProducts.some((item,i)=>item!==rows(this.db.products)[i]))changes.products=updatedProducts;
+    this.catalogMutationBusy=true;this.statusText.textContent='Удаление позиции каталога…';
+    try{
+      await patchOptima(changes,this.revision);
+      await this.load();
+    }catch(error){
+      this.statusText.textContent=error.status===409
+        ?'База изменилась. Обновите каталог и повторите удаление.'
+        :'Не удалось удалить позицию: '+(error.message||String(error));
+    }finally{this.catalogMutationBusy=false;}
+  }
+
   catalogPriceCell(row){
     const wrapper=make('div',undefined,'dx-catalog-price-cell');
     wrapper.style.display='flex';
@@ -1100,7 +1310,8 @@ export default class OptimaDataWidget {
         {label:t('optima.supplier'),get:x=>suppliersById.get(String(x.supplierId))?.name},
         {label:t('optima.unit'),get:x=>x.unit},
         {label:t('optima.price'),get:x=>this.catalogPriceCell(x)},
-        {label:'Привязка',get:x=>this.catalogLinkCell(x)}
+        {label:'Привязка',get:x=>this.catalogLinkCell(x)},
+        {label:'Действия',get:x=>this.catalogActionsCell(x)}
       ],entries);
       const linked=total('supplierCatalog').filter(x=>total('products').some(p=>String(p.id)===String(catalogProductId(x)))).length;
       this.summary.textContent='Показано: '+entries.length+'   |   В каталоге: '+total('supplierCatalog').length+'   |   Непривязано: '+(total('supplierCatalog').length-linked)+'   |   Связано с нашими: '+linked;
@@ -1231,6 +1442,9 @@ export default class OptimaDataWidget {
       this.productEditorPanel=null;
     }
     if(this.catalogLinkDialog){this.catalogLinkDialog.close();this.catalogLinkDialog.remove();this.catalogLinkDialog=null;}
+    if(this.catalogEditDialog){this.catalogEditDialog.close();this.catalogEditDialog.remove();this.catalogEditDialog=null;}
+    if(this.catalogAddDialog){this.catalogAddDialog.close();this.catalogAddDialog.remove();this.catalogAddDialog=null;}
+    if(this.catalogPriceDialog){this.catalogPriceDialog.close();this.catalogPriceDialog.remove();this.catalogPriceDialog=null;}
     this.catalogImporter?.destroy?.();
     this.destroyed=true;
     this.controller?.abort();clearInterval(this.poll);
