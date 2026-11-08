@@ -43,6 +43,7 @@ const WIDGET_CATALOG = Object.freeze({
   optimaStocks:{category:'optima',file:'_optimaStocks.html'},
   optimaOrders:{category:'optima',file:'_optimaOrders.html'},
   optimaSettings:{category:'optima',file:'_optimaSettings.html'},
+  optimaPassport:{category:'optima',file:'_optimaPassport.html'},
   githubControl:{category:'developer',file:'_githubControl.html'},
   serverMonitor:{category:'developer',file:'_serverMonitor.html'},
   smartContacts:{category:'tools',file:'_smartContacts.html'},
