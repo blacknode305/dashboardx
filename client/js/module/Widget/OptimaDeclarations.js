@@ -458,14 +458,24 @@ export default class OptimaDeclarationsWidget{
       group.append(summary);
       const companies=new Map();
       for(const item of entries){
-        // A specification's author is not automatically its commercial supplier.
+        // A specification's manufacturer is not its commercial supplier.
+        // Group unassigned specifications by manufacturer, not by applicant.
+        const unassignedSpecification=item.documentType==='specification'&&!item.supplierId;
+        const manufacturer=String(item.manufacturerName||'').trim();
+        // Keep the full manufacturer address in the document details, not in the group title.
+        const manufacturerLabel=manufacturer
+          .replace(/,\s*(?:Россия|Казахстан|Республика Казахстан|РФ)(?:,|\s|$).*$/i,'').trim();
         const rawFirm=item.supplierId?
-          item.supplierName:item.documentType==='specification'?
-            'Спецификации без привязки к поставщику':
+          item.supplierName:unassignedSpecification?
+            (manufacturerLabel?'Изготовитель: '+manufacturerLabel:'Изготовитель не указан'):
             (item.applicantName||item.supplierNameHint||item.manufacturerName||'Организация не указана');
         const firm=String(rawFirm).trim()||'Организация не указана';
-        const firmKey=item.supplierId?'supplier:'+String(item.supplierId):'document:'+norm(firm);
-        if(!companies.has(firmKey))companies.set(firmKey,{name:firm,rows:[],documents:0});
+        const firmKey=item.supplierId?'supplier:'+String(item.supplierId):
+          unassignedSpecification?'manufacturer:'+(norm(manufacturerLabel)||'unknown'):
+          'document:'+norm(firm);
+        if(!companies.has(firmKey))companies.set(firmKey,{
+          name:firm,rows:[],documents:0,unassignedSpecification
+        });
         const company=companies.get(firmKey);
         company.documents++;
         const positions=Array.isArray(item.productItems)&&item.productItems.length?
@@ -500,7 +510,8 @@ export default class OptimaDeclarationsWidget{
         const head=elem('summary','dx-decl-company-summary');
         head.append(elem('strong','dx-decl-company-name',company.name));
         const meta=elem('span','dx-decl-company-count',
-          company.rows.length+' поз. · '+company.documents+' док.');
+          company.rows.length+' поз. · '+company.documents+' док.'+
+          (company.unassignedSpecification?' · поставщик не назначен':''));
         head.append(meta);branch.append(head);
         const products=elem('div','dx-decl-company-products');
         company.rows.sort((a,b)=>
