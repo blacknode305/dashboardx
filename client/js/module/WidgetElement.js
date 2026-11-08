@@ -1,6 +1,6 @@
 import widgetRegistry from './WidgetRegistry.js';
 import WidgetBase from './WidgetBase.js';
-import WidgetLogic from './WidgetLogic.js?v=catalog-edit-nonmodal-20261108';
+import WidgetLogic from './WidgetLogic.js?v=optima-settings-20261108';
 import { translateElement, translateWidgetBody, t } from './i18n.js';
 
 export default class WidgetElement extends WidgetBase {
