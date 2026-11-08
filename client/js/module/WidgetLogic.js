@@ -23,6 +23,7 @@ import OptimaBranchesWidget from './Widget/OptimaBranches.js?v=optima-branches-2
 import OptimaDeclarationsWidget from './Widget/OptimaDeclarations.js?v=declarations-long-annex-20261107';
 import OptimaDataWidget from './Widget/OptimaData.js?v=catalog-edit-nonmodal-20261108';
 import OptimaOrdersWidget from './Widget/OptimaOrders.js';
+import OptimaSettingsWidget from './Widget/OptimaSettings.js';
 import NesEmulatorWidget from './Widget/NesEmulator.js?v=nes-interactions-20261026';
 import SegaEmulatorWidget from './Widget/SegaEmulator.js?v=sega-rom-compat-20261101c';
 import RealtyRadarWidget from './Widget/RealtyRadar.js?v=realty-radar-20261101';
@@ -69,6 +70,7 @@ const WidgetLogic = {
   OptimaCompareWidget: OptimaDataWidget,
   OptimaStocksWidget: OptimaDataWidget,
   OptimaOrdersWidget,
+  OptimaSettingsWidget,
   TorrentTrackerWidget: LocalCollectionWidget,
   NesEmulatorWidget,
   SegaEmulatorWidget,
