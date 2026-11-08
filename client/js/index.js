@@ -2,7 +2,7 @@ import eventBus from './module/EventBus.js';
 import ClientDB from './module/ClientDB.js';
 import learning from './module/EnglishLearningStore.js';
 import { installEnglishQuickWords } from './module/EnglishQuickWords.js?v=english-study-20261101';
-import WidgetElement from './module/WidgetElement.js?v=catalog-edit-nonmodal-20261108';
+import WidgetElement from './module/WidgetElement.js?v=optima-settings-20261108';
 import NavigationBar from './module/NavigationBar.js';
 import installTableColumnResize from './module/TableColumnResize.js?v=optima-price-upload-20261031';
 import installTableSort from './module/TableSort.js?v=optima-price-upload-20261031';
@@ -42,6 +42,7 @@ const WIDGET_CATALOG = Object.freeze({
   optimaCompare:{category:'optima',file:'_optimaCompare.html'},
   optimaStocks:{category:'optima',file:'_optimaStocks.html'},
   optimaOrders:{category:'optima',file:'_optimaOrders.html'},
+  optimaSettings:{category:'optima',file:'_optimaSettings.html'},
   githubControl:{category:'developer',file:'_githubControl.html'},
   serverMonitor:{category:'developer',file:'_serverMonitor.html'},
   smartContacts:{category:'tools',file:'_smartContacts.html'},
