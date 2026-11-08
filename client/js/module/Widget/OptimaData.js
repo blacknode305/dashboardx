@@ -784,6 +784,7 @@ export default class OptimaDataWidget {
     if(!original||!Number.isFinite(Number(this.revision))){
       window.alert('Позиция не найдена или база недоступна. Обновите каталог.');return;
     }
+    const baseRevision=this.revision;
     const suppliers=rows(this.db.suppliers).filter(item=>item&&item.id!=null)
       .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ru'));
     const products=rows(this.db.products).filter(item=>item&&item.id!=null&&item.catalogStatus!=='proposal');
@@ -926,7 +927,7 @@ export default class OptimaDataWidget {
       }
       setBusy(true);note.textContent='Сохранение изменений в PRO OPTIMA…';
       try{
-        await patchOptima(changes,this.revision);
+        await patchOptima(changes,baseRevision);
         dialog.close();await this.load();
       }catch(error){
         note.textContent=error.status===409?'База изменилась. Закройте окно, обновите каталог и попробуйте снова.'
