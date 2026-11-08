@@ -17,6 +17,12 @@ const CONFIG={
   optimaOrders:{branch:true,status:['all','received','sent','expected','today','overdue','done','pending','approved','rejected'],extra:false,date:true,mode:['history','requests']}
 };
 const MAX_ROWS=400;
+const catalogMoney=value=>{
+  if(value===null||value===undefined||value==='')return '—';
+  const amount=Number(value);
+  return Number.isFinite(amount)&&amount>=0
+    ?new Intl.NumberFormat('ru-RU',{minimumFractionDigits:3,maximumFractionDigits:3}).format(amount)+' ₸':'—';
+};
 const catalogProductId=row=>row&&Object.prototype.hasOwnProperty.call(row,'usedProductId')?row.usedProductId:(row?.productId??row?.linkedProductId??null);
 const PRODUCT_COL_DEFAULTS=Object.freeze({id:64,name:225,unit:88,supplier:245,actions:170});
 const PRODUCT_COL_KEYS=Object.keys(PRODUCT_COL_DEFAULTS);
@@ -1025,7 +1031,7 @@ export default class OptimaDataWidget {
     wrapper.style.display='flex';
     wrapper.style.alignItems='center';
     wrapper.style.gap='6px';
-    wrapper.append(make('span',money(row.price)));
+    wrapper.append(make('span',catalogMoney(row.price)));
     const edit=make('button',undefined,'dx-catalog-price-edit');
     edit.type='button';
     edit.title='Изменить цену из накладной';
@@ -1066,7 +1072,7 @@ export default class OptimaDataWidget {
     input.type='text';
     input.inputMode='decimal';
     input.autocomplete='off';
-    input.placeholder='Например, 1250,50';
+    input.placeholder='Например, 1250,500';
     input.value=row.price===null||row.price===undefined?'':String(row.price);
     input.setAttribute('aria-label','Новая цена в тенге');
     label.append(input);
@@ -1084,8 +1090,8 @@ export default class OptimaDataWidget {
       if(busy)return;
       const raw=input.value.trim().replace(/\s/g,'').replace(',','.');
       const price=Number(raw);
-      if(!raw||!Number.isFinite(price)||price<0||!/^\d+(?:\.\d{1,2})?$/.test(raw)){
-        note.textContent='Укажите цену от 0 ₸, не более двух знаков после запятой.';
+      if(!raw||!Number.isFinite(price)||price<0||!/^\d+(?:\.\d{1,3})?$/.test(raw)){
+        note.textContent='Укажите цену от 0 ₸, не более трёх знаков после запятой.';
         input.focus();return;
       }
       if(String(row.price??'')===String(price)){dialog.close();return;}
@@ -1241,7 +1247,7 @@ export default class OptimaDataWidget {
     const headers=[...(this.results.querySelector('table')?.tHead?.rows?.[0]?.cells||[])];
     const column=headers.findIndex(th=>['ascending','descending'].includes(th.getAttribute('aria-sort')));
     const names=new Map(rows(db.suppliers).map(s=>[String(s.id),String(s.name||'')]));
-    const vals=x=>[String(x.name||''),names.get(String(x.supplierId))||'',String(x.unit||''),money(x.price)];
+    const vals=x=>[String(x.name||''),names.get(String(x.supplierId))||'',String(x.unit||''),catalogMoney(x.price)];
     if(column>=0&&column<4){
       const factor=headers[column].getAttribute('aria-sort')==='descending'?-1:1;
       const collator=new Intl.Collator('ru',{numeric:true,sensitivity:'base'});
@@ -1262,7 +1268,7 @@ export default class OptimaDataWidget {
         name:String(item.name||'—'),
         supplier:names.get(String(item.supplierId))||'—',
         unit:String(item.unit||'—'),
-        price:money(item.price)
+        price:catalogMoney(item.price)
       })),
       filters:[
         ['Поиск',this.filters.search.trim()],
