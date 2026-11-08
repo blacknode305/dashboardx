@@ -80,6 +80,30 @@
     </div>
       </div>
     </details>
+    <details class="dx-settings-fold" data-section="data-import">
+      <summary><span class="dx-settings-fold-icon" aria-hidden="true">⇩</span><span>Импорт данных <small>Railway · localStorage · JSON</small></span><span class="dx-settings-chevron" aria-hidden="true">⌄</span></summary>
+      <div class="dx-settings-fold-body">
+        <p class="dx-settings-note">Загрузите данные в память для просмотра и сохраните JSON. Операции только для чтения: действующая база Railway и данные браузера не перезаписываются.</p>
+        <div class="dx-credential">
+          <strong>База PRO OPTIMA · Railway</strong>
+          <p class="dx-settings-note">Полная структура из /api/admin/db (поставщики, каталог, заявки, документы и другие разделы). Для доступа нужен сохранённый Admin Token. Файлы вложений документов сервер передаёт отдельно и в JSON не включаются.</p>
+          <div class="dx-credential-actions">
+            <button type="button" class="dx-primary" data-role="settings-load-railway">Загрузить из Railway</button>
+            <button type="button" data-role="settings-save-railway" disabled>Скачать JSON Railway</button>
+          </div>
+          <p class="dx-credential-status" data-role="settings-railway-info" role="status" aria-live="polite">Данные ещё не загружены.</p>
+        </div>
+        <div class="dx-credential">
+          <strong>Локальные данные · localStorage</strong>
+          <p class="dx-settings-warning">Копия ВСЕХ ключей localStorage этого сайта, включая сохранённые токены. Не отправляйте полученный файл посторонним.</p>
+          <div class="dx-credential-actions">
+            <button type="button" class="dx-primary" data-role="settings-load-local">Считать localStorage</button>
+            <button type="button" data-role="settings-save-local" disabled>Скачать JSON localStorage</button>
+          </div>
+          <p class="dx-credential-status" data-role="settings-local-info" role="status" aria-live="polite">Данные ещё не считаны.</p>
+        </div>
+      </div>
+    </details>
     <details class="dx-settings-fold" data-section="ai">
       <summary><span class="dx-settings-fold-icon" aria-hidden="true">✧</span><span>DashboardX AI <small>OpenAI API · свой шлюз</small></span><span class="dx-settings-chevron" aria-hidden="true">⌄</span></summary>
       <div class="dx-settings-fold-body">
