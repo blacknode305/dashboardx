@@ -91,6 +91,77 @@ export default class DashboardSettingsWidget {
       if(hasOptimaWritePassword())status.textContent='Пароль уже введён в этой вкладке.';
       this.unbind.push(()=>{ownerPasswordForm.removeEventListener('submit',submit);reveal.removeEventListener('click',toggle);clear.removeEventListener('click',lock);password.value='';});
     }
+    // Read-only snapshot import: never patch Railway or overwrite browser storage.
+    const snapshot=(source,loadRole,saveRole,infoRole,loader)=>{
+      const loadButton=widget.querySelector('[data-role="'+loadRole+'"]');
+      const saveButton=widget.querySelector('[data-role="'+saveRole+'"]');
+      const status=widget.querySelector('[data-role="'+infoRole+'"]');
+      if(!loadButton||!saveButton||!status)return;
+      let captured=null;
+      const report=message=>{if(!this.destroyed)status.textContent=message;};
+      const read=async()=>{
+        loadButton.disabled=true;saveButton.disabled=true;captured=null;
+        report('Чтение данных…');
+        try{
+          const payload=await loader();
+          if(this.destroyed)return;
+          captured={format:'dashboardx-data-snapshot-v1',source,exportedAt:new Date().toISOString(),...payload};
+          const bytes=new Blob([JSON.stringify(captured)]).size;
+          const groups=source==='railway'
+            ?Object.entries(payload.data||{}).filter(([,value])=>Array.isArray(value)).map(([key,value])=>key+': '+value.length).join(' · ')
+            :'Ключей: '+Object.keys(payload.entries||{}).length;
+          report('Загружено · '+(bytes/1024/1024).toFixed(2)+' МБ · '+groups+
+            (source==='railway'?' · ревизия '+String(payload.revision??'—'):''));
+          saveButton.disabled=false;
+        }catch(error){
+          if(this.destroyed)return;
+          const code=error.status===401?' (проверьте Admin Token)':'';
+          report('Не удалось загрузить'+code+': '+String(error.message||error));
+        }finally{if(!this.destroyed)loadButton.disabled=false;}
+      };
+      const save=()=>{
+        if(!captured)return;
+        const blob=new Blob([JSON.stringify(captured,null,2)],{type:'application/json;charset=utf-8'});
+        const url=URL.createObjectURL(blob);
+        const link=document.createElement('a');
+        const stamp=new Date().toISOString().replace(/[:.]/g,'-');
+        link.href=url;link.download='dashboardx-'+source+'-'+stamp+'.json';
+        document.body.append(link);link.click();link.remove();
+        // Revoke after the browser has had an opportunity to start the download.
+        setTimeout(()=>URL.revokeObjectURL(url),60000);
+      };
+      loadButton.addEventListener('click',read);
+      saveButton.addEventListener('click',save);
+      this.unbind.push(()=>{
+        loadButton.removeEventListener('click',read);
+        saveButton.removeEventListener('click',save);
+        captured=null;
+      });
+    };
+    snapshot('railway','settings-load-railway','settings-save-railway','settings-railway-info',async()=>{
+      const token=getCredential('optima');
+      if(!token)throw Object.assign(new Error('Admin Token не сохранён в настройках.'),{status:401});
+      const controller=new AbortController();
+      this.controllers.add(controller);
+      try{
+        const response=await fetch(OPTIMA_BASE+'/api/admin/db',{
+          method:'GET',headers:{Authorization:'Bearer '+token},
+          cache:'no-store',signal:controller.signal
+        });
+        if(!response.ok)throw Object.assign(new Error('HTTP '+response.status),{status:response.status});
+        const body=await response.json();
+        if(!body?.data||!Array.isArray(body.data.suppliers))throw new Error('Неверный формат базы PRO OPTIMA.');
+        return {revision:body.revision,updatedAt:body.updatedAt,data:body.data};
+      }finally{this.controllers.delete(controller);}
+    });
+    snapshot('localstorage','settings-load-local','settings-save-local','settings-local-info',()=>{
+      const entries={};
+      for(let i=0;i<localStorage.length;i++){
+        const key=localStorage.key(i);
+        if(key!==null)entries[key]=localStorage.getItem(key);
+      }
+      return {origin:location.origin,entries};
+    });
     // Per-installation BYOK: never write OpenAI or gateway tokens to localStorage.
     const ownerForm = widget.querySelector('[data-role="ai-owner-form"]');
     if (ownerForm) {
