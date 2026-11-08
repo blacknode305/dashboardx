@@ -2648,12 +2648,12 @@ body:not(.has-custom-wallpaper)::before { display:none!important; }
 #workspace-canvas [data-widget-type="optimaProposals"] .dx-catalog-row-actions button:focus-visible{
   outline:2px solid var(--dx-accent);outline-offset:2px;
 }
-.dx-catalog-edit-dialog{
+.dx-catalog-link-dialog.dx-catalog-edit-dialog{
   width:min(620px,calc(100vw - 24px));max-height:min(88vh,760px);
   overflow-y:auto;overscroll-behavior:contain;
 }
 .dx-catalog-edit-dialog .dx-catalog-link-source{margin-bottom:0}
-.dx-catalog-edit-dialog .dx-catalog-modal-options{flex-shrink:0;max-height:170px}
+.dx-catalog-edit-dialog .dx-catalog-modal-options:not([hidden]){flex-shrink:0;max-height:170px}
 .dx-catalog-edit-dialog .dx-catalog-edit-unlink{
   align-self:flex-start;border:1px solid var(--border);border-radius:6px;
   padding:5px 9px;background:var(--bg-panel-light);color:var(--text-muted);
