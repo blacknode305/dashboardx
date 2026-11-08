@@ -1,6 +1,6 @@
 import widgetRegistry from './WidgetRegistry.js';
 import WidgetBase from './WidgetBase.js';
-import WidgetLogic from './WidgetLogic.js?v=declarations-long-annex-20261107';
+import WidgetLogic from './WidgetLogic.js?v=catalog-row-actions-20261108';
 import { translateElement, translateWidgetBody, t } from './i18n.js';
 
 export default class WidgetElement extends WidgetBase {
