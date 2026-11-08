@@ -1,0 +1,44 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>PRO OPTIMA · Паспорт наименования</title></head><body>
+<template data-widget data-id="optimaPassport" data-category="optima" data-title="Паспорт наименования">
+ <section class="optima-passport">
+  <style>
+   .optima-passport{display:flex;flex-direction:column;gap:12px;min-width:0;font-size:12px}
+   .optima-passport .pp-toolbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+   .optima-passport input,.optima-passport select{padding:8px 9px;min-width:0;border:1px solid rgba(150,162,180,.34);border-radius:8px;background:rgba(120,140,155,.09);color:inherit;font:inherit}
+   .optima-passport .pp-product-input{flex:1 1 180px}
+   .optima-passport .pp-product-select{flex:1 1 220px}
+   .optima-passport .pp-branch,.optima-passport .pp-supplier{flex:1 1 145px}
+   .optima-passport button{border:1px solid rgba(145,155,170,.35);border-radius:8px;background:rgba(130,140,160,.13);color:inherit;padding:8px 11px;cursor:pointer;font:inherit}
+   .optima-passport button:hover,.optima-passport button[aria-pressed=true]{background:rgba(118,145,170,.28)}
+   .optima-passport .pp-tabs{display:flex;gap:5px;flex-wrap:wrap}
+   .optima-passport .pp-summary{padding:10px 12px;border-radius:9px;background:rgba(114,140,167,.1)}
+   .optima-passport .pp-summary strong{font-size:15px;display:block}
+   .optima-passport .pp-summary small,.optima-passport .pp-hint{opacity:.75;line-height:1.45}
+   .optima-passport .pp-scroll{overflow:auto;max-height:460px;min-width:0}
+   .optima-passport table{width:100%;border-collapse:collapse;text-align:left}
+   .optima-passport th,.optima-passport td{padding:9px 7px;vertical-align:top;border-bottom:1px solid rgba(145,155,170,.17)}
+   .optima-passport th{position:sticky;top:0;background:var(--widget-bg,#253340);z-index:1}
+   .optima-passport .pp-price{white-space:nowrap}
+   .optima-passport .pp-name{font-weight:600}
+   .optima-passport .pp-alert{color:#e5a665}
+  </style>
+  <div class="pp-toolbar">
+   <input data-role="pp-search" class="pp-product-input" type="search" autocomplete="off" placeholder="Поиск наименования…">
+   <select data-role="pp-product" class="pp-product-select" aria-label="Наименование"></select>
+   <button type="button" data-role="pp-refresh" title="Обновить паспорт">↻</button>
+  </div>
+  <div class="pp-toolbar">
+   <select data-role="pp-branch" class="pp-branch" aria-label="Филиал"></select>
+   <select data-role="pp-supplier" class="pp-supplier" aria-label="Поставщик"></select>
+  </div>
+  <div class="pp-summary" data-role="pp-summary">Выберите наименование</div>
+  <div class="pp-tabs" data-role="pp-tabs">
+   <button type="button" data-tab="catalog" aria-pressed="true">Товары и цены</button>
+   <button type="button" data-tab="documents" aria-pressed="false">Документы</button>
+   <button type="button" data-tab="stocks" aria-pressed="false">Остатки</button>
+   <button type="button" data-tab="orders" aria-pressed="false">Заявки</button>
+  </div>
+  <p data-role="pp-status" class="pp-hint" aria-live="polite">Подключите Admin Token в настройках Оптима.</p>
+  <div class="pp-scroll" data-role="pp-content"></div>
+ </section>
+</template></body></html>
