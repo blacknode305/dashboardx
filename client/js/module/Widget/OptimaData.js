@@ -792,8 +792,16 @@ export default class OptimaDataWidget {
     this.catalogEditDialog?.remove();
     const dialog=make('dialog',undefined,'dx-catalog-link-dialog dx-catalog-add-dialog dx-catalog-edit-dialog');
     dialog.setAttribute('aria-label','Редактирование позиции каталога прайс-листов');
+    dialog.setAttribute('aria-modal','false');
+    const shade=make('div',undefined,'dx-catalog-edit-shade');
+    shade.setAttribute('aria-hidden','true');
     const form=make('form');form.noValidate=true;
     const title=make('h3','Изменить позицию каталога');
+    const header=make('div',undefined,'dx-catalog-edit-header');
+    header.title='Перетащите, чтобы переместить окно';
+    const exit=make('button','×','dx-catalog-edit-close');
+    exit.type='button';exit.title='Закрыть редактор';exit.setAttribute('aria-label','Закрыть редактор');
+    header.append(title,exit);
     const subtitle=make('p','ID '+String(original.id)+' · Изменяются только поля выбранной позиции.','dx-catalog-link-source');
     const field=(key,titleText,control)=>{
       const label=make('label',titleText);
@@ -870,10 +878,45 @@ export default class OptimaDataWidget {
     const cancel=make('button','Отмена');cancel.type='button';
     const save=make('button','Сохранить','dx-catalog-link-confirm');save.type='submit';
     actions.append(cancel,save);
-    form.append(title,subtitle,field('supplierId','Поставщик',supplier),
+    form.append(header,subtitle,field('supplierId','Поставщик',supplier),
       field('name','Наименование товара',name),field('unit','Единица измерения',unit),
       field('price','Цена, ₸',price),linkLabel,menu,unlink,choice,note,actions);
-    let busy=false;
+    let busy=false,dragCleanup=null;
+    // Native dialog.show() is modeless: the dashboard is never made inert.
+    header.addEventListener('pointerdown',event=>{
+      if(busy||event.button!==0||event.target.closest('button,a,input'))return;
+      event.preventDefault();
+      dragCleanup?.();
+      const rect=dialog.getBoundingClientRect();
+      const initialX=event.clientX,initialY=event.clientY;
+      dialog.style.transform='none';
+      dialog.style.left=Math.round(rect.left)+'px';
+      dialog.style.top=Math.round(rect.top)+'px';
+      const onMove=move=>{
+        if(move.pointerId!==event.pointerId)return;
+        dialog.style.left=Math.max(8,Math.min(window.innerWidth-100,
+          Math.round(rect.left+move.clientX-initialX)))+'px';
+        dialog.style.top=Math.max(8,Math.min(window.innerHeight-65,
+          Math.round(rect.top+move.clientY-initialY)))+'px';
+      };
+      const cleanup=()=>{
+        document.removeEventListener('pointermove',onMove);
+        document.removeEventListener('pointerup',onEnd);
+        document.removeEventListener('pointercancel',onEnd);
+        if(dragCleanup===cleanup)dragCleanup=null;
+      };
+      const onEnd=end=>{if(end.pointerId===event.pointerId)cleanup();};
+      dragCleanup=cleanup;
+      document.addEventListener('pointermove',onMove);
+      document.addEventListener('pointerup',onEnd);
+      document.addEventListener('pointercancel',onEnd);
+    });
+    exit.addEventListener('click',()=>{if(!busy)dialog.close();});
+    dialog.addEventListener('keydown',event=>{
+      if(event.key==='Escape'&&!busy){
+        event.preventDefault();event.stopPropagation();dialog.close();
+      }
+    });
     const fields=[supplier,name,unit,price,link,unlink];
     const setBusy=value=>{
       busy=value;this.catalogMutationBusy=value;
@@ -935,12 +978,13 @@ export default class OptimaDataWidget {
       }finally{setBusy(false);}
     });
     dialog.addEventListener('close',()=>{
+      dragCleanup?.();shade.remove();
       if(this.catalogEditDialog===dialog)this.catalogEditDialog=null;
       dialog.remove();
     },{once:true});
-    dialog.append(form);document.body.append(dialog);this.catalogEditDialog=dialog;
-    try{dialog.showModal();name.focus();name.select();}
-    catch(error){dialog.remove();this.catalogEditDialog=null;
+    dialog.append(form);document.body.append(shade,dialog);this.catalogEditDialog=dialog;
+    try{dialog.show();name.focus();name.select();}
+    catch(error){dragCleanup?.();shade.remove();dialog.remove();this.catalogEditDialog=null;
       this.statusText.textContent='Не удалось открыть редактор каталога: '+error.message;}
   }
   async deleteCatalogEntry(row){
