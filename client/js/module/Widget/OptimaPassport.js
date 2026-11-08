@@ -73,7 +73,7 @@ export default class OptimaPassportWidget {
       product: id(saved.product),
       branch: id(saved.branch),
       supplier: id(saved.supplier),
-      tab: ['catalog', 'documents', 'stocks', 'orders'].includes(saved.tab) ? saved.tab : 'catalog'
+      tab: ['catalog', 'documents', 'stocks', 'orders', 'schedules'].includes(saved.tab) ? saved.tab : 'catalog'
     };
     this.search.value = this.state.search;
     this.on(this.search, 'input', () => {
@@ -194,6 +194,7 @@ export default class OptimaPassportWidget {
     if (this.state.tab === 'documents') this.renderDocuments(product, links);
     if (this.state.tab === 'stocks') this.renderStocks(product);
     if (this.state.tab === 'orders') this.renderOrders(product);
+    if (this.state.tab === 'schedules') this.renderSchedules(product);
   }
   renderCatalog(product, entries) {
     const suppliers = new Map(rows(this.db.suppliers).map(item => [id(item.id), item.name]));
@@ -245,6 +246,23 @@ export default class OptimaPassportWidget {
     this.content.append(table(['Дата', 'Филиал', 'Поставщик', 'Статус'], orders.map(order => [
       order.requestDate || '—', order.branch || '—', order.supplier || '—', order.stage || '—'
     ])));
+  }
+  renderSchedules(product) {
+    const suppliers = new Map(rows(this.db.suppliers).map(item => [id(item.id), item]));
+    const supplierIds = new Set(passportCatalogItems(this.db, product.id).map(item => id(item.supplierId)));
+    for (const link of rows(product.orderSuppliers)) if (link.supplierId != null) supplierIds.add(id(link.supplierId));
+    const found = [...supplierIds].map(supplierId => suppliers.get(supplierId))
+      .filter(Boolean).filter(item => !this.state.supplier || id(item.id) === this.state.supplier);
+    const schedules = found.flatMap(item => rows(item.schedules)
+      .filter(schedule => !this.state.branch || sameBranch(schedule.branch, this.state.branch))
+      .map(schedule => [item.name || '—', schedule.branch || '—',
+        schedule.order || 'Не указаны', schedule.delivery || 'Не указаны',
+        schedule.note || '—']));
+    if (!schedules.length) return this.content.append(node('p',
+      'Для этого наименования нет настроенных графиков поставщиков по выбранным фильтрам.', 'pp-hint'));
+    this.content.append(table(['Поставщик', 'Филиал', 'Дни заявки', 'Дни поставки', 'Примечание'], schedules));
+    this.content.append(node('p',
+      'Точная ожидаемая дата определяется правилами доставки для каждого дня заявки. Настройка графиков остаётся в виджете «Поставщики».', 'pp-hint'));
   }
   destroy() {
     this.destroyed = true;
