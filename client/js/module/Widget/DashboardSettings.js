@@ -1,5 +1,5 @@
 import { t } from '../i18n.js';
-import { setOptimaWritePassword, hasOptimaWritePassword } from '../OptimaAPI.js';
+import { setOptimaWritePassword, hasOptimaWritePassword, getOptimaWritePassword } from '../OptimaAPI.js';
 import { getCredential, hasCredential, setCredential, clearCredential } from '../CredentialStore.js';
 import {
   getGatewayUrl, configureGatewayAccess, disconnectGateway, gatewayStatus,
@@ -53,7 +53,7 @@ export default class DashboardSettingsWidget {
           button.disabled=true;update('settings.testing');
           try {
             const response=await fetch(OPTIMA_BASE+'/api/admin/db',{
-              headers:{Authorization:'Bearer '+token},
+              headers:{Authorization:'Bearer '+token,'X-Optima-Write-Password':getOptimaWritePassword()},
               cache:'no-store',signal:controller.signal
             });
             if(this.destroyed)return;
@@ -62,7 +62,7 @@ export default class DashboardSettingsWidget {
             update(Array.isArray(body.data?.suppliers)?'settings.connected':'settings.badResponse');
           }catch(error){
             if(!this.destroyed&&!controller.signal.aborted)
-              update(error.message==='HTTP 401'?'settings.unauthorized':'settings.offline');
+              update(error.message==='HTTP 401'?'settings.unauthorized':error.message==='HTTP 403'?'Требуется пароль администратора.':'settings.offline');
           }finally{this.controllers.delete(controller);if(!this.destroyed)button.disabled=false;}
         };
         button.addEventListener('click',test);
@@ -81,7 +81,7 @@ export default class DashboardSettingsWidget {
         if(!password.value){status.textContent='Введите пароль администратора.';return;}
         setOptimaWritePassword(password.value);
         password.value='';password.type='password';reveal.textContent='Показать';
-        status.textContent='Пароль установлен для этой вкладки. Сервер проверит его при сохранении.';
+        status.textContent='Пароль установлен для этой вкладки. Сервер проверит его при чтении, скачивании архива и сохранении.';
       };
       const toggle=()=>{password.type=password.type==='password'?'text':'password';reveal.textContent=password.type==='password'?'Показать':'Скрыть';};
       const lock=()=>{setOptimaWritePassword('');password.value='';password.type='password';reveal.textContent='Показать';status.textContent='Полное управление заблокировано в этой вкладке.';};
@@ -90,6 +90,54 @@ export default class DashboardSettingsWidget {
       clear.addEventListener('click',lock);
       if(hasOptimaWritePassword())status.textContent='Пароль уже введён в этой вкладке.';
       this.unbind.push(()=>{ownerPasswordForm.removeEventListener('submit',submit);reveal.removeEventListener('click',toggle);clear.removeEventListener('click',lock);password.value='';});
+    }
+    // Two-factor protected, read-only full archive from Railway.
+    const completeButton=widget.querySelector('[data-role="settings-download-full"]');
+    const completeStatus=widget.querySelector('[data-role="settings-full-backup-info"]');
+    if(completeButton&&completeStatus){
+      const downloadComplete=async()=>{
+        const token=getCredential('optima'),password=getOptimaWritePassword();
+        if(!token||!password){
+          completeStatus.textContent='Сначала укажите Admin Token и пароль администратора в разделе «Подключения».';
+          return;
+        }
+        const controller=new AbortController();this.controllers.add(controller);
+        completeButton.disabled=true;
+        completeStatus.textContent='Загрузка полного архива с фотографиями. Не закрывайте вкладку.';
+        try{
+          const response=await fetch(OPTIMA_BASE+'/api/admin/backup/full',{
+            method:'GET',cache:'no-store',signal:controller.signal,
+            headers:{Authorization:'Bearer '+token,'X-Optima-Write-Password':password}
+          });
+          if(!response.ok){
+            let detail='';
+            try{detail=String((await response.json()).error||'')}catch{}
+            const hint=response.status===401?'Проверьте Admin Token.':
+              response.status===403?'Проверьте пароль администратора.':
+              response.status===404?'На Railway ещё не опубликована серверная версия с полным архивом.':'';
+            throw new Error('HTTP '+response.status+'. '+(hint||detail));
+          }
+          const archive=await response.blob();
+          if(!archive.size)throw new Error('Сервер вернул пустой архив.');
+          if(this.destroyed)return;
+          const cd=response.headers.get('Content-Disposition')||'';
+          const serverName=cd.match(/filename="?([a-zA-Z0-9._-]+)"?/i)?.[1];
+          const filename=serverName||'DashboardX_OPTIMA_complete_'+new Date().toISOString().slice(0,10)+'.tar.gz';
+          const objectUrl=URL.createObjectURL(archive);
+          const link=document.createElement('a');
+          link.href=objectUrl;link.download=filename;document.body.append(link);link.click();link.remove();
+          setTimeout(()=>URL.revokeObjectURL(objectUrl),120000);
+          completeStatus.textContent='Архив передан браузеру ('+(archive.size/1024/1024).toFixed(1)+' МБ). Проверьте загрузки.';
+        }catch(error){
+          if(!this.destroyed&&!controller.signal.aborted)
+            completeStatus.textContent='Не удалось скачать полный архив: '+String(error.message||error);
+        }finally{
+          this.controllers.delete(controller);
+          if(!this.destroyed)completeButton.disabled=false;
+        }
+      };
+      completeButton.addEventListener('click',downloadComplete);
+      this.unbind.push(()=>completeButton.removeEventListener('click',downloadComplete));
     }
     // Read-only snapshot import: never patch Railway or overwrite browser storage.
     const snapshot=(source,loadRole,saveRole,infoRole,loader)=>{
@@ -115,7 +163,7 @@ export default class DashboardSettingsWidget {
           saveButton.disabled=false;
         }catch(error){
           if(this.destroyed)return;
-          const code=error.status===401?' (проверьте Admin Token)':'';
+          const code=error.status===401?' (проверьте Admin Token)':error.status===403?' (проверьте пароль администратора)':'';
           report('Не удалось загрузить'+code+': '+String(error.message||error));
         }finally{if(!this.destroyed)loadButton.disabled=false;}
       };
@@ -145,7 +193,7 @@ export default class DashboardSettingsWidget {
       this.controllers.add(controller);
       try{
         const response=await fetch(OPTIMA_BASE+'/api/admin/db',{
-          method:'GET',headers:{Authorization:'Bearer '+token},
+          method:'GET',headers:{Authorization:'Bearer '+token,'X-Optima-Write-Password':getOptimaWritePassword()},
           cache:'no-store',signal:controller.signal
         });
         if(!response.ok)throw Object.assign(new Error('HTTP '+response.status),{status:response.status});

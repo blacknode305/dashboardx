@@ -86,12 +86,19 @@
         <p class="dx-settings-note">Загрузите данные в память для просмотра и сохраните JSON. Операции только для чтения: действующая база Railway и данные браузера не перезаписываются.</p>
         <div class="dx-credential">
           <strong>База PRO OPTIMA · Railway</strong>
-          <p class="dx-settings-note">Полная структура из /api/admin/db (поставщики, каталог, заявки, документы и другие разделы). Для доступа нужен сохранённый Admin Token. Файлы вложений документов сервер передаёт отдельно и в JSON не включаются.</p>
+          <p class="dx-settings-note">Полная структура из /api/admin/db (поставщики, каталог, заявки, документы и другие разделы). Для доступа нужны Admin Token и пароль администратора. Оригиналы файлов документов в JSON не включаются.</p>
           <div class="dx-credential-actions">
             <button type="button" class="dx-primary" data-role="settings-load-railway">Загрузить из Railway</button>
             <button type="button" data-role="settings-save-railway" disabled>Скачать JSON Railway</button>
           </div>
           <p class="dx-credential-status" data-role="settings-railway-info" role="status" aria-live="polite">Данные ещё не загружены.</p>
+        </div>
+        <div class="dx-credential">
+          <strong>Полный архив DashboardX + OPTIMA с фотографиями</strong>
+          <p class="dx-settings-note">Единая серверная база dashboardx.json (OPTIMA, радио и другие данные DashboardX), meta.json, access.json, оригинальные фотографии и документы, manifest.json с SHA-256. Используются Admin Token и пароль из раздела «Подключения».</p>
+          <div class="dx-credential-actions"><button type="button" class="dx-primary" data-role="settings-download-full">Скачать полный архив с фотографиями</button></div>
+          <p class="dx-credential-status" data-role="settings-full-backup-info" role="status" aria-live="polite">Архив ещё не скачан.</p>
+          <p class="dx-settings-warning">Архив содержит конфиденциальные документы и хеши PIN-кодов. Храните его в защищённом месте. Данные рабочих столов из localStorage текущего браузера можно выгрузить отдельно ниже.</p>
         </div>
         <div class="dx-credential">
           <strong>Локальные данные · localStorage</strong>
