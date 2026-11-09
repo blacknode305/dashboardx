@@ -1,5 +1,5 @@
 import { getCredential, setCredential, clearCredential } from '../CredentialStore.js';
-import { OPTIMA_BASE, optimaRequest, setOptimaWritePassword, hasOptimaWritePassword } from '../OptimaAPI.js';
+import { OPTIMA_BASE, optimaRequest, setOptimaWritePassword, hasOptimaWritePassword, getOptimaWritePassword } from '../OptimaAPI.js';
 
 const find = (root, role) => root.querySelector('[data-role="' + role + '"]');
 const make = (tag, text) => { const el = document.createElement(tag); if (text !== undefined) el.textContent = text; return el; };
@@ -43,13 +43,13 @@ export default class OptimaSettingsWidget {
       if (!this.password.value) return this.report(this.authStatus, 'Введите пароль администратора.', true);
       setOptimaWritePassword(this.password.value);
       this.password.value = '';
-      this.report(this.authStatus, 'Пароль действует только в открытой вкладке. Проверка на сервере обязательна для изменения PIN.');
+      this.report(this.authStatus, 'Пароль действует только в этой вкладке. Сервер проверяет его при чтении и изменении данных.');
       this.load();
     });
     this.bind(find(widget, 'os-password-clear'), 'click', () => {
       setOptimaWritePassword('');
       this.password.value = '';
-      this.report(this.authStatus, 'Изменения заблокированы до повторного ввода пароля.');
+      this.report(this.authStatus, 'Чтение и изменения заблокированы до повторного ввода пароля.');
     });
     this.bind(this.testButton, 'click', () => this.load());
     this.bind(this.backupButton, 'click', () => this.exportSnapshot());
@@ -58,7 +58,7 @@ export default class OptimaSettingsWidget {
     };
     window.addEventListener('dashboardx:credential-changed', this.onCredential);
     this.report(this.authStatus, getCredential('optima')
-      ? 'Admin Token задан.' + (hasOptimaWritePassword() ? ' Пароль администратора введён.' : ' Введите пароль для изменений.')
+      ? 'Admin Token задан.' + (hasOptimaWritePassword() ? ' Пароль администратора введён.' : ' Введите пароль для чтения и изменений.')
       : 'Admin Token отсутствует.');
     this.load();
   }
@@ -158,7 +158,8 @@ export default class OptimaSettingsWidget {
     try {
       const res = await fetch(OPTIMA_BASE + '/api/admin/export', {
         method: 'GET', cache: 'no-store', signal: controller.signal,
-        headers: { Authorization: 'Bearer ' + getCredential('optima') }
+        headers: { Authorization: 'Bearer ' + getCredential('optima'),
+          'X-Optima-Write-Password': getOptimaWritePassword() }
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const blob = await res.blob();
