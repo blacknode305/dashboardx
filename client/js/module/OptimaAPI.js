@@ -40,13 +40,12 @@ export const branchNames=db=>{
 export async function optimaRequest(path,options={}){
   const token=getCredential('optima');
   if(!token)throw Object.assign(new Error('Missing Admin Token'),{status:401,noToken:true});
-  const method=String(options.method||'GET').toUpperCase();
-  const writePassword=!['GET','HEAD','OPTIONS'].includes(method)?ownerWritePassword:null;
-  if(writePassword===null && !['GET','HEAD','OPTIONS'].includes(method))throw new Error('В настройках требуется пароль администратора Оптима.');
-  if(writePassword==='')throw new Error('Укажите пароль администратора Оптима в настройках DashboardX.');
+  // Administrative Optima reads and mutations require both factors.
+  const writePassword=ownerWritePassword;
+  if(!writePassword)throw new Error('Введите пароль администратора в «Настройки Оптима» для чтения и изменений.');
   const headers={
     'Authorization':'Bearer '+token,
-    ...(writePassword!==null?{'X-Optima-Write-Password':writePassword}:{}),
+    'X-Optima-Write-Password':writePassword,
     ...(options.body!==undefined?{'Content-Type':'application/json'}:{}),
     ...(options.headers||{})
   };
