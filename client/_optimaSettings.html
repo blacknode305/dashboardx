@@ -1,0 +1,51 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>PRO OPTIMA · Настройки</title></head><body>
+<template data-widget data-id="optimaSettings" data-category="optima" data-title="Настройки Оптима">
+  <section class="optima-settings-widget" aria-label="Настройки PRO OPTIMA">
+    <style>
+      .optima-settings-widget{display:flex;flex-direction:column;gap:14px;min-width:0;color:inherit}
+      .optima-settings-widget .os-card{border:1px solid var(--border-color,rgba(150,160,180,.28));border-radius:12px;padding:13px;background:rgba(115,132,151,.055)}
+      .optima-settings-widget h3{font-size:14px;margin:0 0 9px}
+      .optima-settings-widget p{margin:7px 0;color:var(--muted,#93a0af);font-size:12px;line-height:1.5}
+      .optima-settings-widget label{display:block;font-size:12px;margin-bottom:6px}
+      .optima-settings-widget .os-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+      .optima-settings-widget input{min-width:0;flex:1 1 150px;padding:8px 10px;border-radius:8px;background:var(--input-bg,rgba(95,110,135,.13));border:1px solid rgba(145,155,170,.35);color:inherit}
+      .optima-settings-widget button{padding:8px 11px;border:1px solid rgba(145,155,170,.4);border-radius:8px;background:rgba(125,137,156,.17);color:inherit;cursor:pointer}
+      .optima-settings-widget button:hover{background:rgba(125,137,156,.3)}
+      .optima-settings-widget button:disabled{opacity:.55;cursor:not-allowed}
+      .optima-settings-widget .os-branch{padding:10px 0;border-top:1px solid rgba(145,155,170,.2)}
+      .optima-settings-widget .os-branch-name{font-weight:600;font-size:12px;margin-bottom:6px}
+      .optima-settings-widget .os-status{font-size:12px;overflow-wrap:anywhere}
+      .optima-settings-widget .os-status[role="alert"]{color:#ed8a8a}
+      .optima-settings-widget .os-badge{font-size:11px;opacity:.72;font-weight:400}
+    </style>
+    <div class="os-card">
+      <h3>Администратор · доступ к данным</h3>
+      <p>Для чтения и управления требуется Admin Token. Пароль администратора используется для сохранения изменений и хранится только в памяти открытой вкладки.</p>
+      <form data-role="os-token-form" autocomplete="off">
+        <label>Admin Token</label>
+        <div class="os-row"><input data-role="os-token" type="password" autocomplete="off" spellcheck="false" placeholder="Токен доступа">
+          <button type="submit">Подключить</button><button type="button" data-role="os-token-clear">Отключить</button></div>
+      </form>
+      <form data-role="os-password-form" autocomplete="off">
+        <label>Пароль администратора для изменений</label>
+        <div class="os-row"><input data-role="os-password" type="password" autocomplete="off" spellcheck="false" placeholder="Пароль администратора">
+          <button type="submit">Применить</button><button type="button" data-role="os-password-clear">Заблокировать</button></div>
+      </form>
+      <p class="os-status" data-role="os-auth-status" aria-live="polite"></p>
+    </div>
+    <div class="os-card">
+      <h3>Данные и резервная копия</h3>
+      <div class="os-row"><button type="button" data-role="os-test">Проверить подключение</button>
+        <button type="button" data-role="os-backup">Экспорт JSON</button></div>
+      <p data-role="os-server-status" class="os-status" aria-live="polite">Данные не загружены.</p>
+      <p>Экспорт не изменяет данные на Railway. Секреты и PIN-коды в файл не включаются; вложения документов хранятся отдельно.</p>
+    </div>
+    <div class="os-card">
+      <h3>Доступ производств</h3>
+      <p>Пароли филиалов задаёт администратор. После смены пароля ранее выданные сессии филиала отзываются. PIN не сохраняется в браузере.</p>
+      <div data-role="os-branch-list"></div>
+      <p data-role="os-branch-status" class="os-status" aria-live="polite">Подключитесь для просмотра производств.</p>
+    </div>
+    <p>Рабочие пространства, фон и язык находятся в общих настройках DashboardX. Здесь — только PRO OPTIMA.</p>
+  </section>
+</template></body></html>
