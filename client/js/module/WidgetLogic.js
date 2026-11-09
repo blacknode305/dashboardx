@@ -23,7 +23,7 @@ import OptimaBranchesWidget from './Widget/OptimaBranches.js?v=optima-branches-2
 import OptimaDeclarationsWidget from './Widget/OptimaDeclarations.js?v=declarations-long-annex-20261107';
 import OptimaDataWidget from './Widget/OptimaData.js?v=catalog-edit-nonmodal-20261108';
 import OptimaOrdersWidget from './Widget/OptimaOrders.js';
-import OptimaSettingsWidget from './Widget/OptimaSettings.js';
+import OptimaSettingsWidget from './Widget/OptimaSettings.js?v=full-backup-20261109';
 import OptimaPassportWidget from './Widget/OptimaPassport.js?v=optima-v1-20261109';
 import NesEmulatorWidget from './Widget/NesEmulator.js?v=nes-interactions-20261026';
 import SegaEmulatorWidget from './Widget/SegaEmulator.js?v=sega-rom-compat-20261101c';
