@@ -1,7 +1,7 @@
 import { getCredential } from '../CredentialStore.js';
 import { attachWidgetInlineEditor } from '../WidgetInlineEditor.js?v=widget-editors-20261101b';
 import { openOptimaPrintPreview } from '../OptimaPrint.js?v=declarations-print-20261107';
-import { loadOptima, optimaRequest, OPTIMA_POLL_MS, OPTIMA_BASE, dateISO, norm } from '../OptimaAPI.js';
+import { loadOptima, optimaRequest, OPTIMA_POLL_MS, OPTIMA_BASE, dateISO, norm, getOptimaWritePassword } from '../OptimaAPI.js';
 const elem=(tag,cls,text)=>{
   const e=document.createElement(tag);
   if(cls)e.className=cls;
@@ -871,7 +871,8 @@ export default class OptimaDeclarationsWidget{
       try{
         const response=await fetch(OPTIMA_BASE+'/api/dashboardx/declarations/attachments/'+
           encodeURIComponent(item.id)+'/'+encodeURIComponent(entry.attachment.id),{
-          headers:{Authorization:'Bearer '+getCredential('optima')},cache:'no-store'
+          headers:{Authorization:'Bearer '+getCredential('optima'),
+             'X-Optima-Write-Password':getOptimaWritePassword()},cache:'no-store'
         });
         if(!response.ok)throw Error('HTTP '+response.status);
         const blob=await response.blob();
