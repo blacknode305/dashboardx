@@ -90,7 +90,7 @@ export default class OptimaSettingsWidget {
     this.report(this.serverStatus, 'Проверка соединения…');
     try {
       const [database, access] = await Promise.all([
-        this.request('/api/admin/db'),
+        this.request('/api/dashboardx/optima/v1/state'),
         this.request('/api/admin/access')
       ]);
       if (this.destroyed || seq !== this.seq) return;
