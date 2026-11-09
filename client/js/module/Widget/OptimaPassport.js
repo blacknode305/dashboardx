@@ -1,5 +1,5 @@
 import { getCredential } from '../CredentialStore.js';
-import { loadOptima, branchNames, sameBranch, rows, dateISO, stockAt, OPTIMA_POLL_MS } from '../OptimaAPI.js';
+import { optimaRequest, branchNames, sameBranch, rows, dateISO, stockAt } from '../OptimaAPI.js';
 
 const node = (tag, value, cls = '') => {
   const element = document.createElement(tag);
@@ -58,6 +58,8 @@ export default class OptimaPassportWidget {
     this.store = window.dashboardxStore;
     this.destroyed = false;
     this.seq = 0;
+    this.detailSeq = 0;
+    this.availableProducts = [];
     this.handlers = [];
     this.search = widget.querySelector('[data-role="pp-search"]');
     this.product = widget.querySelector('[data-role="pp-product"]');
@@ -78,16 +80,15 @@ export default class OptimaPassportWidget {
     this.search.value = this.state.search;
     this.on(this.search, 'input', () => {
       this.state.search = this.search.value;
-      this.populateProducts();
       this.persist();
-      this.render();
+      clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(() => this.load(), 250);
     });
     this.on(this.product, 'change', () => {
       this.state.product = this.product.value;
       this.state.supplier = '';
-      this.populateSuppliers();
       this.persist();
-      this.render();
+      this.loadSelectedProduct();
     });
     this.on(this.branch, 'change', () => {
       this.state.branch = this.branch.value;
@@ -122,43 +123,80 @@ export default class OptimaPassportWidget {
     this.store?.updateWidgetState(this.widget.instanceId, { ...this.state });
   }
   async load() {
+    const seq = ++this.seq;
+    this.controller?.abort();
+    this.detailController?.abort();
     if (!getCredential('optima')) {
       this.db = null;
+      this.availableProducts = [];
+      this.product.replaceChildren();
       this.content.replaceChildren();
       this.status.textContent = 'Подключите Admin Token в «Настройки Оптима».';
       return;
     }
-    const seq = ++this.seq;
-    this.controller?.abort();
     const controller = new AbortController();
     this.controller = controller;
-    this.status.textContent = 'Загрузка данных Railway…';
+    this.status.textContent = 'Поиск наименований на Railway…';
     try {
-      const snapshot = await loadOptima(controller.signal);
+      const query = encodeURIComponent(this.state.search);
+      const index = await optimaRequest('/api/dashboardx/optima/v1/products?limit=1000&q=' + query, {
+        method: 'GET', signal: controller.signal
+      });
       if (this.destroyed || seq !== this.seq) return;
-      this.db = snapshot.data;
-      this.revision = snapshot.revision;
+      this.availableProducts = rows(index.products);
       this.populateProducts();
+      this.persist();
+      await this.loadSelectedProduct(seq);
+    } catch (error) {
+      if (this.destroyed || seq !== this.seq || controller.signal.aborted) return;
+      this.db = null;
+      this.content.replaceChildren();
+      this.status.textContent = error.status === 401 ? 'Неверный Admin Token.' :
+        'Не удалось загрузить список: ' + String(error.message || error);
+    }
+  }
+  async loadSelectedProduct(seq = this.seq) {
+    const requestSeq = ++this.detailSeq;
+    this.detailController?.abort();
+    this.db = null;
+    this.content.replaceChildren();
+    const productId = this.state.product;
+    if (!productId) {
+      this.summary.textContent = 'Поиск не дал результатов.';
+      this.status.textContent = 'Попробуйте изменить запрос.';
+      return;
+    }
+    const controller = new AbortController();
+    this.detailController = controller;
+    this.status.textContent = 'Загрузка паспорта наименования…';
+    try {
+      const details = await optimaRequest('/api/dashboardx/optima/v1/passport?productId=' + encodeURIComponent(productId), {
+        method: 'GET', signal: controller.signal
+      });
+      if (this.destroyed || seq !== this.seq || requestSeq !== this.detailSeq ||
+          controller.signal.aborted || id(productId) !== id(this.state.product)) return;
+      this.db = {
+        products: [details.product],
+        suppliers: rows(details.suppliers),
+        supplierCatalog: rows(details.catalog),
+        offers: rows(details.offers),
+        declarations: rows(details.supplierDocuments),
+        stocks: rows(details.stockEvents),
+        history: rows(details.orders)
+      };
+      this.revision = details.revision;
       selectOptions(this.branch, [['', 'Все филиалы'], ...branchNames(this.db).map(name => [name, name])], this.state.branch);
       this.state.branch = this.branch.value;
       this.populateSuppliers();
       this.render();
     } catch (error) {
       if (this.destroyed || seq !== this.seq || controller.signal.aborted) return;
-      this.db = null;
-      this.content.replaceChildren();
       this.status.textContent = error.status === 401 ? 'Неверный Admin Token.' :
-        'Не удалось загрузить паспорт: ' + String(error.message || error);
+        'Паспорт недоступен: ' + String(error.message || error);
     }
   }
   populateProducts() {
-    if (!this.db) return;
-    const query = byText(this.state.search);
-    const items = rows(this.db.products)
-      .filter(product => !query || byText(product.name).includes(query) || id(product.id).includes(query))
-      .sort((a, b) => String(a.name).localeCompare(String(b.name), 'ru'));
-    const visible = items.slice(0, 200);
-    selectOptions(this.product, visible.map(product => [id(product.id), product.name]), this.state.product);
+    selectOptions(this.product, this.availableProducts.map(product => [id(product.id), product.name]), this.state.product);
     this.state.product = this.product.value;
   }
   populateSuppliers() {
@@ -267,6 +305,8 @@ export default class OptimaPassportWidget {
   destroy() {
     this.destroyed = true;
     this.controller?.abort();
+    this.detailController?.abort();
+    clearTimeout(this.searchTimer);
     this.handlers.forEach(fn => fn());
     window.removeEventListener('dashboardx:credential-changed', this.onCredentials);
     window.removeEventListener('dashboardx:optima-updated', this.onUpdated);
