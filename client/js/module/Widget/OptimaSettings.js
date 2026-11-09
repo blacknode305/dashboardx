@@ -18,6 +18,7 @@ export default class OptimaSettingsWidget {
     this.branchList = find(widget, 'os-branch-list');
     this.testButton = find(widget, 'os-test');
     this.backupButton = find(widget, 'os-backup');
+    this.fullBackupButton = find(widget, 'os-backup-full');
     const tokenForm = find(widget, 'os-token-form');
     const passwordForm = find(widget, 'os-password-form');
     this.bind(tokenForm, 'submit', event => {
@@ -53,6 +54,7 @@ export default class OptimaSettingsWidget {
     });
     this.bind(this.testButton, 'click', () => this.load());
     this.bind(this.backupButton, 'click', () => this.exportSnapshot());
+    this.bind(this.fullBackupButton, 'click', () => this.exportComplete());
     this.onCredential = event => {
       if (event.detail?.service === 'optima') this.load();
     };
@@ -177,6 +179,45 @@ export default class OptimaSettingsWidget {
     } finally {
       this.controllers.delete(controller);
       if (!this.destroyed) this.backupButton.disabled = false;
+    }
+  }
+  async exportComplete() {
+    if (!getCredential('optima') || !hasOptimaWritePassword()) {
+      return this.report(this.serverStatus,
+        'Для полного архива нужны Admin Token и пароль администратора.', true);
+    }
+    this.fullBackupButton.disabled = true;
+    const controller = new AbortController();
+    this.controllers.add(controller);
+    try {
+      this.report(this.serverStatus, 'Загрузка полного архива с фотографиями…');
+      const response = await fetch(OPTIMA_BASE + '/api/admin/backup/full', {
+        method: 'GET', cache: 'no-store', signal: controller.signal,
+        headers: {
+          Authorization: 'Bearer ' + getCredential('optima'),
+          'X-Optima-Write-Password': getOptimaWritePassword()
+        }
+      });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const blob = await response.blob();
+      if (this.destroyed) return;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'DashboardX_OPTIMA_complete_' + new Date().toISOString().slice(0, 10) + '.tar.gz';
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      this.report(this.serverStatus,
+        'Полный архив подготовлен. Сохраните его вне Railway в защищённом месте.');
+    } catch (error) {
+      if (!this.destroyed && !controller.signal.aborted)
+        this.report(this.serverStatus,
+          'Не удалось получить полный архив: ' + String(error.message || error), true);
+    } finally {
+      this.controllers.delete(controller);
+      if (!this.destroyed) this.fullBackupButton.disabled = false;
     }
   }
   destroy() {
