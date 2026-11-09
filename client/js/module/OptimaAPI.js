@@ -60,16 +60,16 @@ export async function optimaRequest(path,options={}){
   return body;
 }
 export async function loadOptima(signal){
-  const data=await optimaRequest('/api/admin/db',{method:'GET',signal});
+  const data=await optimaRequest('/api/dashboardx/optima/v1/state',{method:'GET',signal});
   if(!data||!data.data||!Array.isArray(data.data.suppliers)||!Array.isArray(data.data.products)){
-    throw new Error('Invalid PRO-OPTIMA response');
+    throw new Error('Invalid dashboardx.optima response');
   }
   return data;
 }
 // Revision guarded: never silently overwrite newer Railway changes.
 export async function patchOptima(changes,baseRevision,signal){
   if(!Number.isFinite(Number(baseRevision)))throw new Error('Missing base revision');
-  const result=await optimaRequest('/api/admin/db',{
+  const result=await optimaRequest('/api/dashboardx/optima/v1/state',{
     method:'PATCH',signal,
     body:JSON.stringify({baseRevision:Number(baseRevision),changes})
   });
